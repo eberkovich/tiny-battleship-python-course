@@ -47,6 +47,9 @@ creates or is expected to create new temporary, generated, machine-local, or
 student-local files. Never commit temporary files, caches, local environments,
 generated test output, or mutable student workspaces.
 
+Never create a Git commit without explicit user approval. Approval to edit,
+implement, test, or stage changes is not approval to commit them.
+
 For every implementation change:
 
 1. Add or update the smallest relevant test.
