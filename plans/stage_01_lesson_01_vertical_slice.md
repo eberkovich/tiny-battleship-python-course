@@ -29,21 +29,27 @@ limited to:
 ```python
 from battleship_ui import *
 
-create_board(PLAYER)
-create_board(ENEMY)
+show_board(PLAYER)
+show_board(ENEMY)
 ```
 
 Required behavior:
 
-- create the player and enemy boards separately;
+- show the player and enemy boards separately;
 - finish without an exception while Play keeps the result visible.
 
-The isolated exercises practise selecting a board, locating coordinates,
-drawing an intact deck, and showing fired water. Those exercise operations do
-not become part of `battleship.py` in Lesson 1.
+The lesson has exactly three required isolated exercises:
+
+1. **«Покажи своё поле»** — call `show_board(PLAYER)`.
+2. **«Поставь палубу»** — with the player board already shown by the starter,
+   draw `DECK_IDLE` at `(2, 4)`.
+3. **«Покажи промах»** — with the enemy board already shown by the starter,
+   draw `WATER_FIRED` at `(4, 2)`.
+
+These exercise operations do not become part of `battleship.py` in Lesson 1.
 
 Lesson content is entirely in Russian and includes a short motivation,
-coordinate prediction, two or three isolated exercises, a Battleship upgrade,
+coordinate prediction, three isolated exercises, a Battleship upgrade,
 and a separate optional **«Задача со звёздочкой»**, followed by
 **«Что изменилось в твоей игре?»**. Each editable exercise is copied into the
 selected student's `exercises/lesson_01/` directory; the project upgrade alone
@@ -64,7 +70,7 @@ WATER_IDLE
 WATER_FIRED
 DECK_IDLE
 
-create_board(board)
+show_board(board)
 draw_water(board, x, y, state=WATER_IDLE)
 draw_deck(board, x, y, state=DECK_IDLE)
 ```
@@ -122,10 +128,10 @@ control flow; inspect visuals separately.
 
 | Area | Required checks |
 | --- | --- |
-| API | Real/fake constants and signatures match; unknown boards/states and coordinates outside `1..10` fail clearly. |
-| Real UI | Geometry and axis labels are correct; player idle decks are visible; enemy idle decks stay hidden; fired water is distinct; later draws replace earlier cell state. |
+| API | Real/fake constants and signatures match; both boards begin hidden; `show_board` is idempotent and never resets cells; drawing while hidden is valid; unknown boards/states and coordinates outside `1..10` fail clearly. |
+| Real UI | Only shown boards are rendered; state drawn while hidden appears when shown; geometry and axis labels are correct; player idle decks are visible; enemy idle decks stay hidden; fired water is distinct; later draws replace earlier cell state. |
 | Fake UI | Records deterministic semantic events, resets between runs, never creates a display, and does not retain traces as telemetry. |
-| Runner | Covers success, missing boards, wrong board, invalid coordinates, syntax/runtime errors, and timeout; the launcher survives every failure. |
+| Runner | Covers success, required board not shown, wrong board, invalid coordinates, syntax/runtime errors, and timeout; the launcher survives every failure. |
 | Lesson | Behavioral checks only; required Russian structure; no variables, input, conditions, loops, lists, OOP, fleet validation, hit logic, or AI. |
 | Launcher | Shows the selected task and file; opens that file in Thonny; never overwrites source; preserves work/progress; isolates two students; supports spaces/Cyrillic in paths; routes Play to real UI and Check to fake UI; keeps successful Play visible; and reports errors in Russian. |
 | Installer | Shell syntax; controlled-PATH cases for Python 3 as `python3` or `python`, Python 2, missing/old Python, existing `.venv`, repeated runs, dependency failure, and spaces/Cyrillic; never modifies system Python; verifies launcher/UI/Thonny startup and Russian instructions. |
@@ -134,8 +140,8 @@ A passing Lesson 1 project trace contains the equivalent of:
 
 ```python
 [
-    ("board_created", "player", 10),
-    ("board_created", "enemy", 10),
+    ("board_shown", "player"),
+    ("board_shown", "enemy"),
 ]
 ```
 

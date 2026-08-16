@@ -111,6 +111,7 @@ child_1/
 │   └── lesson_01/
 │       ├── exercise_01.py
 │       ├── exercise_02.py
+│       ├── exercise_03.py
 │       └── star.py
 └── progress.json
 ```
@@ -233,10 +234,18 @@ Water is separate from deck state and has two visual states:
   board;
 - `WATER_FIRED` — a visible miss on either board.
 
-`create_board(board)` initializes one fixed 10×10 board with the visual
-appearance of `WATER_IDLE`. Calling it once with `PLAYER` and once with `ENEMY`
-creates the two visible boards. Student code later chooses whether to render a
-cell as water or a deck and which state to give it.
+Both fixed 10×10 boards and their cell state exist from the beginning, but both
+boards are hidden initially. `show_board(board)` makes one board visible.
+Calling it repeatedly is harmless and does not reset the board.
+
+Student code may draw water or decks before or after showing a board. Drawing
+on a hidden board updates its state; the result becomes visible when the board
+is shown. Forgetting to show a required board is a behavioral verification
+failure, not a runtime error. Invalid board constants, coordinates, and cell
+states still fail clearly.
+
+Do not expose `hide_board()` in V1 because no current lesson or game phase needs
+it. Add it only when a concrete student task requires hiding an entire board.
 
 Student code stores ships as plain coordinate collections:
 
@@ -294,7 +303,7 @@ DECK_IDLE
 DECK_DAMAGED
 DECK_SUNK
 
-create_board(board)
+show_board(board)
 wait_for_cell(board)
 wait_for_button(message, button_text)
 draw_water(board, x, y, state=WATER_IDLE)

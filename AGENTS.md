@@ -20,6 +20,11 @@ repository, not the detailed product design:
 Read the relevant documents before architectural, curriculum, or implementation
 work. Do not silently change a settled decision or expand the active stage.
 
+Any proposed deviation from this file, `context/architecture.md`, or the active
+stage plan must be explicitly discussed with and approved by the user before it
+is implemented. Update every affected document in the same change so the
+documented decisions and the implementation never knowingly diverge.
+
 ## Cross-task guardrails
 
 - Keep student code procedural/structured Python. Do not introduce
