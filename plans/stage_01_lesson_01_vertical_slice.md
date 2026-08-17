@@ -16,8 +16,13 @@ Build only what Lesson 1 needs. Follow `AGENTS.md`,
 
 Child-facing title: **«Знакомство с игровым полем»**.
 
-The lesson teaches game-framework commands and the 10×10 coordinate system in
-two separate articles, with the API article first:
+The lesson teaches helper game commands and the 10×10 coordinate system in
+two articles, ordered by prerequisite:
+
+- a concrete child-friendly introduction stating that the child will complete
+  the one-cell-ship game and write all of its logic, followed by the role of
+  **«вспомогательные команды»**, the import line, and only `show_board`;
+- coordinates first, then `draw_deck` and `show_miss` on the same page.
 
 - `(1, 1)` is top-left;
 - `x` grows to the right;
@@ -52,13 +57,14 @@ The optional star starter already shows both boards because the child completed
 that behavior in the project task. The star asks only for a three-deck ship and
 a miss; it does not require retyping the project solution as setup.
 
-Lesson content is entirely in Russian and includes a short API article that
-explicitly introduces `show_board`, `draw_deck`, `show_miss`, and their
-constants before use. Each argument uses an `argument_name — explanation`
+Lesson content is entirely in Russian. Each command is introduced only after
+its prerequisite concepts: the first article uses **«вспомогательные
+команды»** instead of framework/library terminology, `show_board` needs no
+coordinates, while
+`draw_deck` and `show_miss` follow the coordinate explanation on the second
+page. Each argument uses an `argument_name — explanation`
 bullet, and every available fixed value is listed as an indented round bullet
-without calling it an enum.
-A separate coordinate article then explains only the coordinate system using
-the already introduced API. Three isolated exercises, a **«Пишем игру»**
+without calling it an enum. Three isolated exercises, a **«Пишем игру»**
 upgrade, and a separate optional **«Задача со звёздочкой»** are followed by a
 `summary` step named **«Итоги урока»**. Do not add a passive prediction step.
 Each editable exercise is copied into the selected student's
@@ -151,7 +157,7 @@ control flow; inspect visuals separately.
 | Real UI | Only shown boards are rendered; state drawn while hidden appears when shown; geometry and axis labels are correct; player idle decks use the packaged full-cell wooden mast-and-sail sprite and repeat horizontally or vertically; enemy idle decks stay hidden; misses use the packaged blue-water cannonball-and-splash sprite on either board; later draws replace earlier cell state. |
 | Fake UI | Records deterministic semantic events, resets between runs, never creates a display, and does not retain traces as telemetry. |
 | Runner | Covers success, required board not shown, wrong board, invalid coordinates, syntax/runtime errors, and timeout; the launcher survives every failure. |
-| Lesson | API article introduces every call, constant, state, and argument before any task or starter uses it; arguments use `argument_name — explanation` bullets and list every available fixed value as an indented round bullet without saying “enum”; separate coordinate article introduces no API; examples differ from task answers; every coding-task goal is followed by a fixed uncaptioned italic card containing only the editor and complete/save/Run directions, with no workflow or prefilled-implementation description mixed into the goal; no passive prediction; clear non-solution task wording; passing reference for every checked task; behavioral checks only; required Russian structure; no variables, input, conditions, loops, lists, OOP, fleet validation, hit logic, or AI. |
+| Lesson | Enforces prerequisites at every first use in reading order: the child-friendly ready-command article introduces only `show_board`; the second article explains coordinates before introducing and demonstrating `draw_deck` and `show_miss`; no prose, example, task, starter, or checker silently uses a new concept; arguments use `argument_name — explanation` bullets and list every available fixed value as an indented round bullet without saying “enum”; examples differ from task answers; every coding-task goal is followed by a fixed uncaptioned italic strip containing only the editor and complete/save/Run directions, with no workflow or prefilled-implementation description mixed into the goal; no passive prediction; clear non-solution task wording; passing reference for every checked task; behavioral checks only; required Russian structure; no variables, input, conditions, loops, lists, OOP, fleet validation, hit logic, or AI. |
 | Launcher | Shows course home and lesson navigation; distinguishes step types with bold, smoothly antialiased icons but no duplicate type captions; renders lesson text as narrow, lightly contrasted cards with generous spacing and optional three-submarine dividers; keeps the compact, unframed, visually secondary workflow card fixed while the task description scrolls; shows complete API descriptions as ordinary text on their introduction page and turns only later mentions into clickable underlined recaps, never references before introduction; exposes one persistent dark/light switch on every screen while sharing all layout, rendering and event logic, icon set, and raster assets between constant-only palettes; keeps the light page background distinct from its cards; opens the saved current step or the lesson's first step; never selects or saves a locked step as current; unlocks `summary` when all required exercises and the project pass; keeps later lessons locked until the previous lesson passes; optional stars block neither gate; distinguishes an unselected star by its symbol and spacing without a selection-like frame; uses a finish flag for the `summary`; omits filenames and editor brand from child text; opens the correct file; never overwrites source; preserves work/progress; isolates two students; supports spaces/Cyrillic in paths; checks through fake UI before visual play through real UI; shows behavioral failures visually but does not repeat technical failures; uses one **«Запустить»** action; shows every coding task, including the optional numbered star, in segmented progress; shows contextual feedback; and reports errors in Russian. |
 | Installer | Shell syntax; controlled-PATH cases for Python 3 as `python3` or `python`, versioned Homebrew Python without an unversioned link, supported Homebrew Python without Tk, Homebrew Tk failure without system fallback, Python 2, missing/old Python, existing `.venv`, repeated runs, dependency failure, and spaces/Cyrillic; prefers matching Homebrew Tk without `sudo`, never modifies system Python, and verifies launcher/UI/Thonny startup and Russian instructions. |
 
@@ -203,12 +209,13 @@ reverified.
 
 - Shell syntax, compilation, dependency consistency, focused tests, the full
   suite, reference Play, reference Check, and the headless launcher flow pass.
-- The full suite currently contains 64 passing tests.
+- The full suite currently contains 65 passing tests.
 - Game and launcher screenshots were inspected without pixel assertions, and a
   real macOS pygame game window was opened and closed successfully. The revised
-  course home, typed lesson navigation, API article, coordinate article, and
-  exercise, star, and summary screens were also inspected, and the revised
-  native launcher window opened and closed successfully. The final static deck
+  course home, typed lesson navigation, ready-command article, combined
+  coordinate/deck/miss article, and exercise, star, and summary screens were
+  also inspected, and the revised native launcher window opened and closed
+  successfully. The final static deck
   sprite was inspected at the real 40×40 cell size in both horizontal and
   vertical three-deck ships. The final miss sprite was inspected at 40×40 on
   both the open player board and closed enemy board. The summary sidebar card
@@ -229,7 +236,12 @@ reverified.
   clickable API cue and signature recap modal were inspected in both schemes.
   The API introduction page was inspected without recap links, and a later
   exercise was inspected with its introduced command rendered as a clickable
-  reference.
+  reference. Lesson 1 was also inspected after its prerequisite-order revision:
+  the first article contains only `show_board`, while the second visibly
+  explains coordinates before `draw_deck` and `show_miss`, without adding a
+  sidebar step. The first article's revised opening was inspected across its
+  three cards: the complete one-cell-ship game goal and student-owned logic,
+  the helper-command import, and the `show_board` introduction.
 - The installed dependency set is consistent, including `pygame-ce` 2.5.8,
   PyYAML 6.0.3, Thonny 5.0.0, and pytest 9.1.1.
 - The first actual `install.command` fallback downloaded the pinned package and

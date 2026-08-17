@@ -30,6 +30,8 @@ def test_geometry_maps_one_based_coordinates_to_ten_by_ten_boards() -> None:
 def test_hidden_state_is_rendered_after_show(tmp_path: Path) -> None:
     real_ui.draw_deck(PLAYER, 2, 4, DECK_IDLE)
     real_ui.show_miss(ENEMY, 4, 2)
+    real_ui.show_ship_count(PLAYER, 4)
+    real_ui.show_ship_count(ENEMY, 0)
     real_ui.show_board(PLAYER)
     real_ui.show_board(ENEMY)
     screenshot = tmp_path / "boards.png"
@@ -38,7 +40,21 @@ def test_hidden_state_is_rendered_after_show(tmp_path: Path) -> None:
     snapshot = real_ui._snapshot()
     assert snapshot["boards"][PLAYER]["cells"]["2,4"] == ["deck", DECK_IDLE]
     assert snapshot["boards"][ENEMY]["cells"]["4,2"] == ["water", "miss"]
+    assert snapshot["boards"][PLAYER]["ship_count"] == 4
+    assert snapshot["boards"][ENEMY]["ship_count"] == 0
+    assert snapshot["boards"][PLAYER]["ship_count_visible"]
+    assert snapshot["boards"][ENEMY]["ship_count_visible"]
     assert screenshot.stat().st_size > 0
+
+
+def test_ship_counter_is_aligned_with_a_spacious_board_header() -> None:
+    for board in (PLAYER, ENEMY):
+        board_rect = real_ui._board_rect(board)
+        counter = real_ui._ship_counter_rect(board)
+        assert counter.right == board_rect.right
+        assert counter.bottom < board_rect.top
+        assert not counter.colliderect(board_rect)
+        assert board_rect.top - real_ui.BOARD_HEADER_Y >= 50
 
 
 def test_idle_deck_asset_is_packaged_and_scaled_to_fill_a_cell() -> None:

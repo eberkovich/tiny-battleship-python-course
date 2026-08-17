@@ -231,12 +231,25 @@ def test_api_introduction_page_uses_inline_description_not_recap_links(
 ) -> None:
     controller = LauncherController(tmp_path / "student")
     controller.enter_lesson("lesson_01")
-    controller.select_task("api")
     app = LauncherApp(controller)
 
-    app.render()
+    for task_id, introduced_api in (
+        ("api", "show_board"),
+        ("coordinates", "draw_deck"),
+        ("coordinates", "show_miss"),
+    ):
+        controller.select_task(task_id)
+        app.render()
+        assert introduced_api not in {name for _, name in app.api_links}
 
-    assert app.api_links == []
+    for task_id, referenced_api in (
+        ("exercise_01", "show_board"),
+        ("exercise_02", "draw_deck"),
+        ("exercise_03", "show_miss"),
+    ):
+        controller.select_task(task_id)
+        app.render()
+        assert referenced_api in {name for _, name in app.api_links}
 
 
 def test_theme_switch_is_shared_by_every_screen_and_persisted(

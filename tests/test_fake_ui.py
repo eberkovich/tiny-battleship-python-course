@@ -13,10 +13,16 @@ def setup_function() -> None:
 
 
 def test_real_and_fake_public_signatures_match() -> None:
-    for name in ("show_board", "draw_deck", "show_miss"):
+    for name in ("show_board", "draw_deck", "show_miss", "show_ship_count"):
         assert inspect.signature(getattr(fake_ui, name)) == inspect.signature(
             getattr(real_ui, name)
         )
+    assert (
+        inspect.signature(battleship_ui.show_ship_count)
+        .parameters["count"]
+        .default
+        is inspect.Parameter.empty
+    )
 
 
 def test_public_api_does_not_expose_water_states() -> None:
@@ -27,6 +33,7 @@ def test_public_api_does_not_expose_water_states() -> None:
         "show_board",
         "draw_deck",
         "show_miss",
+        "show_ship_count",
     ]
     for removed in ("WATER_IDLE", "WATER_FIRED", "draw_water"):
         assert not hasattr(battleship_ui, removed)
@@ -54,6 +61,24 @@ def test_boards_start_hidden_and_drawing_before_show_is_preserved() -> None:
     ]
 
 
+def test_ship_count_is_hidden_at_zero_until_shown_and_can_be_updated() -> None:
+    initial = fake_ui._snapshot()
+    assert initial["boards"][PLAYER]["ship_count"] == 0
+    assert not initial["boards"][PLAYER]["ship_count_visible"]
+
+    fake_ui.show_ship_count(PLAYER, 0)
+    fake_ui.show_ship_count(PLAYER, 4)
+    snapshot = fake_ui._snapshot()
+
+    assert snapshot["boards"][PLAYER]["ship_count_visible"]
+    assert snapshot["boards"][PLAYER]["ship_count"] == 4
+    assert not snapshot["boards"][ENEMY]["ship_count_visible"]
+    assert snapshot["events"] == [
+        ["ship_count_shown", PLAYER, 0],
+        ["ship_count_shown", PLAYER, 4],
+    ]
+
+
 @pytest.mark.parametrize(
     "call, code",
     [
@@ -61,6 +86,8 @@ def test_boards_start_hidden_and_drawing_before_show_is_preserved() -> None:
         (lambda: fake_ui.show_miss(ENEMY, 0, 2), "invalid_coordinate"),
         (lambda: fake_ui.draw_deck(PLAYER, True, 2), "invalid_coordinate"),
         (lambda: fake_ui.draw_deck(PLAYER, 1, 1, "miss"), "invalid_deck_state"),
+        (lambda: fake_ui.show_ship_count(PLAYER, -1), "invalid_ship_count"),
+        (lambda: fake_ui.show_ship_count(PLAYER, True), "invalid_ship_count"),
     ],
 )
 def test_invalid_public_arguments_fail_clearly(call, code: str) -> None:

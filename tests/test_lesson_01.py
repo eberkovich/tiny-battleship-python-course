@@ -1,7 +1,7 @@
 from battleship_ui import fake_ui
 from battleship_ui.constants import DECK_IDLE, ENEMY, PLAYER
 from lessons.lesson_01.acceptance import check
-from launcher.course import load_lesson, load_sections
+from launcher.course import load_course, load_lesson, load_sections
 
 
 def setup_function() -> None:
@@ -47,6 +47,24 @@ def test_star_starter_contains_previously_completed_board_setup() -> None:
     assert "используй только знакомые команды `draw_deck` и `show_miss`" in star_text
 
 
+def test_public_api_is_not_used_before_its_introduction_step() -> None:
+    course = load_course()
+    lesson = course.lessons[0]
+    sections = load_sections(lesson.content)
+
+    for api_name, reference in course.api_references.items():
+        introduction_index = next(
+            index
+            for index, task in enumerate(lesson.tasks)
+            if task.id == reference.introduced_in
+        )
+        assert api_name in sections[reference.introduced_in]
+        for task in lesson.tasks[:introduction_index]:
+            assert api_name not in sections[task.section]
+            if task.template is not None:
+                assert api_name not in task.template.read_text(encoding="utf-8")
+
+
 def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
     lesson = load_lesson()
     sections = load_sections(lesson.content)
@@ -54,7 +72,7 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
 
     for required in (
         "команды игрового поля",
-        "координаты клетки",
+        "координаты и корабли",
         "нарисуй однопалубный корабль",
         "пишем игру",
         "задача со звёздочкой",
@@ -67,10 +85,21 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
         "coordinates",
     ]
     assert lesson.task("recap").kind == "summary"
-    for introduced in ("show_board", "draw_deck", "show_miss", "deck_idle"):
-        assert introduced in sections["api"].lower()
+    assert "show_board" in sections["api"]
+    assert "draw_deck" not in sections["api"]
+    assert "show_miss" not in sections["api"]
+    assert "draw_deck" in sections["coordinates"]
+    assert "deck_idle" in sections["coordinates"].lower()
+    assert sections["coordinates"].index("Каждая клетка") < sections[
+        "coordinates"
+    ].index("draw_deck")
+    assert sections["coordinates"].index("Каждая клетка") < sections[
+        "coordinates"
+    ].index("show_miss")
+    assert "`board` —" in sections["api"]
     for argument in ("`board` —", "`x` —", "`y` —", "`state` —"):
-        assert argument in sections["api"]
+        assert argument in sections["coordinates"]
+    assert sections["coordinates"].count("`board` —") == 2
     assert "Возможные значения:" in sections["api"]
     assert "enum" not in content
     assert "перечислен" not in content
@@ -84,7 +113,16 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
     assert "battleship.py" not in content
     assert "show_board(player)" not in sections["project"].lower()
     assert "show_board(enemy)" not in sections["project"].lower()
-    assert sections["api"].count("\n---\n") == 3
+    assert sections["api"].count("\n---\n") == 2
+    assert sections["coordinates"].count("\n---\n") == 2
+    assert "framework" not in content
+    assert "фреймвор" not in content
+    assert "библиотек" not in content
+    assert "полностью создашь игру «морской бой»" in sections["api"].lower()
+    assert "каждый такой корабль занимает одну клетку" in sections["api"].lower()
+    assert "сам напишешь всю логику игры" in sections["api"].lower()
+    assert "вспомогательные команды" in sections["api"].lower()
+    assert "подключает вспомогательные команды" in sections["api"].lower()
     for task in lesson.tasks:
         if not task.is_coding:
             continue

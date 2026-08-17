@@ -12,19 +12,24 @@ from battleship_ui.constants import (
     ENEMY,
     PLAYER,
 )
+from battleship_ui.icons import draw_ship_icon
 from battleship_ui.model import GameState
 
 
 WINDOW_SIZE = (1040, 600)
 CELL_SIZE = 40
 BOARD_ORIGINS = {
-    PLAYER: (70, 120),
-    ENEMY: (570, 120),
+    PLAYER: (70, 145),
+    ENEMY: (570, 145),
 }
+BOARD_HEADER_Y = 88
+SHIP_COUNTER_SIZE = (96, 40)
 
 BACKGROUND = (17, 27, 45)
 TEXT = (239, 246, 255)
 GRID = (185, 218, 236)
+SHIP_COUNTER = (234, 143, 74)
+SHIP_COUNTER_BACKGROUND = (27, 43, 66)
 PLAYER_WATER = (51, 155, 202)
 ENEMY_CLOSED = (53, 78, 112)
 DECK_IDLE_ASSET = Path(__file__).with_name("assets") / "deck_idle.png"
@@ -51,6 +56,12 @@ def draw_deck(board: str, x: int, y: int, state: str = DECK_IDLE) -> None:
 
 def show_miss(board: str, x: int, y: int) -> None:
     _state.show_miss(board, x, y)
+    if _screen is not None:
+        _render()
+
+
+def show_ship_count(board: str, count: int) -> None:
+    _state.show_ship_count(board, count)
     if _screen is not None:
         _render()
 
@@ -85,6 +96,15 @@ def _cell_rect(board: str, x: int, y: int) -> pygame.Rect:
         origin_y + (y - 1) * CELL_SIZE,
         CELL_SIZE,
         CELL_SIZE,
+    )
+
+
+def _ship_counter_rect(board: str) -> pygame.Rect:
+    board_rect = _board_rect(board)
+    return pygame.Rect(
+        board_rect.right - SHIP_COUNTER_SIZE[0],
+        BOARD_HEADER_Y - SHIP_COUNTER_SIZE[1] // 2,
+        *SHIP_COUNTER_SIZE,
     )
 
 
@@ -126,8 +146,27 @@ def _draw_board(screen: pygame.Surface, board: str) -> None:
     title = _font(21, bold=True).render(title_text, True, TEXT)
     screen.blit(
         title,
-        title.get_rect(center=(origin_x + BOARD_SIZE * CELL_SIZE // 2, 86)),
+        title.get_rect(midleft=(origin_x, BOARD_HEADER_Y)),
     )
+
+    board_state = _state.boards[board]
+    if board_state.ship_count_visible:
+        counter = _ship_counter_rect(board)
+        pygame.draw.rect(
+            screen, SHIP_COUNTER_BACKGROUND, counter, border_radius=10
+        )
+        pygame.draw.rect(
+            screen, SHIP_COUNTER, counter, 2, border_radius=10
+        )
+        icon_center = (counter.x + 25, counter.centery)
+        draw_ship_icon(screen, icon_center, SHIP_COUNTER, scale=0.82)
+        count = _font(24, bold=True).render(
+            str(board_state.ship_count), True, TEXT
+        )
+        screen.blit(
+            count,
+            count.get_rect(midleft=(counter.x + 52, counter.centery + 1)),
+        )
 
     label_font = _font(16, bold=True)
     for index in range(1, BOARD_SIZE + 1):
@@ -146,7 +185,6 @@ def _draw_board(screen: pygame.Surface, board: str) -> None:
             ),
         )
 
-    board_state = _state.boards[board]
     for y in range(1, BOARD_SIZE + 1):
         for x in range(1, BOARD_SIZE + 1):
             content, state = board_state.cells[(x, y)]
@@ -203,4 +241,5 @@ __all__ = [
     "show_board",
     "draw_deck",
     "show_miss",
+    "show_ship_count",
 ]

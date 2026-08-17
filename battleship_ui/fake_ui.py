@@ -19,6 +19,10 @@ def show_miss(board: str, x: int, y: int) -> None:
     _state.show_miss(board, x, y)
 
 
+def show_ship_count(board: str, count: int) -> None:
+    _state.show_ship_count(board, count)
+
+
 def _reset() -> None:
     global _state
     _state = GameState()
@@ -35,4 +39,5 @@ __all__ = [
     "show_board",
     "draw_deck",
     "show_miss",
+    "show_ship_count",
 ]

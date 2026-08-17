@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pygame
 
+from battleship_ui.icons import draw_ship_icon
 from launcher.controller import LauncherController
 from launcher.course import Task
 from launcher.theme import DARK_THEME_NAME, THEMES, ThemePalette
@@ -1098,33 +1099,7 @@ class LauncherApp:
         *,
         scale: float = 1.0,
     ) -> None:
-        x, y = center
-        pygame.draw.polygon(
-            target,
-            color,
-            [
-                (x - 14 * scale, y),
-                (x + 14 * scale, y),
-                (x + 8 * scale, y + 9 * scale),
-                (x - 8 * scale, y + 9 * scale),
-            ],
-        )
-        pygame.draw.line(
-            target,
-            color,
-            (x, y),
-            (x, y - 13 * scale),
-            max(2, round(3 * scale)),
-        )
-        pygame.draw.polygon(
-            target,
-            color,
-            [
-                (x + 2 * scale, y - 12 * scale),
-                (x + 2 * scale, y - 2 * scale),
-                (x + 11 * scale, y - 2 * scale),
-            ],
-        )
+        draw_ship_icon(target, center, color, scale=scale)
 
     def _draw_star(
         self,

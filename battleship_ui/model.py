@@ -18,6 +18,8 @@ class BattleshipUIError(ValueError):
 @dataclass
 class BoardState:
     visible: bool = False
+    ship_count_visible: bool = False
+    ship_count: int = 0
     cells: dict[tuple[int, int], tuple[str, str]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -45,6 +47,18 @@ class GameState:
         self.boards[board].cells[(x, y)] = ("water", "miss")
         self.events.append(("miss_shown", board, x, y))
 
+    def show_ship_count(self, board: str, count: int) -> None:
+        self._validate_board(board)
+        if type(count) is not int or count < 0:
+            raise BattleshipUIError(
+                "invalid_ship_count",
+                "Количество кораблей должно быть целым неотрицательным числом.",
+            )
+        board_state = self.boards[board]
+        board_state.ship_count_visible = True
+        board_state.ship_count = count
+        self.events.append(("ship_count_shown", board, count))
+
     def draw_deck(self, board: str, x: int, y: int, state: str) -> None:
         self._validate_board(board)
         self._validate_coordinate(x, y)
@@ -60,6 +74,8 @@ class GameState:
             "boards": {
                 board: {
                     "visible": board_state.visible,
+                    "ship_count_visible": board_state.ship_count_visible,
+                    "ship_count": board_state.ship_count,
                     "cells": {
                         f"{x},{y}": [content, state]
                         for (x, y), (content, state) in board_state.cells.items()

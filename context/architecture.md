@@ -365,6 +365,12 @@ Both fixed 10×10 boards and their cell state exist from the beginning, but both
 boards are hidden initially. `show_board(board)` makes one board visible.
 Calling it repeatedly is harmless and does not reset the board.
 
+Each board also owns a remaining-ship counter. Its stored value starts at `0`
+and it stays hidden until `show_ship_count(board, count)` is called with an
+explicit nonnegative integer. The command may run before or after `show_board`
+and repeated calls update the value. When visible, the counter appears in the
+board header as the shared orange ship icon and a number inside a score badge.
+
 Student code may mark a miss or draw decks before or after showing a board.
 Updating a hidden board changes its state; the result becomes visible when the
 board is shown. Forgetting to show a required board is a behavioral
@@ -417,7 +423,7 @@ is exposed to the student.
 
 ## Current public API direction
 
-Lesson 1 exposes only the API it teaches:
+The currently implemented public API is:
 
 ```python
 PLAYER
@@ -428,11 +434,14 @@ DECK_IDLE
 show_board(board)
 draw_deck(board, x, y, state=DECK_IDLE)
 show_miss(board, x, y)
+show_ship_count(board, count)
 ```
 
 `show_board` reveals a board, `draw_deck` places or updates a deck, and
-`show_miss` displays an unsuccessful shot. Untouched water already exists and
-does not need a public drawing operation.
+`show_miss` displays an unsuccessful shot. `show_ship_count` shows or updates
+the selected board's remaining-ship counter. Untouched water already exists
+and does not need a public drawing operation. `show_ship_count` is implemented
+for a later game milestone and is not introduced or required in Lesson 1.
 
 The real and fake implementations must provide the same student-facing API.
 Later lessons may add deck damage and sunk states, blocking cell or button

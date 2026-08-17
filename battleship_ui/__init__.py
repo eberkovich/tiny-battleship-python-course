@@ -23,6 +23,10 @@ def show_miss(board: str, x: int, y: int) -> None:
     _backend.show_miss(board, x, y)
 
 
+def show_ship_count(board: str, count: int) -> None:
+    _backend.show_ship_count(board, count)
+
+
 __all__ = [
     "PLAYER",
     "ENEMY",
@@ -30,4 +34,5 @@ __all__ = [
     "show_board",
     "draw_deck",
     "show_miss",
+    "show_ship_count",
 ]

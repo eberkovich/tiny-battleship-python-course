@@ -23,10 +23,11 @@ def test_curriculum_provides_clickable_api_recaps() -> None:
     course = load_course()
 
     assert set(course.api_references) == {"show_board", "draw_deck", "show_miss"}
-    assert course.api_references["show_miss"].introduced_in == "api"
+    assert course.api_references["draw_deck"].introduced_in == "coordinates"
+    assert course.api_references["show_miss"].introduced_in == "coordinates"
     assert course.api_references["show_miss"].signature == "show_miss(board, x, y)"
     assert course.api_references["show_miss"].details
-    assert not course.api_reference_available("show_miss", "api")
+    assert not course.api_reference_available("show_miss", "coordinates")
     assert course.api_reference_available("show_miss", "exercise_03")
 
 
