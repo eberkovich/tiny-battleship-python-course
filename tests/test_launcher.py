@@ -8,10 +8,11 @@ from pathlib import Path
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
-from launcher.app import SUMMARY, LauncherApp
+from launcher.app import LauncherApp, _markdown_blocks
 from launcher.controller import LauncherController
 from launcher.course import Lesson, Task, load_course
 from launcher.editor import editor_command, ensure_russian_thonny_config
+from launcher.theme import DARK_THEME_NAME, LIGHT_THEME_NAME
 from runner.results import RunResult
 
 
@@ -25,6 +26,16 @@ class ImmediateJob:
 
     def poll_result(self) -> RunResult:
         return self.result
+
+
+def test_markdown_divider_splits_content_without_becoming_text() -> None:
+    blocks = _markdown_blocks("Первый блок\n\n---\n\nВторой блок")
+
+    assert blocks == [
+        ("text", "Первый блок"),
+        ("divider", ""),
+        ("text", "Второй блок"),
+    ]
 
 
 def test_editor_command_passes_exact_cyrillic_path_without_shell(tmp_path: Path) -> None:
@@ -164,6 +175,25 @@ def test_launcher_renders_course_home_and_typed_lesson_navigation(
     assert "check" not in actions
 
 
+def test_theme_switch_is_shared_by_every_screen_and_persisted(
+    tmp_path: Path,
+) -> None:
+    student = tmp_path / "student"
+    controller = LauncherController(student)
+    app = LauncherApp(controller)
+    app.render()
+
+    assert controller.progress.theme == DARK_THEME_NAME
+    switch = next(button for button in app.buttons if button.action == "theme")
+    app._click(switch.rect.center)
+    assert controller.progress.theme == LIGHT_THEME_NAME
+
+    controller.enter_lesson("lesson_01")
+    app.render()
+    assert any(button.action == "theme" for button in app.buttons)
+    assert LauncherController(student).progress.theme == LIGHT_THEME_NAME
+
+
 def test_opening_lesson_shows_saved_current_step(tmp_path: Path) -> None:
     student = tmp_path / "student"
     controller = LauncherController(student)
@@ -228,7 +258,7 @@ def test_summary_has_its_own_kind_and_finish_color(tmp_path: Path) -> None:
     controller.select_task("recap")
     app.render()
     assert controller.current_task.kind == "summary"
-    assert app._task_color(controller.current_task) == SUMMARY
+    assert app._task_color(controller.current_task) == app.theme.summary
     assert not controller.current_task.is_coding
     assert "recap" in {task_id for _, task_id in app.task_rects}
 

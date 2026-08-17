@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from launcher.course import load_course, load_lesson, load_sections
+from launcher.theme import DARK_THEME_NAME
 from launcher.workspace import StudentWorkspace
 
 
@@ -84,3 +85,27 @@ def test_version_one_progress_is_migrated_without_losing_passed_tasks(
     assert progress.current_lesson == "lesson_01"
     assert progress.current_task == "exercise_02"
     assert progress.completed_tasks == {"exercise_01"}
+    assert progress.theme == DARK_THEME_NAME
+
+
+def test_version_two_progress_defaults_to_dark_theme(tmp_path: Path) -> None:
+    course = load_course()
+    workspace = StudentWorkspace(tmp_path / "student", course)
+    workspace.root.mkdir()
+    workspace.progress_path.write_text(
+        json.dumps(
+            {
+                "version": 2,
+                "current_lesson": "lesson_01",
+                "current_task": "coordinates",
+                "completed_tasks": ["exercise_01"],
+                "earned_stars": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    progress = workspace.load_progress()
+
+    assert progress.current_task == "coordinates"
+    assert progress.theme == DARK_THEME_NAME

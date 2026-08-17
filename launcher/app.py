@@ -11,28 +11,19 @@ import pygame
 
 from launcher.controller import LauncherController
 from launcher.course import Task
+from launcher.theme import DARK_THEME_NAME, THEMES, ThemePalette
 
 
 WINDOW_SIZE = (1180, 760)
 SIDEBAR_WIDTH = 350
-BACKGROUND = (15, 23, 39)
-PANEL = (25, 37, 59)
-CARD = (34, 49, 75)
-CARD_ACTIVE = (43, 74, 111)
-CODE_BACKGROUND = (17, 29, 49)
-TEXT = (239, 245, 255)
-MUTED = (174, 191, 211)
-ACCENT = (63, 190, 181)
-BUTTON = (48, 105, 152)
-BUTTON_HOVER = (61, 129, 184)
-SUCCESS = (67, 180, 113)
-ERROR = (224, 102, 102)
-GOLD = (238, 190, 72)
-ARTICLE = (91, 155, 213)
-QUESTION = (165, 122, 214)
-PROJECT = (234, 143, 74)
-SUMMARY = (164, 139, 219)
 FENCE = chr(96) * 3
+SUBMARINE_DIVIDER_ASSET = Path(__file__).with_name("assets") / "submarine_divider.png"
+CONTENT_COLUMN_WIDTH = 700
+CONTENT_PADDING_X = 32
+CONTENT_PADDING_Y = 26
+DIVIDER_HEIGHT = 40
+TASK_ICON_SIZE = 36
+TASK_ICON_RENDER_SCALE = 4
 
 
 @dataclass(frozen=True)
@@ -73,6 +64,48 @@ def _wrap(font: pygame.font.Font, text: str, width: int) -> list[str]:
     return result
 
 
+def _markdown_blocks(text: str) -> list[tuple[str, str]]:
+    blocks: list[tuple[str, str]] = []
+    in_code = False
+    paragraph: list[str] = []
+
+    def flush_paragraph() -> None:
+        if paragraph:
+            blocks.append(("text", " ".join(paragraph)))
+            paragraph.clear()
+
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if stripped.startswith(FENCE):
+            flush_paragraph()
+            in_code = not in_code
+            continue
+        if in_code:
+            blocks.append(("code", raw_line))
+        elif stripped == "---":
+            flush_paragraph()
+            if blocks and blocks[-1][0] == "space":
+                blocks.pop()
+            blocks.append(("divider", ""))
+        elif re.match(r"^#{1,6}\s+", stripped):
+            flush_paragraph()
+        elif not stripped:
+            flush_paragraph()
+            if blocks and blocks[-1][0] not in {"space", "divider"}:
+                blocks.append(("space", ""))
+        elif stripped.startswith("- "):
+            flush_paragraph()
+            indentation = len(raw_line) - len(raw_line.lstrip())
+            kind = "subbullet" if indentation else "bullet"
+            blocks.append((kind, stripped[2:]))
+        else:
+            paragraph.append(stripped)
+    flush_paragraph()
+    while blocks and blocks[-1][0] == "space":
+        blocks.pop()
+    return blocks
+
+
 class LauncherApp:
     def __init__(self, controller: LauncherController):
         pygame.display.init()
@@ -91,6 +124,38 @@ class LauncherApp:
         self.title_font = pygame.font.SysFont("Arial", 30, bold=True)
         self.hero_font = pygame.font.SysFont("Arial", 40, bold=True)
         self.task_font = pygame.font.SysFont("Arial", 15, bold=True)
+        self.task_icon_font = pygame.font.SysFont(
+            "Arial", 15 * TASK_ICON_RENDER_SCALE, bold=True
+        )
+        divider_source = pygame.image.load(SUBMARINE_DIVIDER_ASSET).convert_alpha()
+        middle_width = round(
+            divider_source.get_width() * DIVIDER_HEIGHT / divider_source.get_height()
+        )
+        escort_height = round(DIVIDER_HEIGHT * 0.72)
+        escort_width = round(
+            divider_source.get_width() * escort_height / divider_source.get_height()
+        )
+        middle = pygame.transform.smoothscale(
+            divider_source, (middle_width, DIVIDER_HEIGHT)
+        )
+        escort = pygame.transform.smoothscale(
+            divider_source, (escort_width, escort_height)
+        )
+        gap = 3
+        divider_width = middle_width + escort_width * 2 + gap * 2
+        self.submarine_divider = pygame.Surface(
+            (divider_width, DIVIDER_HEIGHT), pygame.SRCALPHA
+        )
+        escort_y = (DIVIDER_HEIGHT - escort_height) // 2
+        self.submarine_divider.blit(escort, (0, escort_y))
+        self.submarine_divider.blit(middle, (escort_width + gap, 0))
+        self.submarine_divider.blit(
+            escort, (escort_width + gap + middle_width + gap, escort_y)
+        )
+
+    @property
+    def theme(self) -> ThemePalette:
+        return THEMES[self.controller.progress.theme]
 
     def run(self) -> None:
         running = True
@@ -142,10 +207,12 @@ class LauncherApp:
             elif button.action == "next":
                 self.controller.move(1)
                 self.scroll = 0
+            elif button.action == "theme":
+                self.controller.toggle_theme()
             return
 
     def render(self) -> None:
-        self.screen.fill(BACKGROUND)
+        self.screen.fill(self.theme.background)
         self.buttons = []
         self.task_rects = []
         self.lesson_rects = []
@@ -154,21 +221,78 @@ class LauncherApp:
         else:
             self._render_sidebar()
             self._render_lesson_content()
+        self._render_theme_switch()
         pygame.display.flip()
 
+    def _render_theme_switch(self) -> None:
+        rect = pygame.Rect(WINDOW_SIZE[0] - 146, 16, 128, 38)
+        hovered = rect.collidepoint(pygame.mouse.get_pos())
+        color = (
+            self.theme.button_disabled
+            if self.controller.busy
+            else self.theme.button_hover
+            if hovered
+            else self.theme.button
+        )
+        pygame.draw.rect(self.screen, color, rect, border_radius=9)
+        icon_center = (rect.x + 20, rect.centery)
+        if self.controller.progress.theme == DARK_THEME_NAME:
+            pygame.draw.circle(
+                self.screen, self.theme.button_text, icon_center, 8
+            )
+            pygame.draw.circle(
+                self.screen, color, (icon_center[0] + 4, icon_center[1] - 3), 8
+            )
+            label = "Тёмная"
+        else:
+            pygame.draw.circle(
+                self.screen, self.theme.button_text, icon_center, 6, 2
+            )
+            for offset_x, offset_y in (
+                (-10, 0),
+                (10, 0),
+                (0, -10),
+                (0, 10),
+                (-7, -7),
+                (7, -7),
+                (-7, 7),
+                (7, 7),
+            ):
+                pygame.draw.line(
+                    self.screen,
+                    self.theme.button_text,
+                    (
+                        round(icon_center[0] + offset_x * 0.7),
+                        round(icon_center[1] + offset_y * 0.7),
+                    ),
+                    (icon_center[0] + offset_x, icon_center[1] + offset_y),
+                    2,
+                )
+            label = "Светлая"
+        surface = self.small_font.render(label, True, self.theme.button_text)
+        self.screen.blit(
+            surface,
+            surface.get_rect(midleft=(rect.x + 38, rect.centery)),
+        )
+        self.buttons.append(Button(label, rect, "theme"))
+
     def _render_home(self) -> None:
-        title = self.hero_font.render(self.controller.course.title, True, TEXT)
+        title = self.hero_font.render(
+            self.controller.course.title, True, self.theme.text
+        )
         self.screen.blit(title, (60, 52))
         subtitle = self.font.render(
-            "Курс, в котором каждый урок меняет твою игру", True, ACCENT
+            "Курс, в котором каждый урок меняет твою игру",
+            True,
+            self.theme.accent,
         )
         self.screen.blit(subtitle, (62, 108))
 
         intro_rect = pygame.Rect(60, 158, 1060, 150)
-        pygame.draw.rect(self.screen, CARD, intro_rect, border_radius=14)
+        pygame.draw.rect(self.screen, self.theme.card, intro_rect, border_radius=14)
         y = intro_rect.y + 24
         for paragraph in self.controller.course.description:
-            surface = self.font.render(paragraph, True, TEXT)
+            surface = self.font.render(paragraph, True, self.theme.text)
             self.screen.blit(surface, (intro_rect.x + 28, y))
             y += 34
 
@@ -181,7 +305,7 @@ class LauncherApp:
         action = "Продолжить" if has_progress else "Начать первый урок"
         self._add_button(action, 60, 330, 230, "continue")
 
-        heading = self.title_font.render("Уроки", True, TEXT)
+        heading = self.title_font.render("Уроки", True, self.theme.text)
         self.screen.blit(heading, (60, 410))
         y = 462
         for number, lesson in enumerate(self.controller.course.lessons, start=1):
@@ -189,11 +313,14 @@ class LauncherApp:
             status = self.controller.lesson_status(lesson)
             unlocked = status != "locked"
             pygame.draw.rect(
-                self.screen, CARD if unlocked else PANEL, rect, border_radius=12
+                self.screen,
+                self.theme.card if unlocked else self.theme.panel,
+                rect,
+                border_radius=12,
             )
-            number_color = ACCENT if unlocked else MUTED
+            number_color = self.theme.accent if unlocked else self.theme.muted
             number_surface = self.title_font.render(str(number), True, number_color)
-            title_color = TEXT if unlocked else MUTED
+            title_color = self.theme.text if unlocked else self.theme.muted
             title_surface = self.font.render(lesson.title, True, title_color)
             status_text = {
                 "completed": "Пройден",
@@ -201,7 +328,9 @@ class LauncherApp:
                 "not_started": "Не начат",
                 "locked": "Откроется после предыдущего урока",
             }[status]
-            status_color = SUCCESS if status == "completed" else MUTED
+            status_color = (
+                self.theme.success if status == "completed" else self.theme.muted
+            )
             self.screen.blit(number_surface, (rect.x + 24, rect.y + 25))
             self.screen.blit(title_surface, (rect.x + 74, rect.y + 20))
             self.screen.blit(
@@ -214,14 +343,16 @@ class LauncherApp:
 
     def _render_sidebar(self) -> None:
         pygame.draw.rect(
-            self.screen, PANEL, (0, 0, SIDEBAR_WIDTH, WINDOW_SIZE[1])
+            self.screen,
+            self.theme.panel,
+            (0, 0, SIDEBAR_WIDTH, WINDOW_SIZE[1]),
         )
         self._add_button("Все уроки", 18, 16, 125, "home", height=38)
         lesson_number = self.controller.course.lessons.index(
             self.controller.lesson
         ) + 1
         lesson_label = self.small_font.render(
-            f"УРОК {lesson_number}", True, ACCENT
+            f"УРОК {lesson_number}", True, self.theme.accent
         )
         self.screen.blit(lesson_label, (20, 68))
         title_lines = _wrap(
@@ -231,7 +362,7 @@ class LauncherApp:
         )[:2]
         for index, line in enumerate(title_lines):
             self.screen.blit(
-                self.task_font.render(line, True, TEXT),
+                self.task_font.render(line, True, self.theme.text),
                 (20, 91 + index * 20),
             )
 
@@ -243,25 +374,37 @@ class LauncherApp:
             active = task.id == self.controller.current_task.id
             pygame.draw.rect(
                 self.screen,
-                CARD_ACTIVE if active else CARD if unlocked else PANEL,
+                self.theme.card_active
+                if active
+                else self.theme.card
+                if unlocked
+                else self.theme.panel,
                 rect,
                 border_radius=9,
             )
             if active:
-                pygame.draw.rect(self.screen, ACCENT, rect, 2, border_radius=9)
-            color = self._task_color(task) if unlocked else MUTED
+                pygame.draw.rect(
+                    self.screen, self.theme.accent, rect, 2, border_radius=9
+                )
+            color = self._task_color(task) if unlocked else self.theme.muted
             self._draw_task_icon(task, (rect.x + 27, rect.centery), color)
             task_lines = _wrap(self.task_font, task.title, rect.width - 66)[:2]
             title_y = rect.centery - len(task_lines) * 9
             for index, line in enumerate(task_lines):
                 self.screen.blit(
-                    self.task_font.render(line, True, TEXT if unlocked else MUTED),
+                    self.task_font.render(
+                        line,
+                        True,
+                        self.theme.text if unlocked else self.theme.muted,
+                    ),
                     (rect.x + 52, title_y + index * 18),
                 )
             if unlocked:
                 self.task_rects.append((rect, task.id))
             else:
-                self._draw_lock((rect.right - 22, rect.centery), MUTED)
+                self._draw_lock(
+                    (rect.right - 22, rect.centery), self.theme.muted
+                )
             y += 67
 
     def _render_progress(self, x: int, y: int) -> None:
@@ -272,9 +415,9 @@ class LauncherApp:
             width = 54 if segment.optional else 42
             rect = pygame.Rect(cursor_x, y, width, 26)
             color = {
-                "passed": SUCCESS,
-                "failed": ERROR,
-                "not_started": (70, 84, 105),
+                "passed": self.theme.success,
+                "failed": self.theme.error,
+                "not_started": self.theme.progress_idle,
             }[segment.state]
             pygame.draw.rect(self.screen, color, rect, border_radius=6)
             outline = self._progress_outline_color(segment)
@@ -283,11 +426,11 @@ class LauncherApp:
             self._draw_progress_marker(segment, rect)
             cursor_x += width + 6
 
-    @staticmethod
     def _progress_outline_color(
+        self,
         segment: ProgressSegment,
     ) -> tuple[int, int, int] | None:
-        return TEXT if segment.selected else None
+        return self.theme.text if segment.selected else None
 
     def _progress_segments(self) -> list[ProgressSegment]:
         required_ids = set(self.controller.lesson.completion_tasks)
@@ -331,32 +474,44 @@ class LauncherApp:
         self, segment: ProgressSegment, rect: pygame.Rect
     ) -> None:
         if segment.symbol == "star":
-            self._draw_star((rect.x + 15, rect.centery), GOLD, radius=8)
+            self._draw_star(
+                (rect.x + 15, rect.centery), self.theme.gold, radius=8
+            )
             if segment.state == "passed":
-                self._draw_check((rect.x + 37, rect.centery), TEXT)
+                self._draw_check(
+                    (rect.x + 37, rect.centery), self.theme.button_text
+                )
                 return
             marker = {
                 "failed": "!",
                 "not_started": str(segment.number),
             }[segment.state]
-            marker_surface = self.small_font.render(marker, True, TEXT)
+            marker_surface = self.small_font.render(
+                marker, True, self.theme.button_text
+            )
             self.screen.blit(
                 marker_surface,
                 marker_surface.get_rect(center=(rect.x + 37, rect.centery)),
             )
             return
         if segment.state == "passed":
-            self._draw_check(rect.center, TEXT)
+            self._draw_check(rect.center, self.theme.button_text)
             return
         if segment.state == "failed":
             marker = "!"
-            marker_surface = self.small_font.render(marker, True, TEXT)
+            marker_surface = self.small_font.render(
+                marker, True, self.theme.button_text
+            )
             self.screen.blit(marker_surface, marker_surface.get_rect(center=rect.center))
             return
         if segment.symbol == "ship":
-            self._draw_ship((rect.centerx, rect.centery), TEXT, scale=0.7)
+            self._draw_ship(
+                (rect.centerx, rect.centery), self.theme.button_text, scale=0.7
+            )
             return
-        number = self.small_font.render(str(segment.number), True, TEXT)
+        number = self.small_font.render(
+            str(segment.number), True, self.theme.button_text
+        )
         self.screen.blit(number, number.get_rect(center=rect.center))
 
     def _render_lesson_content(self) -> None:
@@ -364,7 +519,7 @@ class LauncherApp:
         width = WINDOW_SIZE[0] - left - 34
         task = self.controller.current_task
         self._draw_task_icon(task, (left + 17, 48), self._task_color(task))
-        title = self.title_font.render(task.title, True, TEXT)
+        title = self.title_font.render(task.title, True, self.theme.text)
         self.screen.blit(title, (left + 42, 28))
 
         body_top = 82
@@ -372,19 +527,18 @@ class LauncherApp:
         content_rect = pygame.Rect(
             left, body_top, width, body_bottom - body_top
         )
-        pygame.draw.rect(self.screen, CARD, content_rect, border_radius=10)
         self._render_markdown(
             self.controller.sections[task.section],
-            content_rect.inflate(-28, -22),
+            content_rect,
         )
 
         if task.is_coding:
             if self.controller.message:
                 color = {
-                    "success": SUCCESS,
-                    "error": ERROR,
-                    "info": MUTED,
-                }.get(self.controller.message_level, MUTED)
+                    "success": self.theme.success,
+                    "error": self.theme.error,
+                    "info": self.theme.muted,
+                }.get(self.controller.message_level, self.theme.muted)
                 message_lines = _wrap(
                     self.small_font, self.controller.message, width - 20
                 )[:2]
@@ -394,7 +548,7 @@ class LauncherApp:
                         (left + 4, 603 + index * 20),
                     )
             reminder = self.small_font.render(
-                "Сохрани код в редакторе: Cmd+S", True, MUTED
+                "Сохрани код в редакторе: Cmd+S", True, self.theme.muted
             )
             self.screen.blit(reminder, (left + 4, 651))
 
@@ -426,79 +580,115 @@ class LauncherApp:
 
     def _render_markdown(self, text: str, rect: pygame.Rect) -> None:
         self.screen.set_clip(rect)
-        y = rect.y - self.scroll
-        blocks: list[tuple[str, str]] = []
-        in_code = False
-        paragraph: list[str] = []
-
-        def flush_paragraph() -> None:
-            if paragraph:
-                blocks.append(("text", " ".join(paragraph)))
-                paragraph.clear()
-
-        for raw_line in text.splitlines():
-            stripped = raw_line.strip()
-            if stripped.startswith(FENCE):
-                flush_paragraph()
-                in_code = not in_code
-                continue
-            if in_code:
-                blocks.append(("code", raw_line))
-            elif re.match(r"^#{1,6}\s+", stripped):
-                flush_paragraph()
-            elif not stripped:
-                flush_paragraph()
-                blocks.append(("space", ""))
-            elif stripped.startswith("- "):
-                flush_paragraph()
-                indentation = len(raw_line) - len(raw_line.lstrip())
-                kind = "subbullet" if indentation else "bullet"
-                blocks.append((kind, stripped[2:]))
+        card_width = min(CONTENT_COLUMN_WIDTH, rect.width)
+        card_x = rect.centerx - card_width // 2
+        inner_width = card_width - CONTENT_PADDING_X * 2
+        groups: list[list[tuple[str, str]]] = [[]]
+        for block in _markdown_blocks(text):
+            if block[0] == "divider":
+                if groups[-1]:
+                    groups.append([])
             else:
-                paragraph.append(stripped)
-        flush_paragraph()
+                groups[-1].append(block)
+        groups = [group for group in groups if group]
 
+        y = rect.y - self.scroll
+        for index, group in enumerate(groups):
+            content_height = self._markdown_group_height(group, inner_width)
+            card = pygame.Rect(
+                card_x,
+                y,
+                card_width,
+                content_height + CONTENT_PADDING_Y * 2,
+            )
+            pygame.draw.rect(
+                self.screen, self.theme.content_card, card, border_radius=14
+            )
+            self._draw_markdown_group(
+                group,
+                card.x + CONTENT_PADDING_X,
+                card.y + CONTENT_PADDING_Y,
+                inner_width,
+            )
+            y = card.bottom
+            if index < len(groups) - 1:
+                y += 14
+                divider_rect = self.submarine_divider.get_rect(
+                    centerx=rect.centerx, top=y
+                )
+                self.screen.blit(self.submarine_divider, divider_rect)
+                y = divider_rect.bottom + 14
+        self.screen.set_clip(None)
+
+    def _markdown_group_height(
+        self, blocks: list[tuple[str, str]], width: int
+    ) -> int:
+        height = 0
         for kind, value in blocks:
             if kind == "space":
-                y += 13
+                height += 18
             elif kind == "code":
-                code_rect = pygame.Rect(rect.x, y - 4, rect.width, 31)
-                pygame.draw.rect(
-                    self.screen, CODE_BACKGROUND, code_rect, border_radius=5
-                )
-                self.screen.blit(
-                    self.code_font.render(value, True, (205, 231, 246)),
-                    (rect.x + 12, y + 1),
-                )
-                y += 35
+                height += 43
             else:
                 line = _clean_markdown(value)
-                line_x = rect.x
-                line_width = rect.width
+                line_width = width - 22 if kind == "subbullet" else width
                 if kind == "bullet":
                     line = "• " + line
                 elif kind == "subbullet":
-                    line = "– " + line
+                    line = "• " + line
+                height += len(_wrap(self.font, line, line_width)) * 30 + 5
+        return height
+
+    def _draw_markdown_group(
+        self,
+        blocks: list[tuple[str, str]],
+        x: int,
+        y: int,
+        width: int,
+    ) -> None:
+        for kind, value in blocks:
+            if kind == "space":
+                y += 18
+            elif kind == "code":
+                code_rect = pygame.Rect(x, y, width, 35)
+                pygame.draw.rect(
+                    self.screen,
+                    self.theme.code_background,
+                    code_rect,
+                    border_radius=5,
+                )
+                self.screen.blit(
+                    self.code_font.render(value, True, self.theme.code_text),
+                    (x + 12, y + 4),
+                )
+                y += 43
+            else:
+                line = _clean_markdown(value)
+                line_x = x
+                line_width = width
+                if kind == "bullet":
+                    line = "• " + line
+                elif kind == "subbullet":
+                    line = "• " + line
                     line_x += 22
                     line_width -= 22
                 for wrapped in _wrap(self.font, line, line_width):
                     self.screen.blit(
-                        self.font.render(wrapped, True, TEXT), (line_x, y)
+                        self.font.render(wrapped, True, self.theme.text),
+                        (line_x, y),
                     )
-                    y += 29
-            if kind in {"text", "code"}:
-                y += 3
-        self.screen.set_clip(None)
+                    y += 30
+                y += 5
 
     def _task_color(self, task: Task) -> tuple[int, int, int]:
         return {
-            "article": ARTICLE,
-            "question": QUESTION,
-            "exercise": ACCENT,
-            "project": PROJECT,
-            "star": GOLD,
-            "summary": SUMMARY,
-        }.get(task.kind, MUTED)
+            "article": self.theme.article,
+            "question": self.theme.question,
+            "exercise": self.theme.accent,
+            "project": self.theme.project,
+            "star": self.theme.gold,
+            "summary": self.theme.summary,
+        }.get(task.kind, self.theme.muted)
 
     def _draw_task_icon(
         self,
@@ -506,68 +696,136 @@ class LauncherApp:
         center: tuple[int, int],
         color: tuple[int, int, int],
     ) -> None:
+        render_size = TASK_ICON_SIZE * TASK_ICON_RENDER_SCALE
+        icon_surface = pygame.Surface((render_size, render_size), pygame.SRCALPHA)
+        icon_center = (render_size // 2, render_size // 2)
+        self._draw_task_icon_shape(
+            icon_surface,
+            task,
+            icon_center,
+            color,
+            TASK_ICON_RENDER_SCALE,
+        )
+        icon = pygame.transform.smoothscale(
+            icon_surface, (TASK_ICON_SIZE, TASK_ICON_SIZE)
+        )
+        self.screen.blit(icon, icon.get_rect(center=center))
+
+    def _draw_task_icon_shape(
+        self,
+        target: pygame.Surface,
+        task: Task,
+        center: tuple[int, int],
+        color: tuple[int, int, int],
+        scale: int,
+    ) -> None:
         x, y = center
+
+        def point(offset_x: int, offset_y: int) -> tuple[int, int]:
+            return (x + offset_x * scale, y + offset_y * scale)
+
+        def stroke(width: int) -> int:
+            return width * scale
+
         if task.kind == "article":
+            pygame.draw.polygon(
+                target,
+                color,
+                [
+                    point(-15, -10),
+                    point(-2, -7),
+                    point(-2, 11),
+                    point(-15, 8),
+                ],
+            )
+            pygame.draw.polygon(
+                target,
+                color,
+                [
+                    point(15, -10),
+                    point(2, -7),
+                    point(2, 11),
+                    point(15, 8),
+                ],
+            )
             pygame.draw.line(
-                self.screen, color, (x, y - 10), (x, y + 10), 2
+                target,
+                self.theme.button_text,
+                point(0, -7),
+                point(0, 11),
+                stroke(3),
             )
-            pygame.draw.polygon(
-                self.screen,
-                color,
-                [
-                    (x - 13, y - 9),
-                    (x - 2, y - 6),
-                    (x - 2, y + 10),
-                    (x - 13, y + 7),
-                ],
-                2,
+            pygame.draw.line(
+                target,
+                self.theme.button_text,
+                point(-11, -5),
+                point(-5, -3),
+                stroke(2),
             )
-            pygame.draw.polygon(
-                self.screen,
-                color,
-                [
-                    (x + 13, y - 9),
-                    (x + 2, y - 6),
-                    (x + 2, y + 10),
-                    (x + 13, y + 7),
-                ],
-                2,
+            pygame.draw.line(
+                target,
+                self.theme.button_text,
+                point(11, -5),
+                point(5, -3),
+                stroke(2),
             )
         elif task.kind == "question":
-            pygame.draw.circle(self.screen, color, center, 12, 2)
-            mark = self.task_font.render("?", True, color)
-            self.screen.blit(mark, mark.get_rect(center=center))
+            pygame.draw.circle(target, color, point(0, -1), 13 * scale)
+            pygame.draw.polygon(
+                target,
+                color,
+                [point(-7, 8), point(-11, 14), point(-2, 11)],
+            )
+            mark = self.task_icon_font.render("?", True, self.theme.button_text)
+            target.blit(mark, mark.get_rect(center=point(0, -1)))
         elif task.kind == "exercise":
-            pygame.draw.lines(
-                self.screen,
+            pygame.draw.polygon(
+                target,
                 color,
-                False,
-                [(x - 3, y - 9), (x - 11, y), (x - 3, y + 9)],
-                2,
-            )
-            pygame.draw.lines(
-                self.screen,
-                color,
-                False,
-                [(x + 3, y - 9), (x + 11, y), (x + 3, y + 9)],
-                2,
-            )
-        elif task.kind == "project":
-            self._draw_ship(center, color)
-        elif task.kind == "star":
-            self._draw_star(center, color)
-        elif task.kind == "summary":
-            pygame.draw.line(
-                self.screen, color, (x - 9, y - 12), (x - 9, y + 12), 2
+                [
+                    point(-9, 5),
+                    point(-5, 9),
+                    point(11, -7),
+                    point(7, -11),
+                ],
             )
             pygame.draw.polygon(
-                self.screen,
+                target,
                 color,
-                [(x - 8, y - 11), (x + 12, y - 7), (x - 8, y - 1)],
-                2,
+                [point(-12, 12), point(-9, 5), point(-5, 9)],
+            )
+            pygame.draw.line(
+                target,
+                self.theme.button_text,
+                point(6, -6),
+                point(9, -3),
+                stroke(2),
+            )
+        elif task.kind == "project":
+            self._draw_ship_shape(target, center, color, scale=scale)
+        elif task.kind == "star":
+            self._draw_star_shape(target, center, color, radius=13 * scale)
+        elif task.kind == "summary":
+            pygame.draw.line(
+                target,
+                color,
+                point(-10, -13),
+                point(-10, 13),
+                stroke(4),
+            )
+            pygame.draw.circle(target, color, point(-10, -13), 3 * scale)
+            pygame.draw.polygon(
+                target,
+                color,
+                [
+                    point(-8, -11),
+                    point(13, -7),
+                    point(7, -1),
+                    point(-8, -4),
+                ],
             )
         else:
-            pygame.draw.circle(self.screen, color, center, 11, 2)
+            pygame.draw.circle(target, color, center, 12 * scale)
 
     def _draw_ship(
         self,
@@ -576,9 +834,19 @@ class LauncherApp:
         *,
         scale: float = 1.0,
     ) -> None:
+        self._draw_ship_shape(self.screen, center, color, scale=scale)
+
+    @staticmethod
+    def _draw_ship_shape(
+        target: pygame.Surface,
+        center: tuple[int, int],
+        color: tuple[int, int, int],
+        *,
+        scale: float = 1.0,
+    ) -> None:
         x, y = center
         pygame.draw.polygon(
-            self.screen,
+            target,
             color,
             [
                 (x - 14 * scale, y),
@@ -588,7 +856,20 @@ class LauncherApp:
             ],
         )
         pygame.draw.line(
-            self.screen, color, (x, y), (x, y - 10 * scale), max(1, int(2 * scale))
+            target,
+            color,
+            (x, y),
+            (x, y - 13 * scale),
+            max(2, round(3 * scale)),
+        )
+        pygame.draw.polygon(
+            target,
+            color,
+            [
+                (x + 2 * scale, y - 12 * scale),
+                (x + 2 * scale, y - 2 * scale),
+                (x + 11 * scale, y - 2 * scale),
+            ],
         )
 
     def _draw_star(
@@ -597,6 +878,16 @@ class LauncherApp:
         color: tuple[int, int, int],
         *,
         radius: int = 13,
+    ) -> None:
+        self._draw_star_shape(self.screen, center, color, radius=radius)
+
+    @staticmethod
+    def _draw_star_shape(
+        target: pygame.Surface,
+        center: tuple[int, int],
+        color: tuple[int, int, int],
+        *,
+        radius: int,
     ) -> None:
         x, y = center
         points = []
@@ -609,7 +900,7 @@ class LauncherApp:
                     y + math.sin(angle) * point_radius,
                 )
             )
-        pygame.draw.polygon(self.screen, color, points, 2)
+        pygame.draw.polygon(target, color, points)
 
     def _draw_lock(
         self,
@@ -661,11 +952,15 @@ class LauncherApp:
     ) -> None:
         rect = pygame.Rect(x, y, width, height)
         hovered = rect.collidepoint(pygame.mouse.get_pos())
-        color = BUTTON_HOVER if hovered else BUTTON
-        if self.controller.busy:
-            color = (67, 77, 93)
+        color = (
+            self.theme.button_disabled
+            if self.controller.busy
+            else self.theme.button_hover
+            if hovered
+            else self.theme.button
+        )
         pygame.draw.rect(self.screen, color, rect, border_radius=8)
-        surface = self.small_font.render(label, True, TEXT)
+        surface = self.small_font.render(label, True, self.theme.button_text)
         self.screen.blit(surface, surface.get_rect(center=rect.center))
         self.buttons.append(Button(label, rect, action))
 

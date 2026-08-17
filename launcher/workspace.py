@@ -8,9 +8,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from launcher.course import Course, Lesson
+from launcher.theme import DEFAULT_THEME_NAME, THEMES
 
 
-PROGRESS_VERSION = 2
+PROGRESS_VERSION = 3
 
 
 @dataclass
@@ -19,6 +20,7 @@ class Progress:
     current_task: str
     completed_tasks: set[str]
     earned_stars: set[str]
+    theme: str
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -27,6 +29,7 @@ class Progress:
             "current_task": self.current_task,
             "completed_tasks": sorted(self.completed_tasks),
             "earned_stars": sorted(self.earned_stars),
+            "theme": self.theme,
         }
 
 
@@ -54,6 +57,7 @@ class StudentWorkspace:
                     current_task=first_lesson.tasks[0].id,
                     completed_tasks=set(),
                     earned_stars=set(),
+                    theme=DEFAULT_THEME_NAME,
                 )
             )
 
@@ -66,7 +70,7 @@ class StudentWorkspace:
     def load_progress(self) -> Progress:
         data = json.loads(self.progress_path.read_text(encoding="utf-8"))
         version = data.get("version")
-        if version not in {1, PROGRESS_VERSION}:
+        if version not in {1, 2, PROGRESS_VERSION}:
             raise ValueError("Unsupported progress version")
         valid_lessons = {lesson.id for lesson in self.course.lessons}
         current_lesson = data.get("current_lesson")
@@ -85,6 +89,11 @@ class StudentWorkspace:
             current_task=str(current_task),
             completed_tasks=set(data.get("completed_tasks", [])) & valid_ids,
             earned_stars=set(data.get("earned_stars", [])) & valid_ids,
+            theme=(
+                str(data.get("theme"))
+                if data.get("theme") in THEMES
+                else DEFAULT_THEME_NAME
+            ),
         )
 
     def save_progress(self, progress: Progress) -> None:
@@ -127,3 +136,11 @@ class StudentWorkspace:
 
     def lesson_complete(self, lesson: Lesson, progress: Progress) -> bool:
         return set(lesson.completion_tasks) <= progress.completed_tasks
+
+    def set_theme(self, theme: str) -> Progress:
+        if theme not in THEMES:
+            raise ValueError(f"Unknown theme: {theme}")
+        progress = self.load_progress()
+        progress.theme = theme
+        self.save_progress(progress)
+        return progress

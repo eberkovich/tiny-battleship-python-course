@@ -23,6 +23,7 @@ packages = ["battleship_ui", "launcher", "runner", "lessons", "lessons.lesson_01
 
 [tool.setuptools.package-data]
 battleship_ui = ["assets/*.png"]
+launcher = ["assets/*.png"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

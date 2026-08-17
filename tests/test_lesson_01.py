@@ -85,5 +85,6 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
     assert "battleship.py" not in content
     assert "show_board(player)" not in sections["project"].lower()
     assert "show_board(enemy)" not in sections["project"].lower()
+    assert sections["api"].count("\n---\n") == 3
     for unintroduced in ("переменн", "цикл", "список", "условие"):
         assert unintroduced not in content

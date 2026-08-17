@@ -8,8 +8,8 @@ Current stage: `stage_01_lesson_01_vertical_slice.md`
 
 ## Workflow
 
-1. Read `AGENTS.md`, `context/architecture.md`, this index, and the current
-   stage file.
+1. Read `AGENTS.md`, `context/architecture.md`, `context/lesson_content.md`,
+   this index, and the current stage file.
 2. Before changing source, run the existing regression and prior-stage
    acceptance tests. A completed status is an expectation, not proof.
 3. Implement only the current stage and keep its status accurate.

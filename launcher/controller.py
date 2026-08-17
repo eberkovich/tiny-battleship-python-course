@@ -6,6 +6,7 @@ from pathlib import Path
 
 from launcher.course import Course, Lesson, Task, load_course, load_sections
 from launcher.editor import open_in_thonny
+from launcher.theme import DARK_THEME_NAME, LIGHT_THEME_NAME
 from launcher.workspace import Progress, StudentWorkspace
 from runner.process import RunningStudentProcess, start_student_process
 from runner.results import RunResult
@@ -80,6 +81,14 @@ class LauncherController:
 
     def continue_course(self) -> None:
         self.enter_lesson(self.progress.current_lesson)
+
+    def toggle_theme(self) -> None:
+        theme = (
+            LIGHT_THEME_NAME
+            if self.progress.theme == DARK_THEME_NAME
+            else DARK_THEME_NAME
+        )
+        self.progress = self.workspace.set_theme(theme)
 
     def lesson_unlocked(self, lesson_id: str) -> bool:
         index = next(

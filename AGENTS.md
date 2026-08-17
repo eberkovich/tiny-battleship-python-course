@@ -10,20 +10,23 @@ education platform.
 This file is the operating manual for agents. It defines how to work in the
 repository, not the detailed product design:
 
-- `context/architecture.md` is the source of truth for settled product,
-  curriculum, and technical decisions;
+- `context/architecture.md` is the source of truth for settled product and
+  technical decisions;
+- `context/lesson_content.md` is the source of truth for lesson-authoring rules;
 - `plans/README.md` and its current stage file define the active scope and
   completion criteria;
 - `COURSE_DESIGN.md` and `CURRICULUM.yaml`, when present, contain supporting
-  course rationale and lesson metadata; they must conform to the architecture.
+  course rationale and lesson metadata; they must conform to both context
+  documents.
 
 Read the relevant documents before architectural, curriculum, or implementation
 work. Do not silently change a settled decision or expand the active stage.
 
-Any proposed deviation from this file, `context/architecture.md`, or the active
-stage plan must be explicitly discussed with and approved by the user before it
-is implemented. Update every affected document in the same change so the
-documented decisions and the implementation never knowingly diverge.
+Any proposed deviation from this file, `context/architecture.md`,
+`context/lesson_content.md`, or the active stage plan must be explicitly
+discussed with and approved by the user before it is implemented. Update every
+affected document in the same change so the documented decisions and the
+implementation never knowingly diverge.
 
 Claims added to `context/architecture.md` must preserve the project's logical
 invariants. Do not document an impossible or invalid state as normal behavior;
@@ -36,8 +39,7 @@ check each claim against the relevant state and domain invariants first.
 - Keep game state, decisions, algorithms, and control flow in student code.
 - Keep the public UI small and procedural; internal implementation may use OOP.
 - Keep the launcher lesson-agnostic and V1 small.
-- Write all child-facing lesson text, launcher labels, hints, and check feedback
-  in Russian. Keep code identifiers and developer documentation in English.
+- Follow `context/lesson_content.md` for all child-facing content.
 - Prefer the smallest working implementation. Do not add infrastructure for a
   hypothetical future need.
 
@@ -87,21 +89,13 @@ dependency, dependency version, or supported Python version changes, update
 
 When creating or changing a lesson:
 
-1. Inspect previous lessons and preserve their structure and tone.
-2. Use previously introduced concepts plus at most the specified new concept.
-3. Make exercises require thought rather than direct copying.
-4. Ensure the cumulative game milestone genuinely needs the new concept.
-5. For every exercise, project milestone, and star task:
-   - make the expected observable result unambiguous;
-   - verify that the task and its starter use only material introduced according
-     to the prerequisite rules in `context/architecture.md`;
-   - maintain at least one passing reference solution;
-   - run it through the same behavioral checker used for student code;
-   - verify that the checker tests only requirements stated to the child.
-6. Do not show reference solutions in child-facing task text.
-7. Add behavioral checks and an optional **«Задача со звёздочкой»**.
-8. Review all child-facing material for Russian-only presentation, age
-   appropriateness, excess text, and long gaps between interactions.
+1. Read `context/lesson_content.md`, the architecture, and the active plan.
+2. Inspect previous lessons and preserve their established structure and tone.
+3. Keep the curriculum order and ensure the cumulative milestone needs the
+   lesson's new concept.
+4. Validate every coding task with a passing reference solution through the
+   same behavioral checker used for student code.
+5. Run focused lesson checks, applicable regressions, and the full suite.
 
 Do not independently reorder the curriculum or introduce extra major concepts
 for implementation convenience.

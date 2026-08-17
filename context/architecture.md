@@ -1,23 +1,15 @@
 # Tiny Battleship: V1 Architecture
 
-This document is the source of truth for settled product, curriculum, and
-technical decisions. `AGENTS.md` defines how agents maintain the project; stage
-plans define what is implemented now.
+This document is the source of truth for settled product and technical
+decisions. `context/lesson_content.md` defines lesson-authoring rules,
+`AGENTS.md` defines how agents maintain the project, and stage plans define what
+is implemented now.
 
 ## Product and teaching constraints
 
-The course is for an active child of about eight who already knows basic
-turtle-, maze-, or block-style programming and is supported by an experienced
-programmer parent. Lead with a concrete problem and introduce syntax as a tool
-for solving it. Use short explanations, frequent interaction, visible game
-progress, stars, debugging, and optional challenges without speed pressure.
-
-Introduce at most one major new concept per lesson. A lesson normally contains
-a motivating problem, short explanation, an optional interactive question, two
-or three isolated exercises, a cumulative Battleship project upgrade, an optional
-**«Задача со звёздочкой»**, and **«Итоги урока»**. All
-child-facing content and interaction is in Russian; code identifiers and
-developer documentation are in English.
+The course teaches procedural Python through one cumulative Battleship game;
+it is not a generic education platform. Follow `context/lesson_content.md` for
+the learner profile, teaching style, lesson structure, and content rules.
 
 ## Main parts
 
@@ -144,58 +136,47 @@ current step is always unlocked; a locked step cannot be selected or saved as
 current. When all required tasks pass, unlock the summary; the optional star
 task remains available.
 
-## Lesson presentation and authoring
+## Lesson presentation
 
 Distinguish lesson-step types with a pygame-drawn icon, shape, and color; do not
 rely on emoji or color alone. A sidebar card contains one icon and the step
 title. The opened page contains one icon and the same title as its heading. Do
 not add visible type captions such as **«Материал»**, **«Упражнение»**,
-**«Пишем игру»**, or **«Со звёздочкой»** around those titles.
+**«Пишем игру»**, or **«Со звёздочкой»** around those titles. Icons use bold,
+simple, playful silhouettes with smoothly antialiased edges that remain clear
+at sidebar size.
 
 Use these internal step kinds and icons:
 
 - `article` — open book;
-- `question` — question mark;
-- `exercise` — pencil or code brackets;
+- `question` — speech bubble with a question mark;
+- `exercise` — pencil;
 - `project` — ship;
 - `star` — five-point star;
 - `summary` — finish flag in soft violet, distinct from green completion.
 
-The cumulative project section is always named **«Пишем игру»**. The final
-summary is always named **«Итоги урока»**; it is a `summary`, not material or a
-coding task.
+Child-facing titles, wording, explanation order, and authoring requirements are
+defined in `context/lesson_content.md`. A `summary` is informational, not
+material or a coding task.
 
-Before a task, checker, or starter uses an API call, constant, state, or
-programming concept, an earlier lesson step must explicitly introduce it.
-Beginner-facing API material shows the exact call form in a monospace block,
-explains every argument as a bullet in the form `argument_name — explanation`,
-gives a complete example with values different from the task answer, and states
-the expected visible result. When an argument accepts one of a fixed set of
-public values, list and explain every value available to the child at that
-point. Do not call such values an enum in child-facing text. A checker must not
-require behavior based on material that has not been introduced. When an API
-and a separate concept such as coordinates are taught, explain them in separate
-articles: API first, concept second. The concept article may use already
-introduced API calls in its examples but must not silently introduce new ones.
+Render lesson text in a narrow column of lightly contrasted cards with generous
+padding, line spacing, and visible space between major sections. A standalone
+Markdown `---` separates major cards and is rendered as a compact group of
+three yellow submarines. Do not use decorative dividers between ordinary
+paragraphs.
 
-Exercise and project descriptions state the visible goal and name relevant API
-commands, but do not show the final solution. Examples use arguments different
-from the required answer. Child-facing text says **«редактор»**, never names
-Thonny or student filenames. Tool names and filenames may appear in
-parent/developer documentation and logs.
+The launcher offers dark and light schemes through one fixed top-right switch
+on every screen. Both schemes share the same layout, rendering and event logic,
+icon set, and raster assets; only named palette constants differ. In the
+light scheme, the page background is visibly darker than the content cards so
+their boundaries remain clear. Dark is the default, and the selected scheme is
+saved independently in each student's `progress.json`.
 
-Do not require the child to repeat behavior already completed and checked
-earlier merely to prepare a later task. A cumulative project naturally keeps
-the child's earlier code. When an isolated exercise or star task depends on
-earlier behavior, include the necessary previously taught setup in its starter
-and ask the child only for the new result. Require repetition only when it is an
-explicit learning objective.
-
-A question step is optional. Include it only when the launcher can collect an
-answer and provide immediate feedback. Do not add passive prompts such as
-“think”, “guess”, or “show with your finger” merely to satisfy a template. If a
-prompt cannot be meaningfully answered, integrate its useful content into the
-preceding article or remove it.
+Theme support is a UI invariant: every visual change must work through the
+shared renderer and shared assets in both schemes. Do not add theme-specific
+layout or behavior branches, and do not duplicate behavioral tests by palette;
+test shared logic once and visually inspect readability and contrast in both
+schemes.
 
 ## Coding-task workflow
 
@@ -299,6 +280,7 @@ project dependency, dependency version, or supported Python version changes.
 For V1, one `CURRICULUM.yaml` is sufficient. It defines lesson order and each
 lesson's compact pedagogical contract: the new concept, motivating problem,
 game milestone, prerequisites, required behavior, paths, and star challenge.
+Its lesson content must follow `context/lesson_content.md`.
 
 Detailed material stays in its natural format:
 
