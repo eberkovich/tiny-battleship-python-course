@@ -277,12 +277,17 @@ class LauncherApp:
                 "not_started": (70, 84, 105),
             }[segment.state]
             pygame.draw.rect(self.screen, color, rect, border_radius=6)
-            if segment.optional:
-                pygame.draw.rect(self.screen, GOLD, rect, 1, border_radius=6)
-            if segment.selected:
-                pygame.draw.rect(self.screen, TEXT, rect, 2, border_radius=6)
+            outline = self._progress_outline_color(segment)
+            if outline is not None:
+                pygame.draw.rect(self.screen, outline, rect, 2, border_radius=6)
             self._draw_progress_marker(segment, rect)
             cursor_x += width + 6
+
+    @staticmethod
+    def _progress_outline_color(
+        segment: ProgressSegment,
+    ) -> tuple[int, int, int] | None:
+        return TEXT if segment.selected else None
 
     def _progress_segments(self) -> list[ProgressSegment]:
         required_ids = set(self.controller.lesson.completion_tasks)

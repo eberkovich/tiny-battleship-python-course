@@ -138,7 +138,11 @@ Completed lessons remain available. The current lesson is available; later
 lessons are visible but locked until all required coding tasks in the current
 lesson pass. The **«Итоги урока»** step is also visible but locked until every
 required exercise and the cumulative project task in that lesson pass. Optional
-star tasks never block the summary or progression.
+star tasks never block the summary or progression. Opening a lesson shows its
+saved current step, or its first step when no current step has been saved. The
+current step is always unlocked; a locked step cannot be selected or saved as
+current. When all required tasks pass, unlock the summary; the optional star
+task remains available.
 
 ## Lesson presentation and authoring
 
@@ -225,9 +229,10 @@ optional star exercise uses a star with its exercise number, for example `★4`.
 Separate the star segment slightly without turning it into a second caption or
 counter. Green ✓ means passed, grey number or symbol means not attempted, red !
 means the latest attempt failed, and an outline marks the selected task. Do not
-rely on color alone. Persist successful completion; failed state is temporary.
-Articles, questions, and summaries are excluded. The star never blocks lesson
-completion.
+rely on color alone. The star symbol and extra spacing are the optional task's
+only permanent distinction; it has an outline only while selected. Persist
+successful completion; failed state is temporary. Articles, questions, and
+summaries are excluded. The star never blocks lesson completion.
 
 Exercise, project, and star completion are recorded separately. Source code and
 verification traces are never stored in progress. Completed tasks may be

@@ -97,7 +97,7 @@ until the first lesson that needs them.
 - A minimal pygame launcher with a course home, lesson navigation, step icons
   without duplicate type captions, combined Run, per-task progress including
   the optional star segment, a locked summary until all required work passes,
-  and `--student-dir` support.
+  safe restoration of the current unlocked step, and `--student-dir` support.
 - Russian Lesson 1 content, isolated exercise/star templates, starter project,
   and passing reference programs for verifier tests.
 - Independent per-student `battleship.py`, exercise files, and `progress.json`.
@@ -146,7 +146,7 @@ control flow; inspect visuals separately.
 | Fake UI | Records deterministic semantic events, resets between runs, never creates a display, and does not retain traces as telemetry. |
 | Runner | Covers success, required board not shown, wrong board, invalid coordinates, syntax/runtime errors, and timeout; the launcher survives every failure. |
 | Lesson | API article introduces every call, constant, state, and argument before any task or starter uses it; arguments use `argument_name — explanation` bullets and list every available fixed value without saying “enum”; separate coordinate article introduces no API; examples differ from task answers; no passive prediction; clear non-solution task wording; passing reference for every checked task; behavioral checks only; required Russian structure; no variables, input, conditions, loops, lists, OOP, fleet validation, hit logic, or AI. |
-| Launcher | Shows course home and lesson navigation; distinguishes step types with icons but no duplicate type captions; keeps `summary` visible but locked until all required exercises and the project pass; keeps later lessons locked until the previous lesson passes; optional stars block neither gate; uses a finish flag for the `summary`; omits filenames and editor brand from child text; opens the correct file; never overwrites source; preserves work/progress; isolates two students; supports spaces/Cyrillic in paths; checks through fake UI before visual play through real UI; shows behavioral failures visually but does not repeat technical failures; uses one **«Запустить»** action; shows every coding task, including the optional numbered star, in segmented progress; shows contextual feedback; and reports errors in Russian. |
+| Launcher | Shows course home and lesson navigation; distinguishes step types with icons but no duplicate type captions; opens the saved current step or the lesson's first step; never selects or saves a locked step as current; unlocks `summary` when all required exercises and the project pass; keeps later lessons locked until the previous lesson passes; optional stars block neither gate; distinguishes an unselected star by its symbol and spacing without a selection-like frame; uses a finish flag for the `summary`; omits filenames and editor brand from child text; opens the correct file; never overwrites source; preserves work/progress; isolates two students; supports spaces/Cyrillic in paths; checks through fake UI before visual play through real UI; shows behavioral failures visually but does not repeat technical failures; uses one **«Запустить»** action; shows every coding task, including the optional numbered star, in segmented progress; shows contextual feedback; and reports errors in Russian. |
 | Installer | Shell syntax; controlled-PATH cases for Python 3 as `python3` or `python`, versioned Homebrew Python without an unversioned link, supported Homebrew Python without Tk, Homebrew Tk failure without system fallback, Python 2, missing/old Python, existing `.venv`, repeated runs, dependency failure, and spaces/Cyrillic; prefers matching Homebrew Tk without `sudo`, never modifies system Python, and verifies launcher/UI/Thonny startup and Russian instructions. |
 
 A passing Lesson 1 project trace contains the equivalent of:
@@ -197,7 +197,7 @@ reverified.
 
 - Shell syntax, compilation, dependency consistency, focused tests, the full
   suite, reference Play, reference Check, and the headless launcher flow pass.
-- The full suite currently contains 55 passing tests.
+- The full suite currently contains 56 passing tests.
 - Game and launcher screenshots were inspected without pixel assertions, and a
   real macOS pygame game window was opened and closed successfully. The revised
   course home, typed lesson navigation, API article, coordinate article, and
@@ -207,7 +207,8 @@ reverified.
   vertical three-deck ships. The final miss sprite was inspected at 40×40 on
   both the open player board and closed enemy board. The summary sidebar card
   was inspected in its locked and unlocked states, including the drawn lock and
-  completion marks.
+  completion marks. The star progress segment was inspected with an outline
+  only in its selected state.
 - The installed dependency set is consistent, including `pygame-ce` 2.5.8,
   PyYAML 6.0.3, Thonny 5.0.0, and pytest 9.1.1.
 - The first actual `install.command` fallback downloaded the pinned package and

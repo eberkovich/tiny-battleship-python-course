@@ -25,6 +25,10 @@ stage plan must be explicitly discussed with and approved by the user before it
 is implemented. Update every affected document in the same change so the
 documented decisions and the implementation never knowingly diverge.
 
+Claims added to `context/architecture.md` must preserve the project's logical
+invariants. Do not document an impossible or invalid state as normal behavior;
+check each claim against the relevant state and domain invariants first.
+
 ## Cross-task guardrails
 
 - Keep student code procedural/structured Python. Do not introduce

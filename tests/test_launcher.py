@@ -164,6 +164,19 @@ def test_launcher_renders_course_home_and_typed_lesson_navigation(
     assert "check" not in actions
 
 
+def test_opening_lesson_shows_saved_current_step(tmp_path: Path) -> None:
+    student = tmp_path / "student"
+    controller = LauncherController(student)
+    controller.enter_lesson("lesson_01")
+    assert controller.current_task.id == "api"
+
+    controller.select_task("coordinates")
+    reopened = LauncherController(student)
+    reopened.enter_lesson("lesson_01")
+
+    assert reopened.current_task.id == "coordinates"
+
+
 def test_progress_models_every_coding_task_without_a_separate_star_counter(
     tmp_path: Path,
 ) -> None:
@@ -189,12 +202,14 @@ def test_progress_models_every_coding_task_without_a_separate_star_counter(
     ]
     assert [segment.number for segment in segments] == [1, 2, 3, None, 4]
     assert segments[-1].optional
+    assert app._progress_outline_color(segments[-1]) is None
 
     controller.select_task("star")
     controller.failed_tasks.add("star")
     star = app._progress_segments()[-1]
     assert star.state == "failed"
     assert star.selected
+    assert app._progress_outline_color(star) is not None
 
 
 def test_summary_has_its_own_kind_and_finish_color(tmp_path: Path) -> None:
