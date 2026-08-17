@@ -4,7 +4,7 @@ Current stage: `stage_01_lesson_01_vertical_slice.md`
 
 | Stage | Status | Description |
 | --- | --- | --- |
-| 01 | Planned | Russian Lesson 1 vertical slice: 10×10 boards, launcher, real/fake UI, Play, Check, and macOS installation |
+| 01 | In progress | Revise the completed vertical slice after the first child-facing launcher review, then repeat full and visual verification |
 
 ## Workflow
 

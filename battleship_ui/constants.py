@@ -1,0 +1,8 @@
+PLAYER = "player"
+ENEMY = "enemy"
+
+DECK_IDLE = "deck_idle"
+
+BOARDS = (PLAYER, ENEMY)
+DECK_STATES = (DECK_IDLE,)
+BOARD_SIZE = 10

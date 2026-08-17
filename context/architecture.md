@@ -13,9 +13,9 @@ for solving it. Use short explanations, frequent interaction, visible game
 progress, stars, debugging, and optional challenges without speed pressure.
 
 Introduce at most one major new concept per lesson. A lesson normally contains
-a motivating problem, short explanation, prediction, two or three isolated
-exercises, a cumulative Battleship project upgrade, an optional
-**«Задача со звёздочкой»**, and **«Что изменилось в твоей игре?»**. All
+a motivating problem, short explanation, an optional interactive question, two
+or three isolated exercises, a cumulative Battleship project upgrade, an optional
+**«Задача со звёздочкой»**, and **«Итоги урока»**. All
 child-facing content and interaction is in Russian; code identifiers and
 developer documentation are in English.
 
@@ -25,7 +25,8 @@ The project has three product-level parts:
 
 1. **Game/UI library** — the small procedural API used by student code, with a
    real graphical implementation and a fake implementation for checks.
-2. **Launcher** — lesson navigation, Play, Check, Open Code, progress, and stars.
+2. **Launcher** — course introduction, lesson navigation, editor launching,
+   combined run/check flow, progress, and stars.
 3. **Lessons** — curriculum metadata, child-facing text, exercises, cumulative
    Battleship upgrades, behavioral checks, and star challenges.
 
@@ -123,7 +124,74 @@ but it must never overwrite an existing student source file, including
 Checkpoint creation and restoration are deferred beyond Stage 1. Add them only
 when the cumulative program is large enough to justify the recovery workflow.
 
-## Lesson tasks and external-editor workflow
+## Course and lesson navigation
+
+The launcher has two navigation levels:
+
+- **Course home** — a short Russian introduction explaining what the child will
+  build, a lesson list, and **«Начать первый урок»** or **«Продолжить»**. This
+  introduction is not Lesson 0.
+- **Lesson screen** — **«Все уроки»**, the lesson title and steps, required-task
+  progress, and navigation to the next unlocked lesson.
+
+Completed lessons remain available. The current lesson is available; later
+lessons are visible but locked until all required coding tasks in the current
+lesson pass. Optional star tasks never block progression.
+
+## Lesson presentation and authoring
+
+Distinguish lesson-step types with a pygame-drawn icon, shape, and color; do not
+rely on emoji or color alone. A sidebar card contains one icon and the step
+title. The opened page contains one icon and the same title as its heading. Do
+not add visible type captions such as **«Материал»**, **«Упражнение»**,
+**«Пишем игру»**, or **«Со звёздочкой»** around those titles.
+
+Use these internal step kinds and icons:
+
+- `article` — open book;
+- `question` — question mark;
+- `exercise` — pencil or code brackets;
+- `project` — ship;
+- `star` — five-point star;
+- `summary` — finish flag in soft violet, distinct from green completion.
+
+The cumulative project section is always named **«Пишем игру»**. The final
+summary is always named **«Итоги урока»**; it is a `summary`, not material or a
+coding task.
+
+Before a task, checker, or starter uses an API call, constant, state, or
+programming concept, an earlier lesson step must explicitly introduce it.
+Beginner-facing API material shows the exact call form in a monospace block,
+explains every argument as a bullet in the form `argument_name — explanation`,
+gives a complete example with values different from the task answer, and states
+the expected visible result. When an argument accepts one of a fixed set of
+public values, list and explain every value available to the child at that
+point. Do not call such values an enum in child-facing text. A checker must not
+require behavior based on material that has not been introduced. When an API
+and a separate concept such as coordinates are taught, explain them in separate
+articles: API first, concept second. The concept article may use already
+introduced API calls in its examples but must not silently introduce new ones.
+
+Exercise and project descriptions state the visible goal and name relevant API
+commands, but do not show the final solution. Examples use arguments different
+from the required answer. Child-facing text says **«редактор»**, never names
+Thonny or student filenames. Tool names and filenames may appear in
+parent/developer documentation and logs.
+
+Do not require the child to repeat behavior already completed and checked
+earlier merely to prepare a later task. A cumulative project naturally keeps
+the child's earlier code. When an isolated exercise or star task depends on
+earlier behavior, include the necessary previously taught setup in its starter
+and ask the child only for the new result. Require repetition only when it is an
+explicit learning objective.
+
+A question step is optional. Include it only when the launcher can collect an
+answer and provide immediate feedback. Do not add passive prompts such as
+“think”, “guess”, or “show with your finger” merely to satisfy a template. If a
+prompt cannot be meaningfully answered, integrate its useful content into the
+preceding article or remove it.
+
+## Coding-task workflow
 
 Lessons contain two distinct kinds of coding work:
 
@@ -134,13 +202,30 @@ Lessons contain two distinct kinds of coding work:
 The optional star challenge is an isolated exercise unless a later lesson
 explicitly requires a project extension. It never blocks lesson completion.
 
-For each coding task, the launcher shows the current task and file, then offers
-Russian actions equivalent to **Open Code**, **Run**, and **Check**. Open Code
-opens that exact student file in Thonny. Run and Check always read the saved file
-from disk and execute it in a fresh subprocess; the launcher reminds the child
-to save in Thonny first. Run never changes progress. A successful Check records
-the stable task ID in `progress.json`; a failed Check leaves progress unchanged
-and returns concise Russian feedback.
+Each coding task has two child-facing actions:
+
+- **«Открыть редактор»** opens the correct student file;
+- **«Запустить»** reads the saved file, checks it with the fake UI, and then
+  runs it with the real UI.
+
+A behavioral failure still opens the real UI so the child can inspect the
+result. Syntax errors, runtime failures before useful drawing, and timeouts are
+reported without repeating the run. Only a successful behavioral check records
+completion.
+
+Show feedback inside the selected task near its actions. Do not reserve an
+empty status panel or show placeholder messages such as **«Выбери шаг урока»**.
+Use the generic reminder **«Сохрани код в редакторе: Cmd+S»**.
+
+Show every coding task as one segment in the progress bar. Required exercises
+use their exercise numbers, the cumulative project uses a ship symbol, and an
+optional star exercise uses a star with its exercise number, for example `★4`.
+Separate the star segment slightly without turning it into a second caption or
+counter. Green ✓ means passed, grey number or symbol means not attempted, red !
+means the latest attempt failed, and an outline marks the selected task. Do not
+rely on color alone. Persist successful completion; failed state is temporary.
+Articles, questions, and summaries are excluded. The star never blocks lesson
+completion.
 
 Exercise, project, and star completion are recorded separately. Source code and
 verification traces are never stored in progress. Completed tasks may be
@@ -151,25 +236,48 @@ reopened, but the launcher never restores or overwrites their files.
 Provide an idempotent `install.command` script that prepares the project on a
 supported Intel or Apple Silicon Mac. It must:
 
+Stage 1 supports Python 3.11 through 3.14. If a supported Homebrew Python is
+already installed without Tk, the script first installs the matching
+`python-tk@<major.minor>` Homebrew formula and reuses that interpreter. This
+route does not use `sudo`. When a complete Python installation is still
+necessary, the script uses the pinned official Python 3.13.15 universal macOS
+package and verifies its published SHA-256 checksum and Apple-trusted package
+signature.
+
+If installing Tk for an existing supported Homebrew Python fails, stop with an
+actionable error. Do not silently fall back to the Python.org package in that
+case because that package adds its framework to the shell path and may change
+which interpreter the unqualified `python3` command selects.
+
+Discover Homebrew's versioned executables under
+`<brew-prefix>/opt/python@3.x/bin/python3.x` as well as the ordinary
+`python3` and `python` commands. A Homebrew upgrade may leave the versioned
+executable valid while removing an unversioned `python3` link; this must not
+trigger the Python.org fallback.
+
 1. Look for both `python3` and `python` and execute a version check rather than
    assuming either command's meaning.
 2. Accept a compatible Python 3 interpreter from either command. The minimum
    supported version must match the project's pinned dependencies.
 3. If `python` starts Python 2, leave it untouched and install Python 3 under
    the `python3` command.
-4. If Python 3 is missing or too old, install a pinned, signed, official macOS
-   Python 3 distribution after obtaining any required administrator approval.
-5. Never replace, delete, modify, or globally alias `/usr/bin/python`,
+4. If a supported Homebrew Python lacks Tk, install its matching Homebrew Tk
+   formula. If that operation fails, stop without invoking the system-wide
+   installer.
+5. If Python 3 is missing, too old, or still lacks Tk, install a pinned, signed,
+   official macOS Python 3 distribution after obtaining any required
+   administrator approval, except after the Homebrew failure described above.
+6. Never replace, delete, modify, or globally alias `/usr/bin/python`,
    `/usr/bin/python3`, or another system-managed interpreter.
-6. Create a project-local `.venv` with the selected Python 3 interpreter and
+7. Create a project-local `.venv` with the selected Python 3 interpreter and
    use `.venv/bin/python` for every subsequent project command.
-7. Install all pinned project dependencies into that virtual environment,
+8. Install all pinned project dependencies into that virtual environment,
    including `pygame-ce` and Thonny, and verify that the launcher, UI, and editor
    can be started.
-8. Be safe to run repeatedly without overwriting student workspaces or progress.
-9. Fail with a nonzero exit status and an actionable Russian message when
+9. Be safe to run repeatedly without overwriting student workspaces or progress.
+10. Fail with a nonzero exit status and an actionable Russian message when
    installation cannot be completed.
-10. Finish by printing a Russian success message with exact commands for
+11. Finish by printing a Russian success message with exact commands for
     starting the launcher for a selected `--student-dir`.
 
 The normal `run.command` wrapper must use the virtual-environment interpreter
@@ -228,21 +336,29 @@ one deck. A deck has three visual states:
 - `DECK_DAMAGED` — hit and visible;
 - `DECK_SUNK` — part of a sunk ship and visible.
 
-Water is separate from deck state and has two visual states:
+Use a playful nautical 2D style with wood, brass, ocean blue, cyan accents, and
+strong outlines. Graphics must remain clear at 40×40. Deck tiles fill the cell
+and repeat unchanged horizontally or vertically. Visual effects never affect
+game logic or verification. In V1, an intact deck is a static wooden tile with
+a short mast and a white-and-cyan sail. A miss uses the open-water blue with a
+large dark cartoon cannonball and a bold white-and-cyan splash. Grid lines
+remain visible between cells.
 
-- `WATER_IDLE` — open water on the player board and a closed cell on the enemy
-  board;
-- `WATER_FIRED` — a visible miss on either board.
+Water is separate from deck state. Untouched water is the initial cell state: it
+looks open on the player board and closed on the enemy board. A missed shot is
+visible on either board. The real and fake implementations may represent these
+as internal states, but the student-facing API does not expose water-state
+constants or require the child to draw ordinary water.
 
 Both fixed 10×10 boards and their cell state exist from the beginning, but both
 boards are hidden initially. `show_board(board)` makes one board visible.
 Calling it repeatedly is harmless and does not reset the board.
 
-Student code may draw water or decks before or after showing a board. Drawing
-on a hidden board updates its state; the result becomes visible when the board
-is shown. Forgetting to show a required board is a behavioral verification
-failure, not a runtime error. Invalid board constants, coordinates, and cell
-states still fail clearly.
+Student code may mark a miss or draw decks before or after showing a board.
+Updating a hidden board changes its state; the result becomes visible when the
+board is shown. Forgetting to show a required board is a behavioral
+verification failure, not a runtime error. Invalid board constants,
+coordinates, and deck states still fail clearly.
 
 Do not expose `hide_board()` in V1 because no current lesson or game phase needs
 it. Add it only when a concrete student task requires hiding an entire board.
@@ -290,32 +406,27 @@ is exposed to the student.
 
 ## Current public API direction
 
-Exact names may be refined during the Lesson 1 vertical slice. The intended
-shape is small and procedural:
+Lesson 1 exposes only the API it teaches:
 
 ```python
 PLAYER
 ENEMY
 
-WATER_IDLE
-WATER_FIRED
 DECK_IDLE
-DECK_DAMAGED
-DECK_SUNK
 
 show_board(board)
-wait_for_cell(board)
-wait_for_button(message, button_text)
-draw_water(board, x, y, state=WATER_IDLE)
 draw_deck(board, x, y, state=DECK_IDLE)
-show_invalid_cell(board, x, y)
-show_message(text)
+show_miss(board, x, y)
 ```
 
-Use `draw_water(..., WATER_IDLE)` to restore an idle water cell and
-`draw_water(..., WATER_FIRED)` to show a miss.
+`show_board` reveals a board, `draw_deck` places or updates a deck, and
+`show_miss` displays an unsuccessful shot. Untouched water already exists and
+does not need a public drawing operation.
 
 The real and fake implementations must provide the same student-facing API.
-`wait_for_button` is not required by Lesson 1; add it when a later lesson first
-needs an explicit student-controlled phase transition. During Lesson 1 Play,
-the runner keeps the finished pygame window open internally until it is closed.
+Later lessons may add deck damage and sunk states, blocking cell or button
+input, placement feedback, and messages only when those capabilities are first
+taught and needed. Before adding or renaming anything, review the complete API
+for consistent verbs, argument order, defaults, terminology, and abstraction
+level. During Lesson 1 Run, the runner keeps the finished pygame window open
+internally until it is closed.

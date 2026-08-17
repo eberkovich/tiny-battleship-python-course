@@ -14,6 +14,7 @@ tmp/
 
 # Virtual environments and packaging output
 .venv/
+.venv.previous/
 venv/
 build/
 dist/
@@ -27,3 +28,6 @@ students/
 
 # Runtime logs
 *.log
+
+# Local visual verification output
+screenshots/

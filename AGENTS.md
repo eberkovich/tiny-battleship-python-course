@@ -63,10 +63,13 @@ For every implementation change:
 4. Update concise documentation when behavior, public APIs, file layout, or
    commands change.
 
-When the student-facing UI API changes, update its real and fake implementations
-and their tests together. Prefer black-box behavioral checks and semantic events
-over pixel or exact-source assertions. Run arbitrary student code only in a
-subprocess; never import it into the launcher process.
+When the student-facing UI API changes, review the complete API for consistent
+naming, verb meaning, argument order, defaults, abstraction level, and
+terminology. Update every affected real and fake implementation, export,
+lesson, check, test, architecture decision, and active-stage requirement in the
+same change. Prefer black-box behavioral checks and semantic events over pixel
+or exact-source assertions. Run arbitrary student code only in a subprocess;
+never import it into the launcher process.
 
 Do not weaken a test merely to make an implementation pass. If a test reflects
 an outdated decision, explain the mismatch before changing it. Whenever a
@@ -81,8 +84,16 @@ When creating or changing a lesson:
 2. Use previously introduced concepts plus at most the specified new concept.
 3. Make exercises require thought rather than direct copying.
 4. Ensure the cumulative game milestone genuinely needs the new concept.
-5. Add behavioral checks and an optional **«Задача со звёздочкой»**.
-6. Review all child-facing material for Russian-only presentation, age
+5. For every exercise, project milestone, and star task:
+   - make the expected observable result unambiguous;
+   - verify that the task and its starter use only material introduced according
+     to the prerequisite rules in `context/architecture.md`;
+   - maintain at least one passing reference solution;
+   - run it through the same behavioral checker used for student code;
+   - verify that the checker tests only requirements stated to the child.
+6. Do not show reference solutions in child-facing task text.
+7. Add behavioral checks and an optional **«Задача со звёздочкой»**.
+8. Review all child-facing material for Russian-only presentation, age
    appropriateness, excess text, and long gaps between interactions.
 
 Do not independently reorder the curriculum or introduce extra major concepts
@@ -96,6 +107,7 @@ Before finishing, check that the change:
 - gives the child visible feedback within a few minutes;
 - advances the cumulative game when the task is a project milestone;
 - remains behaviorally verifiable;
+- gives an unambiguous definition of success backed by a verified solution;
 - adds no out-of-scope infrastructure;
 - passes all relevant tests.
 

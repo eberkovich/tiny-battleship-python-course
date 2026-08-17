@@ -1,0 +1,63 @@
+version: 1
+course:
+  title: "Создаём «Морской бой» на Python"
+  description:
+    - "Ты шаг за шагом напишешь свою игру."
+    - "В каждом уроке ты узнаешь новую команду и сразу добавишь что-то в «Морской бой»."
+    - "Ошибаться можно: запускай код, смотри результат и пробуй снова."
+lessons:
+  - id: lesson_01
+    title: "Знакомство с игровым полем"
+    concept: "Команды игрового интерфейса и координаты"
+    motivating_problem: "Как командами показать поле и указать точную клетку?"
+    milestone: "Показать поле игрока и поле противника"
+    prerequisites: []
+    content: lessons/lesson_01/lesson.md
+    completion_tasks:
+      - exercise_01
+      - exercise_02
+      - exercise_03
+      - project
+    tasks:
+      - id: api
+        kind: article
+        title: "Команды игрового поля"
+        section: api
+      - id: exercise_01
+        kind: exercise
+        title: "Покажи своё поле"
+        section: exercise_01
+        student_file: exercises/lesson_01/exercise_01.py
+        template: lessons/lesson_01/exercises/exercise_01.py
+      - id: coordinates
+        kind: article
+        title: "Координаты клетки"
+        section: coordinates
+      - id: exercise_02
+        kind: exercise
+        title: "Нарисуй однопалубный корабль"
+        section: exercise_02
+        student_file: exercises/lesson_01/exercise_02.py
+        template: lessons/lesson_01/exercises/exercise_02.py
+      - id: exercise_03
+        kind: exercise
+        title: "Покажи промах"
+        section: exercise_03
+        student_file: exercises/lesson_01/exercise_03.py
+        template: lessons/lesson_01/exercises/exercise_03.py
+      - id: project
+        kind: project
+        title: "Пишем игру"
+        section: project
+        student_file: battleship.py
+        template: templates/battleship.py
+      - id: star
+        kind: star
+        title: "Задача со звёздочкой"
+        section: star
+        student_file: exercises/lesson_01/star.py
+        template: lessons/lesson_01/exercises/star.py
+      - id: recap
+        kind: summary
+        title: "Итоги урока"
+        section: recap
