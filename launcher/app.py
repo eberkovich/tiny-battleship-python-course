@@ -21,9 +21,15 @@ SUBMARINE_DIVIDER_ASSET = Path(__file__).with_name("assets") / "submarine_divide
 CONTENT_COLUMN_WIDTH = 700
 CONTENT_PADDING_X = 32
 CONTENT_PADDING_Y = 26
+NOTE_COLUMN_WIDTH = CONTENT_COLUMN_WIDTH
+NOTE_PADDING_X = CONTENT_PADDING_X
+NOTE_PADDING_Y = 10
+NOTE_LINE_HEIGHT = 21
+NOTE_LINE_GAP = 2
 DIVIDER_HEIGHT = 40
 TASK_ICON_SIZE = 36
 TASK_ICON_RENDER_SCALE = 4
+DIALOG_OVERLAY_ALPHA = 135
 
 
 @dataclass(frozen=True)
@@ -67,21 +73,41 @@ def _wrap(font: pygame.font.Font, text: str, width: int) -> list[str]:
 def _markdown_blocks(text: str) -> list[tuple[str, str]]:
     blocks: list[tuple[str, str]] = []
     in_code = False
+    in_note = False
     paragraph: list[str] = []
+    note: list[str] = []
 
     def flush_paragraph() -> None:
         if paragraph:
             blocks.append(("text", " ".join(paragraph)))
             paragraph.clear()
 
+    def flush_note() -> None:
+        if note:
+            blocks.append(("note", "\n".join(note)))
+            note.clear()
+
     for raw_line in text.splitlines():
         stripped = raw_line.strip()
+        if in_note:
+            if stripped.startswith(">"):
+                note_line = stripped[1:].strip()
+                if note_line:
+                    note.append(note_line)
+                continue
+            flush_note()
+            in_note = False
         if stripped.startswith(FENCE):
             flush_paragraph()
             in_code = not in_code
             continue
         if in_code:
             blocks.append(("code", raw_line))
+        elif stripped == "> [!NOTE]":
+            flush_paragraph()
+            if blocks and blocks[-1][0] == "space":
+                blocks.pop()
+            in_note = True
         elif stripped == "---":
             flush_paragraph()
             if blocks and blocks[-1][0] == "space":
@@ -101,6 +127,7 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
         else:
             paragraph.append(stripped)
     flush_paragraph()
+    flush_note()
     while blocks and blocks[-1][0] == "space":
         blocks.pop()
     return blocks
@@ -118,9 +145,13 @@ class LauncherApp:
         self.buttons: list[Button] = []
         self.task_rects: list[tuple[pygame.Rect, str]] = []
         self.lesson_rects: list[tuple[pygame.Rect, str]] = []
+        self.api_links: list[tuple[pygame.Rect, str]] = []
+        self.api_dialog: str | None = None
+        self.note_card_rect: pygame.Rect | None = None
         self.font = pygame.font.SysFont("Arial", 20)
         self.small_font = pygame.font.SysFont("Arial", 16)
         self.code_font = pygame.font.SysFont("Menlo", 18)
+        self.note_font = pygame.font.SysFont("Arial", 15, italic=True)
         self.title_font = pygame.font.SysFont("Arial", 30, bold=True)
         self.hero_font = pygame.font.SysFont("Arial", 40, bold=True)
         self.task_font = pygame.font.SysFont("Arial", 15, bold=True)
@@ -167,7 +198,7 @@ class LauncherApp:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self._click(event.pos)
-                elif event.type == pygame.MOUSEWHEEL:
+                elif event.type == pygame.MOUSEWHEEL and self.api_dialog is None:
                     self.scroll = max(0, self.scroll - event.y * 32)
             self.controller.poll()
             self.render()
@@ -178,8 +209,21 @@ class LauncherApp:
         pygame.quit()
 
     def _click(self, position: tuple[int, int]) -> None:
+        if self.api_dialog is not None:
+            for button in self.buttons:
+                if (
+                    button.action == "close_api"
+                    and button.rect.collidepoint(position)
+                ):
+                    self.api_dialog = None
+                    return
+            return
         if self.controller.busy:
             return
+        for rect, api_name in self.api_links:
+            if rect.collidepoint(position):
+                self.api_dialog = api_name
+                return
         for rect, lesson_id in self.lesson_rects:
             if rect.collidepoint(position):
                 self.controller.enter_lesson(lesson_id)
@@ -216,12 +260,16 @@ class LauncherApp:
         self.buttons = []
         self.task_rects = []
         self.lesson_rects = []
+        self.api_links = []
+        self.note_card_rect = None
         if self.controller.view == "home":
             self._render_home()
         else:
             self._render_sidebar()
             self._render_lesson_content()
         self._render_theme_switch()
+        if self.api_dialog is not None:
+            self._render_api_dialog()
         pygame.display.flip()
 
     def _render_theme_switch(self) -> None:
@@ -517,42 +565,56 @@ class LauncherApp:
     def _render_lesson_content(self) -> None:
         left = SIDEBAR_WIDTH + 34
         width = WINDOW_SIZE[0] - left - 34
+        button_y = 700
         task = self.controller.current_task
         self._draw_task_icon(task, (left + 17, 48), self._task_color(task))
         title = self.title_font.render(task.title, True, self.theme.text)
         self.screen.blit(title, (left + 42, 28))
 
         body_top = 82
-        body_bottom = 586 if task.is_coding else 665
-        content_rect = pygame.Rect(
-            left, body_top, width, body_bottom - body_top
-        )
-        self._render_markdown(
-            self.controller.sections[task.section],
-            content_rect,
-        )
-
-        if task.is_coding:
-            if self.controller.message:
-                color = {
-                    "success": self.theme.success,
-                    "error": self.theme.error,
-                    "info": self.theme.muted,
-                }.get(self.controller.message_level, self.theme.muted)
-                message_lines = _wrap(
-                    self.small_font, self.controller.message, width - 20
-                )[:2]
+        section_blocks = _markdown_blocks(self.controller.sections[task.section])
+        note_values = [value for kind, value in section_blocks if kind == "note"]
+        message_lines: list[str] = []
+        message_color = self.theme.muted
+        if task.is_coding and self.controller.message:
+            message_color = {
+                "success": self.theme.success,
+                "error": self.theme.error,
+                "info": self.theme.muted,
+            }.get(self.controller.message_level, self.theme.muted)
+            message_width = min(CONTENT_COLUMN_WIDTH, width) - CONTENT_PADDING_X * 2
+            message_lines = _wrap(
+                self.small_font, self.controller.message, message_width
+            )[:2]
+        if task.is_coding and note_values:
+            note_value = note_values[0]
+            note_height = self._note_card_height(note_value, width)
+            note_top = button_y - 14 - note_height
+            content_bottom = note_top - 14
+            if message_lines:
+                content_bottom -= len(message_lines) * 20 + 10
+            content_rect = pygame.Rect(
+                left, body_top, width, content_bottom - body_top
+            )
+            self._render_markdown_blocks(
+                [block for block in section_blocks if block[0] != "note"],
+                content_rect,
+            )
+            self._render_fixed_note(note_value, left, note_top, width)
+            if message_lines:
+                card_x = left + (width - min(CONTENT_COLUMN_WIDTH, width)) // 2
+                message_y = note_top - 10 - len(message_lines) * 20
                 for index, line in enumerate(message_lines):
                     self.screen.blit(
-                        self.small_font.render(line, True, color),
-                        (left + 4, 603 + index * 20),
+                        self.small_font.render(line, True, message_color),
+                        (card_x + CONTENT_PADDING_X, message_y + index * 20),
                     )
-            reminder = self.small_font.render(
-                "Сохрани код в редакторе: Cmd+S", True, self.theme.muted
+        else:
+            content_rect = pygame.Rect(
+                left, body_top, width, 665 - body_top
             )
-            self.screen.blit(reminder, (left + 4, 651))
+            self._render_markdown_blocks(section_blocks, content_rect)
 
-        button_y = 700
         if self.controller.current_index > 0:
             self._add_button("Назад", left, button_y, 105, "previous")
         if task.is_coding:
@@ -579,46 +641,113 @@ class LauncherApp:
                 )
 
     def _render_markdown(self, text: str, rect: pygame.Rect) -> None:
+        self._render_markdown_blocks(_markdown_blocks(text), rect)
+
+    def _render_markdown_blocks(
+        self,
+        blocks: list[tuple[str, str]],
+        rect: pygame.Rect,
+    ) -> None:
         self.screen.set_clip(rect)
         card_width = min(CONTENT_COLUMN_WIDTH, rect.width)
         card_x = rect.centerx - card_width // 2
         inner_width = card_width - CONTENT_PADDING_X * 2
-        groups: list[list[tuple[str, str]]] = [[]]
-        for block in _markdown_blocks(text):
+        items: list[tuple[str, list[tuple[str, str]]]] = []
+        group: list[tuple[str, str]] = []
+
+        def flush_group() -> None:
+            if group:
+                items.append(("content", group.copy()))
+                group.clear()
+
+        for block in blocks:
             if block[0] == "divider":
-                if groups[-1]:
-                    groups.append([])
+                flush_group()
+                items.append(("divider", []))
+            elif block[0] == "note":
+                flush_group()
+                items.append(("note", [block]))
             else:
-                groups[-1].append(block)
-        groups = [group for group in groups if group]
+                group.append(block)
+        flush_group()
 
         y = rect.y - self.scroll
-        for index, group in enumerate(groups):
-            content_height = self._markdown_group_height(group, inner_width)
-            card = pygame.Rect(
-                card_x,
-                y,
-                card_width,
-                content_height + CONTENT_PADDING_Y * 2,
-            )
-            pygame.draw.rect(
-                self.screen, self.theme.content_card, card, border_radius=14
-            )
-            self._draw_markdown_group(
-                group,
-                card.x + CONTENT_PADDING_X,
-                card.y + CONTENT_PADDING_Y,
-                inner_width,
-            )
-            y = card.bottom
-            if index < len(groups) - 1:
+        previous_was_card = False
+        for item_kind, group in items:
+            if item_kind == "divider":
                 y += 14
                 divider_rect = self.submarine_divider.get_rect(
                     centerx=rect.centerx, top=y
                 )
                 self.screen.blit(self.submarine_divider, divider_rect)
                 y = divider_rect.bottom + 14
+                previous_was_card = False
+                continue
+            if previous_was_card:
+                y += 14
+            item_inner_width = (
+                card_width - NOTE_PADDING_X * 2
+                if item_kind == "note"
+                else inner_width
+            )
+            item_padding_y = (
+                NOTE_PADDING_Y if item_kind == "note" else CONTENT_PADDING_Y
+            )
+            content_height = self._markdown_group_height(group, item_inner_width)
+            card = pygame.Rect(
+                card_x,
+                y,
+                card_width,
+                content_height + item_padding_y * 2,
+            )
+            pygame.draw.rect(
+                self.screen,
+                self.theme.note_background
+                if item_kind == "note"
+                else self.theme.content_card,
+                card,
+                border_radius=14,
+            )
+            self._draw_markdown_group(
+                group,
+                card.x
+                + (NOTE_PADDING_X if item_kind == "note" else CONTENT_PADDING_X),
+                card.y + item_padding_y,
+                item_inner_width,
+            )
+            y = card.bottom
+            previous_was_card = True
         self.screen.set_clip(None)
+
+    def _note_card_height(self, value: str, available_width: int) -> int:
+        card_width = min(NOTE_COLUMN_WIDTH, available_width)
+        inner_width = card_width - NOTE_PADDING_X * 2
+        return (
+            self._markdown_group_height([("note", value)], inner_width)
+            + NOTE_PADDING_Y * 2
+        )
+
+    def _render_fixed_note(
+        self,
+        value: str,
+        left: int,
+        top: int,
+        available_width: int,
+    ) -> None:
+        card_width = min(NOTE_COLUMN_WIDTH, available_width)
+        card_x = left + (available_width - card_width) // 2
+        card_height = self._note_card_height(value, available_width)
+        card = pygame.Rect(card_x, top, card_width, card_height)
+        pygame.draw.rect(
+            self.screen, self.theme.note_background, card, border_radius=9
+        )
+        self._draw_markdown_group(
+            [("note", value)],
+            card.x + NOTE_PADDING_X,
+            card.y + NOTE_PADDING_Y,
+            card.width - NOTE_PADDING_X * 2,
+        )
+        self.note_card_rect = card
 
     def _markdown_group_height(
         self, blocks: list[tuple[str, str]], width: int
@@ -629,6 +758,14 @@ class LauncherApp:
                 height += 18
             elif kind == "code":
                 height += 43
+            elif kind == "note":
+                source_lines = value.splitlines()
+                for index, source_line in enumerate(source_lines):
+                    height += len(
+                        _wrap(self.note_font, _clean_markdown(source_line), width)
+                    ) * NOTE_LINE_HEIGHT
+                    if index < len(source_lines) - 1:
+                        height += NOTE_LINE_GAP
             else:
                 line = _clean_markdown(value)
                 line_width = width - 22 if kind == "subbullet" else width
@@ -657,11 +794,27 @@ class LauncherApp:
                     code_rect,
                     border_radius=5,
                 )
-                self.screen.blit(
-                    self.code_font.render(value, True, self.theme.code_text),
-                    (x + 12, y + 4),
+                self._draw_text_with_api_links(
+                    self.code_font,
+                    value,
+                    self.theme.code_text,
+                    x + 12,
+                    y + 4,
                 )
                 y += 43
+            elif kind == "note":
+                source_lines = value.splitlines()
+                for index, source_line in enumerate(source_lines):
+                    for wrapped in _wrap(
+                        self.note_font, _clean_markdown(source_line), width
+                    ):
+                        self.screen.blit(
+                            self.note_font.render(wrapped, True, self.theme.muted),
+                            (x, y),
+                        )
+                        y += NOTE_LINE_HEIGHT
+                    if index < len(source_lines) - 1:
+                        y += NOTE_LINE_GAP
             else:
                 line = _clean_markdown(value)
                 line_x = x
@@ -673,12 +826,113 @@ class LauncherApp:
                     line_x += 22
                     line_width -= 22
                 for wrapped in _wrap(self.font, line, line_width):
-                    self.screen.blit(
-                        self.font.render(wrapped, True, self.theme.text),
-                        (line_x, y),
+                    self._draw_text_with_api_links(
+                        self.font,
+                        wrapped,
+                        self.theme.text,
+                        line_x,
+                        y,
                     )
                     y += 30
                 y += 5
+
+    def _draw_text_with_api_links(
+        self,
+        font: pygame.font.Font,
+        text: str,
+        color: tuple[int, int, int],
+        x: int,
+        y: int,
+    ) -> None:
+        self.screen.blit(font.render(text, True, color), (x, y))
+        for api_name in self.controller.course.api_references:
+            if not self.controller.course.api_reference_available(
+                api_name, self.controller.current_task.id
+            ):
+                continue
+            pattern = rf"\b{re.escape(api_name)}\b"
+            for match in re.finditer(pattern, text):
+                link_x = x + font.size(text[: match.start()])[0]
+                link_width = font.size(api_name)[0]
+                self.screen.blit(
+                    font.render(api_name, True, self.theme.accent),
+                    (link_x, y),
+                )
+                underline_y = y + font.get_height() - 2
+                pygame.draw.line(
+                    self.screen,
+                    self.theme.accent,
+                    (link_x, underline_y),
+                    (link_x + link_width, underline_y),
+                    1,
+                )
+                link_rect = pygame.Rect(
+                    link_x,
+                    y,
+                    link_width,
+                    font.get_height(),
+                ).clip(self.screen.get_clip())
+                if link_rect.width and link_rect.height:
+                    self.api_links.append((link_rect, api_name))
+
+    def _render_api_dialog(self) -> None:
+        reference = self.controller.course.api_references.get(self.api_dialog or "")
+        if reference is None:
+            self.api_dialog = None
+            return
+
+        overlay = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, DIALOG_OVERLAY_ALPHA))
+        self.screen.blit(overlay, (0, 0))
+
+        dialog = pygame.Rect(0, 0, 700, 390)
+        dialog.center = (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2)
+        pygame.draw.rect(
+            self.screen, self.theme.content_card, dialog, border_radius=16
+        )
+        pygame.draw.rect(
+            self.screen, self.theme.accent, dialog, 2, border_radius=16
+        )
+
+        title = self.title_font.render(
+            f"Команда {self.api_dialog}", True, self.theme.text
+        )
+        self.screen.blit(title, (dialog.x + 32, dialog.y + 28))
+
+        code_rect = pygame.Rect(dialog.x + 32, dialog.y + 82, dialog.width - 64, 42)
+        pygame.draw.rect(
+            self.screen, self.theme.code_background, code_rect, border_radius=7
+        )
+        signature = self.code_font.render(
+            reference.signature, True, self.theme.code_text
+        )
+        self.screen.blit(signature, (code_rect.x + 14, code_rect.y + 7))
+
+        y = dialog.y + 147
+        for line in _wrap(self.font, reference.summary, dialog.width - 64):
+            self.screen.blit(
+                self.font.render(line, True, self.theme.text),
+                (dialog.x + 32, y),
+            )
+            y += 29
+        y += 10
+        for detail in reference.details:
+            for line in _wrap(self.small_font, "• " + detail, dialog.width - 76):
+                self.screen.blit(
+                    self.small_font.render(line, True, self.theme.text),
+                    (dialog.x + 42, y),
+                )
+                y += 23
+            y += 4
+
+        self._add_button(
+            "Закрыть",
+            dialog.right - 142,
+            dialog.bottom - 58,
+            110,
+            "close_api",
+            height=38,
+        )
 
     def _task_color(self, task: Task) -> tuple[int, int, int]:
         return {

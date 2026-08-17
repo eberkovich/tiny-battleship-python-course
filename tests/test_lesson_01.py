@@ -44,7 +44,6 @@ def test_star_starter_contains_previously_completed_board_setup() -> None:
 
     assert "show_board(PLAYER)" in starter
     assert "show_board(ENEMY)" in starter
-    assert "оба поля уже показаны" in star_text
     assert "используй только знакомые команды `draw_deck` и `show_miss`" in star_text
 
 
@@ -86,5 +85,17 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
     assert "show_board(player)" not in sections["project"].lower()
     assert "show_board(enemy)" not in sections["project"].lower()
     assert sections["api"].count("\n---\n") == 3
+    for task in lesson.tasks:
+        if not task.is_coding:
+            continue
+        task_text = sections[task.section]
+        goal, note = task_text.split("> [!NOTE]", maxsplit=1)
+        assert "Открой редактор" not in goal
+        note_lines = [line.removeprefix("> ") for line in note.strip().splitlines()]
+        assert note_lines == [
+            "Открой редактор → выполни задание → сохрани изменения → "
+            "нажми **«Запустить»**."
+        ]
+        assert "Запустить" not in goal
     for unintroduced in ("переменн", "цикл", "список", "условие"):
         assert unintroduced not in content

@@ -165,6 +165,26 @@ Markdown `---` separates major cards and is rendered as a compact group of
 three yellow submarines. Do not use decorative dividers between ordinary
 paragraphs.
 
+Render Markdown `> [!NOTE]` after a coding-task description as a separate card
+without an icon or caption. Its italic text contains only the editor prompt and
+the instruction to complete, save, and run the task; do not describe prefilled
+starter implementation. Keep this card fixed on screen while the task
+description scrolls. Render it as an arrow-separated instruction strip aligned
+to the task card's width, left edge, and text inset, directly above the action
+buttons. Keep it compact and unframed, with smaller muted text, restrained
+padding, and a quiet background so it remains secondary to the exercise. Show
+contextual feedback immediately above it. The card uses shared layout and theme
+palette constants in both schemes.
+
+On the page that first introduces a public game API command, show its complete
+description inline and render its name as ordinary text. Only later mentions of
+that command become underlined clickable references; a command is never a
+reference before it has been introduced. Clicking a reference opens a modal
+recap with the command's signature, short purpose, and argument summary. Store
+both the introduction step and recap content in course metadata so the launcher
+remains lesson-agnostic; the modal and links use the shared renderer and theme
+palettes.
+
 The launcher offers dark and light schemes through one fixed top-right switch
 on every screen. Both schemes share the same layout, rendering and event logic,
 icon set, and raster assets; only named palette constants differ. In the
@@ -279,8 +299,10 @@ project dependency, dependency version, or supported Python version changes.
 
 For V1, one `CURRICULUM.yaml` is sufficient. It defines lesson order and each
 lesson's compact pedagogical contract: the new concept, motivating problem,
-game milestone, prerequisites, required behavior, paths, and star challenge.
-Its lesson content must follow `context/lesson_content.md`.
+game milestone, prerequisites, required behavior, paths, and star challenge. It
+also stores each public API command's introduction step and the signature recap
+used by later clickable mentions. Its lesson content must follow
+`context/lesson_content.md`.
 
 Detailed material stays in its natural format:
 

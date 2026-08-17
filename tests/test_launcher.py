@@ -38,6 +38,24 @@ def test_markdown_divider_splits_content_without_becoming_text() -> None:
     ]
 
 
+def test_markdown_note_is_a_distinct_content_block() -> None:
+    blocks = _markdown_blocks(
+        "Покажи промах.\n\n"
+        "> [!NOTE]\n"
+        "> Открой редактор → выполни задание → сохрани изменения → "
+        "нажми **«Запустить»**."
+    )
+
+    assert blocks == [
+        ("text", "Покажи промах."),
+        (
+            "note",
+            "Открой редактор → выполни задание → сохрани изменения → "
+            "нажми **«Запустить»**.",
+        ),
+    ]
+
+
 def test_editor_command_passes_exact_cyrillic_path_without_shell(tmp_path: Path) -> None:
     source = tmp_path / "Ученик 1" / "мой код.py"
     command = editor_command(source)
@@ -173,6 +191,52 @@ def test_launcher_renders_course_home_and_typed_lesson_navigation(
     assert actions >= {"home", "open", "run"}
     assert "play" not in actions
     assert "check" not in actions
+
+
+def test_coding_note_stays_fixed_while_description_scrolls(tmp_path: Path) -> None:
+    controller = LauncherController(tmp_path / "student")
+    controller.enter_lesson("lesson_01")
+    controller.select_task("exercise_03")
+    app = LauncherApp(controller)
+
+    app.render()
+    initial_rect = app.note_card_rect.copy()
+    assert initial_rect.width == 700
+    assert initial_rect.height <= 60
+    app.scroll = 160
+    app.render()
+
+    assert app.note_card_rect == initial_rect
+
+
+def test_api_mention_opens_and_closes_signature_recap(tmp_path: Path) -> None:
+    controller = LauncherController(tmp_path / "student")
+    controller.enter_lesson("lesson_01")
+    controller.select_task("exercise_03")
+    app = LauncherApp(controller)
+    app.render()
+
+    link = next(link for link in app.api_links if link[1] == "show_miss")
+    app._click(link[0].center)
+    assert app.api_dialog == "show_miss"
+
+    app.render()
+    close = next(button for button in app.buttons if button.action == "close_api")
+    app._click(close.rect.center)
+    assert app.api_dialog is None
+
+
+def test_api_introduction_page_uses_inline_description_not_recap_links(
+    tmp_path: Path,
+) -> None:
+    controller = LauncherController(tmp_path / "student")
+    controller.enter_lesson("lesson_01")
+    controller.select_task("api")
+    app = LauncherApp(controller)
+
+    app.render()
+
+    assert app.api_links == []
 
 
 def test_theme_switch_is_shared_by_every_screen_and_persisted(

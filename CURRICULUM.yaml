@@ -5,6 +5,30 @@ course:
     - "Ты шаг за шагом напишешь свою игру."
     - "В каждом уроке ты узнаешь новую команду и сразу добавишь что-то в «Морской бой»."
     - "Ошибаться можно: запускай код, смотри результат и пробуй снова."
+api_reference:
+  show_board:
+    introduced_in: api
+    signature: "show_board(board)"
+    summary: "Показывает выбранное игровое поле."
+    details:
+      - "board — PLAYER для твоего поля или ENEMY для поля противника."
+  draw_deck:
+    introduced_in: api
+    signature: "draw_deck(board, x, y, state)"
+    summary: "Рисует одну палубу корабля в выбранной клетке."
+    details:
+      - "board — PLAYER для твоего поля или ENEMY для поля противника."
+      - "x — номер столбца от 1 до 10."
+      - "y — номер строки от 1 до 10."
+      - "state — состояние палубы; сейчас доступно DECK_IDLE."
+  show_miss:
+    introduced_in: api
+    signature: "show_miss(board, x, y)"
+    summary: "Показывает промах в выбранной клетке."
+    details:
+      - "board — PLAYER для твоего поля или ENEMY для поля противника."
+      - "x — номер столбца от 1 до 10."
+      - "y — номер строки от 1 до 10."
 lessons:
   - id: lesson_01
     title: "Знакомство с игровым полем"

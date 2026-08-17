@@ -63,7 +63,11 @@ upgrade, and a separate optional **«Задача со звёздочкой»** 
 `summary` step named **«Итоги урока»**. Do not add a passive prediction step.
 Each editable exercise is copied into the selected student's
 `exercises/lesson_01/` directory; the project upgrade alone modifies
-`battleship.py`.
+`battleship.py`. Every coding task keeps its goal separate from a compact,
+unframed, fixed instruction strip in smaller muted italics containing the
+arrow-separated editor/complete/save/Run workflow; it does not describe
+prefilled implementation. The strip aligns with the task card and sits directly
+above the action buttons, with contextual feedback immediately above it.
 Add a plain parent note only if useful; do not build special UI for it. Do not
 introduce variables, input, conditions, loops, lists, OOP, fleet placement, hit
 detection, or AI in this lesson.
@@ -147,8 +151,8 @@ control flow; inspect visuals separately.
 | Real UI | Only shown boards are rendered; state drawn while hidden appears when shown; geometry and axis labels are correct; player idle decks use the packaged full-cell wooden mast-and-sail sprite and repeat horizontally or vertically; enemy idle decks stay hidden; misses use the packaged blue-water cannonball-and-splash sprite on either board; later draws replace earlier cell state. |
 | Fake UI | Records deterministic semantic events, resets between runs, never creates a display, and does not retain traces as telemetry. |
 | Runner | Covers success, required board not shown, wrong board, invalid coordinates, syntax/runtime errors, and timeout; the launcher survives every failure. |
-| Lesson | API article introduces every call, constant, state, and argument before any task or starter uses it; arguments use `argument_name — explanation` bullets and list every available fixed value as an indented round bullet without saying “enum”; separate coordinate article introduces no API; examples differ from task answers; no passive prediction; clear non-solution task wording; passing reference for every checked task; behavioral checks only; required Russian structure; no variables, input, conditions, loops, lists, OOP, fleet validation, hit logic, or AI. |
-| Launcher | Shows course home and lesson navigation; distinguishes step types with bold, smoothly antialiased icons but no duplicate type captions; renders lesson text as narrow, lightly contrasted cards with generous spacing and optional three-submarine dividers; exposes one persistent dark/light switch on every screen while sharing all layout, rendering, event logic, icon set, and raster assets between constant-only palettes; keeps the light page background distinct from its cards; opens the saved current step or the lesson's first step; never selects or saves a locked step as current; unlocks `summary` when all required exercises and the project pass; keeps later lessons locked until the previous lesson passes; optional stars block neither gate; distinguishes an unselected star by its symbol and spacing without a selection-like frame; uses a finish flag for the `summary`; omits filenames and editor brand from child text; opens the correct file; never overwrites source; preserves work/progress; isolates two students; supports spaces/Cyrillic in paths; checks through fake UI before visual play through real UI; shows behavioral failures visually but does not repeat technical failures; uses one **«Запустить»** action; shows every coding task, including the optional numbered star, in segmented progress; shows contextual feedback; and reports errors in Russian. |
+| Lesson | API article introduces every call, constant, state, and argument before any task or starter uses it; arguments use `argument_name — explanation` bullets and list every available fixed value as an indented round bullet without saying “enum”; separate coordinate article introduces no API; examples differ from task answers; every coding-task goal is followed by a fixed uncaptioned italic card containing only the editor and complete/save/Run directions, with no workflow or prefilled-implementation description mixed into the goal; no passive prediction; clear non-solution task wording; passing reference for every checked task; behavioral checks only; required Russian structure; no variables, input, conditions, loops, lists, OOP, fleet validation, hit logic, or AI. |
+| Launcher | Shows course home and lesson navigation; distinguishes step types with bold, smoothly antialiased icons but no duplicate type captions; renders lesson text as narrow, lightly contrasted cards with generous spacing and optional three-submarine dividers; keeps the compact, unframed, visually secondary workflow card fixed while the task description scrolls; shows complete API descriptions as ordinary text on their introduction page and turns only later mentions into clickable underlined recaps, never references before introduction; exposes one persistent dark/light switch on every screen while sharing all layout, rendering and event logic, icon set, and raster assets between constant-only palettes; keeps the light page background distinct from its cards; opens the saved current step or the lesson's first step; never selects or saves a locked step as current; unlocks `summary` when all required exercises and the project pass; keeps later lessons locked until the previous lesson passes; optional stars block neither gate; distinguishes an unselected star by its symbol and spacing without a selection-like frame; uses a finish flag for the `summary`; omits filenames and editor brand from child text; opens the correct file; never overwrites source; preserves work/progress; isolates two students; supports spaces/Cyrillic in paths; checks through fake UI before visual play through real UI; shows behavioral failures visually but does not repeat technical failures; uses one **«Запустить»** action; shows every coding task, including the optional numbered star, in segmented progress; shows contextual feedback; and reports errors in Russian. |
 | Installer | Shell syntax; controlled-PATH cases for Python 3 as `python3` or `python`, versioned Homebrew Python without an unversioned link, supported Homebrew Python without Tk, Homebrew Tk failure without system fallback, Python 2, missing/old Python, existing `.venv`, repeated runs, dependency failure, and spaces/Cyrillic; prefers matching Homebrew Tk without `sudo`, never modifies system Python, and verifies launcher/UI/Thonny startup and Russian instructions. |
 
 A passing Lesson 1 project trace contains the equivalent of:
@@ -199,7 +203,7 @@ reverified.
 
 - Shell syntax, compilation, dependency consistency, focused tests, the full
   suite, reference Play, reference Check, and the headless launcher flow pass.
-- The full suite currently contains 59 passing tests.
+- The full suite currently contains 64 passing tests.
 - Game and launcher screenshots were inspected without pixel assertions, and a
   real macOS pygame game window was opened and closed successfully. The revised
   course home, typed lesson navigation, API article, coordinate article, and
@@ -217,7 +221,15 @@ reverified.
   task icons, progress markers, code blocks, and divider assets as the dark
   scheme; the fixed switch remains visible on both navigation levels. The
   shared bold, smoothly antialiased task-icon set was inspected both in the real
-  lesson sidebar and as a complete light-scheme icon sheet.
+  lesson sidebar and as a complete light-scheme icon sheet. The separate,
+  compact, unframed, uncaptioned workflow strip with smaller muted italics was
+  inspected on a real exercise in both dark and light schemes. It aligns with
+  the task card, remains fixed directly above the action buttons while the
+  description scrolls, and keeps contextual feedback immediately above it. The
+  clickable API cue and signature recap modal were inspected in both schemes.
+  The API introduction page was inspected without recap links, and a later
+  exercise was inspected with its introduced command rendered as a clickable
+  reference.
 - The installed dependency set is consistent, including `pygame-ce` 2.5.8,
   PyYAML 6.0.3, Thonny 5.0.0, and pytest 9.1.1.
 - The first actual `install.command` fallback downloaded the pinned package and

@@ -40,10 +40,19 @@ class Lesson:
 
 
 @dataclass(frozen=True)
+class ApiReference:
+    introduced_in: str
+    signature: str
+    summary: str
+    details: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class Course:
     title: str
     description: tuple[str, ...]
     lessons: tuple[Lesson, ...]
+    api_references: dict[str, ApiReference]
 
     def lesson(self, lesson_id: str) -> Lesson:
         for lesson in self.lessons:
@@ -56,6 +65,19 @@ class Course:
             for task in lesson.tasks:
                 if task.id == task_id:
                     return lesson, task
+        raise KeyError(task_id)
+
+    def api_reference_available(self, api_name: str, task_id: str) -> bool:
+        reference = self.api_references.get(api_name)
+        if reference is None:
+            return False
+        introduction_seen = False
+        for lesson in self.lessons:
+            for task in lesson.tasks:
+                if task.id == reference.introduced_in:
+                    introduction_seen = True
+                if task.id == task_id:
+                    return introduction_seen and task.id != reference.introduced_in
         raise KeyError(task_id)
 
 
@@ -107,10 +129,29 @@ def load_course(curriculum_path: Path | None = None) -> Course:
         isinstance(line, str) and line for line in description
     ):
         raise ValueError("Course description must be a non-empty list of text")
+    api_references = {}
+    for name, reference_data in raw.get("api_reference", {}).items():
+        details = reference_data.get("details")
+        if not isinstance(details, list) or not all(
+            isinstance(line, str) and line for line in details
+        ):
+            raise ValueError(f"API reference {name} requires detail lines")
+        api_references[name] = ApiReference(
+            introduced_in=_required_text(reference_data, "introduced_in"),
+            signature=_required_text(reference_data, "signature"),
+            summary=_required_text(reference_data, "summary"),
+            details=tuple(details),
+        )
+        if api_references[name].introduced_in not in task_ids:
+            raise ValueError(
+                f"API reference {name} has unknown introduction task: "
+                f"{api_references[name].introduced_in}"
+            )
     return Course(
         title=_required_text(course_data, "title"),
         description=tuple(description),
         lessons=tuple(lessons),
+        api_references=api_references,
     )
 
 

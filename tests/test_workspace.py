@@ -19,6 +19,17 @@ def test_curriculum_and_sections_are_consistent() -> None:
     assert {task.section for task in lesson.tasks} <= sections.keys()
 
 
+def test_curriculum_provides_clickable_api_recaps() -> None:
+    course = load_course()
+
+    assert set(course.api_references) == {"show_board", "draw_deck", "show_miss"}
+    assert course.api_references["show_miss"].introduced_in == "api"
+    assert course.api_references["show_miss"].signature == "show_miss(board, x, y)"
+    assert course.api_references["show_miss"].details
+    assert not course.api_reference_available("show_miss", "api")
+    assert course.api_reference_available("show_miss", "exercise_03")
+
+
 def test_workspace_initialization_preserves_existing_source(tmp_path: Path) -> None:
     course = load_course()
     workspace = StudentWorkspace(tmp_path / "Иван", course)
