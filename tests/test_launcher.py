@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import time
+from dataclasses import replace
 from pathlib import Path
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -9,6 +10,7 @@ os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
 from launcher.app import SUMMARY, LauncherApp
 from launcher.controller import LauncherController
+from launcher.course import Lesson, Task, load_course
 from launcher.editor import editor_command, ensure_russian_thonny_config
 from runner.results import RunResult
 
@@ -149,7 +151,10 @@ def test_launcher_renders_course_home_and_typed_lesson_navigation(
 
     controller.enter_lesson("lesson_01")
     app.render()
-    assert len(app.task_rects) == len(controller.lesson.tasks)
+    clickable_task_ids = {task_id for _, task_id in app.task_rects}
+    assert clickable_task_ids == {
+        task.id for task in controller.lesson.tasks if task.kind != "summary"
+    }
     assert any(button.action == "next" for button in app.buttons)
     controller.select_task("exercise_01")
     app.render()
@@ -195,12 +200,50 @@ def test_progress_models_every_coding_task_without_a_separate_star_counter(
 def test_summary_has_its_own_kind_and_finish_color(tmp_path: Path) -> None:
     controller = LauncherController(tmp_path / "student")
     controller.enter_lesson("lesson_01")
-    controller.select_task("recap")
     app = LauncherApp(controller)
 
+    controller.select_task("recap")
+    assert controller.current_task.id != "recap"
+    app.render()
+    assert "recap" not in {task_id for _, task_id in app.task_rects}
+
+    for task_id in controller.lesson.completion_tasks:
+        controller.progress = controller.workspace.mark_passed(task_id)
+
+    controller.select_task("recap")
+    app.render()
     assert controller.current_task.kind == "summary"
     assert app._task_color(controller.current_task) == SUMMARY
     assert not controller.current_task.is_coding
+    assert "recap" in {task_id for _, task_id in app.task_rects}
+
+
+def test_next_lesson_stays_locked_until_previous_lesson_is_complete(
+    tmp_path: Path,
+) -> None:
+    first_course = load_course()
+    first = first_course.lessons[0]
+    second_task = Task("lesson_02_intro", "article", "Новый урок", "api")
+    second = Lesson(
+        id="lesson_02",
+        title="Второй урок",
+        content=first.content,
+        completion_tasks=(second_task.id,),
+        tasks=(second_task,),
+    )
+    course = replace(first_course, lessons=(first, second))
+    controller = LauncherController(tmp_path / "student", course=course)
+
+    assert not controller.lesson_unlocked("lesson_02")
+    controller.enter_lesson("lesson_02")
+    assert controller.lesson.id == "lesson_01"
+
+    for task_id in first.completion_tasks:
+        controller.progress = controller.workspace.mark_passed(task_id)
+
+    assert controller.lesson_unlocked("lesson_02")
+    controller.enter_lesson("lesson_02")
+    assert controller.lesson.id == "lesson_02"
 
 
 def test_run_command_initializes_cyrillic_student_workspace_end_to_end(

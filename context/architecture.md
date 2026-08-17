@@ -136,7 +136,9 @@ The launcher has two navigation levels:
 
 Completed lessons remain available. The current lesson is available; later
 lessons are visible but locked until all required coding tasks in the current
-lesson pass. Optional star tasks never block progression.
+lesson pass. The **«Итоги урока»** step is also visible but locked until every
+required exercise and the cumulative project task in that lesson pass. Optional
+star tasks never block the summary or progression.
 
 ## Lesson presentation and authoring
 

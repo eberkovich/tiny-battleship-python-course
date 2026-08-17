@@ -239,25 +239,29 @@ class LauncherApp:
         y = 184
         for task in self.controller.lesson.tasks:
             rect = pygame.Rect(14, y, SIDEBAR_WIDTH - 28, 61)
+            unlocked = self.controller.task_unlocked(task)
             active = task.id == self.controller.current_task.id
             pygame.draw.rect(
                 self.screen,
-                CARD_ACTIVE if active else CARD,
+                CARD_ACTIVE if active else CARD if unlocked else PANEL,
                 rect,
                 border_radius=9,
             )
             if active:
                 pygame.draw.rect(self.screen, ACCENT, rect, 2, border_radius=9)
-            color = self._task_color(task)
+            color = self._task_color(task) if unlocked else MUTED
             self._draw_task_icon(task, (rect.x + 27, rect.centery), color)
             task_lines = _wrap(self.task_font, task.title, rect.width - 66)[:2]
             title_y = rect.centery - len(task_lines) * 9
             for index, line in enumerate(task_lines):
                 self.screen.blit(
-                    self.task_font.render(line, True, TEXT),
+                    self.task_font.render(line, True, TEXT if unlocked else MUTED),
                     (rect.x + 52, title_y + index * 18),
                 )
-            self.task_rects.append((rect, task.id))
+            if unlocked:
+                self.task_rects.append((rect, task.id))
+            else:
+                self._draw_lock((rect.right - 22, rect.centery), MUTED)
             y += 67
 
     def _render_progress(self, x: int, y: int) -> None:
@@ -323,8 +327,10 @@ class LauncherApp:
     ) -> None:
         if segment.symbol == "star":
             self._draw_star((rect.x + 15, rect.centery), GOLD, radius=8)
+            if segment.state == "passed":
+                self._draw_check((rect.x + 37, rect.centery), TEXT)
+                return
             marker = {
-                "passed": "✓",
                 "failed": "!",
                 "not_started": str(segment.number),
             }[segment.state]
@@ -334,8 +340,11 @@ class LauncherApp:
                 marker_surface.get_rect(center=(rect.x + 37, rect.centery)),
             )
             return
-        if segment.state != "not_started":
-            marker = "✓" if segment.state == "passed" else "!"
+        if segment.state == "passed":
+            self._draw_check(rect.center, TEXT)
+            return
+        if segment.state == "failed":
+            marker = "!"
             marker_surface = self.small_font.render(marker, True, TEXT)
             self.screen.blit(marker_surface, marker_surface.get_rect(center=rect.center))
             return
@@ -402,9 +411,13 @@ class LauncherApp:
             and self.controller.current_index
             < len(self.controller.lesson.tasks) - 1
         ):
-            self._add_button(
-                "Дальше", left + width - 120, button_y, 120, "next"
-            )
+            next_task = self.controller.lesson.tasks[
+                self.controller.current_index + 1
+            ]
+            if self.controller.task_unlocked(next_task):
+                self._add_button(
+                    "Дальше", left + width - 120, button_y, 120, "next"
+                )
 
     def _render_markdown(self, text: str, rect: pygame.Rect) -> None:
         self.screen.set_clip(rect)
@@ -592,6 +605,44 @@ class LauncherApp:
                 )
             )
         pygame.draw.polygon(self.screen, color, points, 2)
+
+    def _draw_lock(
+        self,
+        center: tuple[int, int],
+        color: tuple[int, int, int],
+    ) -> None:
+        x, y = center
+        pygame.draw.arc(
+            self.screen,
+            color,
+            pygame.Rect(x - 7, y - 10, 14, 13),
+            0,
+            math.pi,
+            2,
+        )
+        pygame.draw.rect(
+            self.screen,
+            color,
+            pygame.Rect(x - 9, y - 2, 18, 14),
+            2,
+            border_radius=3,
+        )
+        pygame.draw.circle(self.screen, color, (x, y + 4), 2)
+        pygame.draw.line(self.screen, color, (x, y + 5), (x, y + 8), 2)
+
+    def _draw_check(
+        self,
+        center: tuple[int, int],
+        color: tuple[int, int, int],
+    ) -> None:
+        x, y = center
+        pygame.draw.lines(
+            self.screen,
+            color,
+            False,
+            [(x - 6, y), (x - 2, y + 4), (x + 7, y - 5)],
+            2,
+        )
 
     def _add_button(
         self,

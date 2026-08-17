@@ -54,6 +54,9 @@ generated test output, or mutable student workspaces.
 
 Never create a Git commit without explicit user approval. Approval to edit,
 implement, test, or stage changes is not approval to commit them.
+Every approved commit must use a concise, meaningful message that describes
+the actual change; do not use generic messages such as `update`, `changes`, or
+`work in progress`.
 
 For every implementation change:
 

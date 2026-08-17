@@ -102,6 +102,9 @@ class LauncherController:
     def select_task(self, task_id: str) -> None:
         if self.busy:
             return
+        task = self.lesson.task(task_id)
+        if not self.task_unlocked(task):
+            return
         self.progress = self.workspace.set_current_task(self.lesson.id, task_id)
         self.message = ""
         self.message_level = "info"
@@ -109,7 +112,9 @@ class LauncherController:
 
     def move(self, offset: int) -> None:
         index = max(0, min(len(self.lesson.tasks) - 1, self.current_index + offset))
-        self.select_task(self.lesson.tasks[index].id)
+        target = self.lesson.tasks[index]
+        if self.task_unlocked(target):
+            self.select_task(target.id)
 
     def source_path(self) -> Path | None:
         if not self.current_task.is_coding:
@@ -214,6 +219,9 @@ class LauncherController:
         if task.kind == "star":
             return task.id in self.progress.earned_stars
         return task.id in self.progress.completed_tasks
+
+    def task_unlocked(self, task: Task) -> bool:
+        return task.kind != "summary" or self.lesson_complete()
 
     def lesson_complete(self, lesson: Lesson | None = None) -> bool:
         return self.workspace.lesson_complete(lesson or self.lesson, self.progress)
