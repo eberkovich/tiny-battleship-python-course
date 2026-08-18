@@ -41,6 +41,21 @@ class Lesson:
 
 
 @dataclass(frozen=True)
+class RoadmapLesson:
+    id: str
+    title: str
+    outcome: str
+
+
+@dataclass(frozen=True)
+class RoadmapStage:
+    id: str
+    title: str
+    summary: str
+    lessons: tuple[RoadmapLesson, ...]
+
+
+@dataclass(frozen=True)
 class ApiReference:
     introduced_in: str
     signature: str
@@ -51,9 +66,42 @@ class ApiReference:
 @dataclass(frozen=True)
 class Course:
     title: str
-    description: tuple[str, ...]
+    goal: str
+    promise: str
+    route: tuple[str, ...]
+    roadmap: tuple[RoadmapStage, ...]
     lessons: tuple[Lesson, ...]
     api_references: dict[str, ApiReference]
+
+    @property
+    def roadmap_lessons(self) -> tuple[RoadmapLesson, ...]:
+        return tuple(
+            lesson for stage in self.roadmap for lesson in stage.lessons
+        )
+
+    def roadmap_lesson(self, lesson_id: str) -> RoadmapLesson:
+        for lesson in self.roadmap_lessons:
+            if lesson.id == lesson_id:
+                return lesson
+        raise KeyError(lesson_id)
+
+    def roadmap_position(self, lesson_id: str) -> int:
+        for index, lesson in enumerate(self.roadmap_lessons, start=1):
+            if lesson.id == lesson_id:
+                return index
+        raise KeyError(lesson_id)
+
+    def roadmap_stage(self, lesson_id: str) -> RoadmapStage:
+        for stage in self.roadmap:
+            if any(lesson.id == lesson_id for lesson in stage.lessons):
+                return stage
+        raise KeyError(lesson_id)
+
+    def roadmap_stage_number(self, lesson_id: str) -> int:
+        for index, stage in enumerate(self.roadmap, start=1):
+            if any(lesson.id == lesson_id for lesson in stage.lessons):
+                return index
+        raise KeyError(lesson_id)
 
     def lesson(self, lesson_id: str) -> Lesson:
         for lesson in self.lessons:
@@ -95,10 +143,67 @@ def load_course(curriculum_path: Path | None = None) -> Course:
     if raw.get("version") != 1 or not raw.get("lessons"):
         raise ValueError("Curriculum version 1 requires at least one lesson")
 
+    course_data = raw.get("course", {})
+    route = course_data.get("route")
+    if not isinstance(route, list) or len(route) < 2 or not all(
+        isinstance(item, str) and item for item in route
+    ):
+        raise ValueError("Course route requires at least two text steps")
+
+    roadmap_data = course_data.get("roadmap")
+    if not isinstance(roadmap_data, list) or not roadmap_data:
+        raise ValueError("Course roadmap requires at least one stage")
+    roadmap: list[RoadmapStage] = []
+    roadmap_stage_ids: set[str] = set()
+    roadmap_lesson_ids: set[str] = set()
+    for stage_data in roadmap_data:
+        stage_id = _required_text(stage_data, "id")
+        if stage_id in roadmap_stage_ids:
+            raise ValueError(f"Roadmap stage IDs must be unique: {stage_id}")
+        roadmap_stage_ids.add(stage_id)
+        entries = stage_data.get("lessons")
+        if not isinstance(entries, list) or not entries:
+            raise ValueError(f"Roadmap stage {stage_id} requires lessons")
+        planned_lessons = []
+        for entry in entries:
+            planned = RoadmapLesson(
+                id=_required_text(entry, "id"),
+                title=_required_text(entry, "title"),
+                outcome=_required_text(entry, "outcome"),
+            )
+            if planned.id in roadmap_lesson_ids:
+                raise ValueError(
+                    f"Roadmap lesson IDs must be unique: {planned.id}"
+                )
+            roadmap_lesson_ids.add(planned.id)
+            planned_lessons.append(planned)
+        roadmap.append(
+            RoadmapStage(
+                id=stage_id,
+                title=_required_text(stage_data, "title"),
+                summary=_required_text(stage_data, "summary"),
+                lessons=tuple(planned_lessons),
+            )
+        )
+
+    roadmap_lessons = tuple(
+        lesson for stage in roadmap for lesson in stage.lessons
+    )
+    roadmap_ids = [lesson.id for lesson in roadmap_lessons]
+    expected_roadmap_ids = [
+        f"lesson_{number:02d}"
+        for number in range(1, len(roadmap_lessons) + 1)
+    ]
+    if roadmap_ids != expected_roadmap_ids:
+        raise ValueError("Roadmap lessons must use continuous lesson_NN IDs")
+    roadmap_by_id = {lesson.id: lesson for lesson in roadmap_lessons}
+
     lessons = []
     task_ids: set[str] = set()
     for lesson_data in raw["lessons"]:
         lesson_id = _required_text(lesson_data, "id")
+        if lesson_id not in roadmap_by_id:
+            raise ValueError(f"Implemented lesson is missing from roadmap: {lesson_id}")
         tasks = []
         for item in lesson_data["tasks"]:
             student_file = item.get("student_file")
@@ -130,19 +235,20 @@ def load_course(curriculum_path: Path | None = None) -> Course:
         lessons.append(
             Lesson(
                 id=lesson_id,
-                title=_required_text(lesson_data, "title"),
+                title=roadmap_by_id[lesson_id].title,
                 content=PROJECT_ROOT / _required_text(lesson_data, "content"),
                 completion_tasks=tuple(lesson_data["completion_tasks"]),
                 tasks=tuple(tasks),
             )
         )
 
-    course_data = raw.get("course", {})
-    description = course_data.get("description")
-    if not isinstance(description, list) or not all(
-        isinstance(line, str) and line for line in description
-    ):
-        raise ValueError("Course description must be a non-empty list of text")
+    implemented_ids = [lesson.id for lesson in lessons]
+    planned_prefix = [
+        lesson.id for lesson in roadmap_lessons[: len(implemented_ids)]
+    ]
+    if implemented_ids != planned_prefix:
+        raise ValueError("Implemented lessons must be a prefix of the roadmap")
+
     api_references = {}
     for name, reference_data in raw.get("api_reference", {}).items():
         details = reference_data.get("details")
@@ -163,7 +269,10 @@ def load_course(curriculum_path: Path | None = None) -> Course:
             )
     return Course(
         title=_required_text(course_data, "title"),
-        description=tuple(description),
+        goal=_required_text(course_data, "goal"),
+        promise=_required_text(course_data, "promise"),
+        route=tuple(route),
+        roadmap=tuple(roadmap),
         lessons=tuple(lessons),
         api_references=api_references,
     )

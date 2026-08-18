@@ -13,7 +13,13 @@ def setup_function() -> None:
 
 
 def test_real_and_fake_public_signatures_match() -> None:
-    for name in ("show_board", "draw_deck", "show_miss", "show_ship_count"):
+    for name in (
+        "show_board",
+        "draw_deck",
+        "show_miss",
+        "show_ship_count",
+        "wait_for_button",
+    ):
         assert inspect.signature(getattr(fake_ui, name)) == inspect.signature(
             getattr(real_ui, name)
         )
@@ -34,6 +40,7 @@ def test_public_api_does_not_expose_water_states() -> None:
         "draw_deck",
         "show_miss",
         "show_ship_count",
+        "wait_for_button",
     ]
     for removed in ("WATER_IDLE", "WATER_FIRED", "draw_water"):
         assert not hasattr(battleship_ui, removed)
@@ -88,6 +95,14 @@ def test_checker_can_prepare_deterministic_cell_inputs() -> None:
     assert fake_ui._remaining_inputs() == ()
 
 
+def test_button_wait_is_recorded_without_blocking() -> None:
+    fake_ui.wait_for_button("Флот готов!", "Начать бой")
+
+    assert fake_ui._snapshot()["events"] == [
+        ["button_waited", "Флот готов!", "Начать бой"]
+    ]
+
+
 @pytest.mark.parametrize(
     "call, code",
     [
@@ -97,6 +112,8 @@ def test_checker_can_prepare_deterministic_cell_inputs() -> None:
         (lambda: fake_ui.draw_deck(PLAYER, 1, 1, "miss"), "invalid_deck_state"),
         (lambda: fake_ui.show_ship_count(PLAYER, -1), "invalid_ship_count"),
         (lambda: fake_ui.show_ship_count(PLAYER, True), "invalid_ship_count"),
+        (lambda: fake_ui.wait_for_button("", "Готово"), "invalid_text"),
+        (lambda: fake_ui.wait_for_button("Сообщение", "  "), "invalid_text"),
     ],
 )
 def test_invalid_public_arguments_fail_clearly(call, code: str) -> None:

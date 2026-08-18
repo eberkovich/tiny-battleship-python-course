@@ -1,5 +1,7 @@
 # Stage 1 Plan: Lesson 1 Vertical Slice
 
+Status: complete
+
 ## Outcome
 
 Deliver one complete, installable lesson experience on macOS:
@@ -214,7 +216,7 @@ reverified.
 
 - Shell syntax, compilation, dependency consistency, focused tests, the full
   suite, reference Play, reference Check, and the headless launcher flow pass.
-- The full suite currently contains 69 passing tests.
+- The final Stage 1 baseline contains 82 passing tests.
 - Game and launcher screenshots were inspected without pixel assertions, and a
   real macOS pygame game window was opened and closed successfully. The revised
   course home, typed lesson navigation, course introduction,
@@ -258,9 +260,9 @@ reverified.
   matching Tk formula to an existing supported Homebrew Python without `sudo`
   and stops instead of changing the default Python when Homebrew fails. That
   path now also discovers Homebrew's versioned Python when an upgrade removes
-  the unversioned `python3` link. The installer completion and Thonny GUI smoke
-  test still await a successful rerun.
+  the unversioned `python3` link.
 
-Do not mark Stage 1 complete or activate another stage until the real installer
-and Russian Thonny file-opening smoke test pass on macOS, or the user explicitly
-changes this completion requirement.
+The installer completion and Russian Thonny file-opening smoke test remain a
+known deferred manual check. On 2026-08-19 the user explicitly directed work to
+advance to Part 1 Phase A without waiting for that rerun; completion status does
+not claim that the deferred check passed.

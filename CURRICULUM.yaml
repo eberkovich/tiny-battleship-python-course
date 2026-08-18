@@ -1,10 +1,44 @@
 version: 1
 course:
   title: "Создаём «Морской бой» на Python"
-  description:
-    - "Ты шаг за шагом напишешь свою игру."
-    - "В каждом уроке ты узнаешь новую команду и сразу добавишь что-то в «Морской бой»."
-    - "Ошибаться можно: запускай код, смотри результат и пробуй снова."
+  goal: "Создать законченную игру с 10 однопалубными кораблями у тебя и компьютера"
+  promise: "Ты сам напишешь игру: расставишь флот, добавишь выстрелы и определение победителя."
+  route:
+    - "Расставить флот"
+    - "Начать бой"
+    - "Стрелять по очереди"
+    - "Победа!"
+  roadmap:
+    - id: stage_01
+      title: "Собираем флот"
+      summary: "Поля, адреса клеток и готовый флот из 10 кораблей."
+      lessons:
+        - {id: lesson_01, title: "Знакомство с игровым полем", outcome: "Показать поле игрока и поле противника."}
+        - {id: lesson_02, title: "Переменные и счётчик кораблей", outcome: "Нарисовать первый корабль и показать счётчик со значением 1."}
+        - {id: lesson_03, title: "Адрес клетки", outcome: "Хранить и рисовать два корабля по адресам."}
+        - {id: lesson_04, title: "Список кораблей", outcome: "Хранить три корабля в списке и считать их с len."}
+        - {id: lesson_05, title: "Изменяем список", outcome: "Построить список из четырёх кораблей с append."}
+        - {id: lesson_06, title: "Повторяем команды", outcome: "Нарисовать циклом фиксированный флот из 10 кораблей."}
+        - {id: lesson_07, title: "Флот готов", outcome: "Показать сообщение о готовом флоте и дождаться кнопки."}
+    - id: stage_02
+      title: "Расставляем корабли"
+      summary: "Выбор клеток и проверка правильного расстояния между кораблями."
+      lessons:
+        - {id: lesson_08, title: "Простое решение", outcome: "Не ставить новый корабль в занятую клетку."}
+        - {id: lesson_09, title: "Соседние клетки", outcome: "Не ставить корабли рядом друг с другом."}
+        - {id: lesson_10, title: "Проверяем место", outcome: "Проверять место для корабля отдельной функцией."}
+        - {id: lesson_11, title: "Выбираем клетку", outcome: "Выбирать клетку на поле и ставить один корабль."}
+        - {id: lesson_12, title: "Расставляем весь флот", outcome: "Расставить все 10 кораблей игрока."}
+        - {id: lesson_13, title: "Флот компьютера", outcome: "Создать скрытый флот компьютера."}
+    - id: stage_03
+      title: "Ход игры"
+      summary: "Выстрелы игрока и компьютера, смена ходов и победитель."
+      lessons:
+        - {id: lesson_14, title: "Первый выстрел", outcome: "Сделать один выстрел и показать попадание или промах."}
+        - {id: lesson_15, title: "История выстрелов", outcome: "Запоминать выстрелы и не стрелять повторно."}
+        - {id: lesson_16, title: "Ход компьютера", outcome: "Добавить один случайный выстрел компьютера."}
+        - {id: lesson_17, title: "Компьютер выбирает клетку", outcome: "Научить компьютер выбирать полезную клетку."}
+        - {id: lesson_18, title: "Полный бой", outcome: "Играть по очереди до победы одного из флотов."}
 api_reference:
   show_board:
     introduced_in: api
@@ -29,9 +63,22 @@ api_reference:
       - "board — PLAYER для твоего поля или ENEMY для поля противника."
       - "x — номер столбца от 1 до 10."
       - "y — номер строки от 1 до 10."
+  show_ship_count:
+    introduced_in: lesson_02_counter
+    signature: "show_ship_count(board, count)"
+    summary: "Показывает или обновляет счётчик оставшихся кораблей."
+    details:
+      - "board — PLAYER для твоего поля или ENEMY для поля противника."
+      - "count — целое неотрицательное количество кораблей."
+  wait_for_button:
+    introduced_in: lesson_07_button_api
+    signature: "wait_for_button(message, label)"
+    summary: "Показывает сообщение и ждёт нажатия кнопки."
+    details:
+      - "message — текст сообщения."
+      - "label — текст на кнопке."
 lessons:
   - id: lesson_01
-    title: "Знакомство с игровым полем"
     concept: "Готовые игровые команды и координаты"
     motivating_problem: "Как командами показать поле и указать точную клетку?"
     milestone: "Показать поле игрока и поле противника"
@@ -89,3 +136,269 @@ lessons:
         kind: summary
         title: "Итоги урока"
         section: recap
+
+  - id: lesson_02
+    concept: "Переменные сохраняют значения под понятными именами"
+    motivating_problem: "Как запомнить число и использовать его несколько раз?"
+    milestone: "Нарисовать первый корабль и показать счётчик со значением 1"
+    prerequisites: [lesson_01]
+    content: lessons/lesson_02/lesson.md
+    completion_tasks:
+      - lesson_02_exercise_01
+      - lesson_02_exercise_02
+      - lesson_02_exercise_03
+      - lesson_02_project
+    tasks:
+      - {id: lesson_02_output, kind: article, title: "Как увидеть значение", section: output}
+      - id: lesson_02_exercise_01
+        kind: exercise
+        title: "Выведи число"
+        section: exercise_01
+        student_file: exercises/lesson_02/exercise_01.py
+        template: lessons/lesson_02/exercises/exercise_01.py
+        run_mode: console
+      - {id: lesson_02_variables, kind: article, title: "Имя для значения", section: variables}
+      - id: lesson_02_exercise_02
+        kind: exercise
+        title: "Измени переменную"
+        section: exercise_02
+        student_file: exercises/lesson_02/exercise_02.py
+        template: lessons/lesson_02/exercises/exercise_02.py
+        run_mode: console
+      - id: lesson_02_exercise_03
+        kind: exercise
+        title: "Исправь имя"
+        section: exercise_03
+        student_file: exercises/lesson_02/exercise_03.py
+        template: lessons/lesson_02/exercises/exercise_03.py
+        run_mode: console
+      - {id: lesson_02_counter, kind: article, title: "Счётчик кораблей", section: counter}
+      - id: lesson_02_project
+        kind: project
+        title: "Пишем игру"
+        section: project
+        student_file: battleship.py
+        template: templates/battleship.py
+      - {id: lesson_02_recap, kind: summary, title: "Итоги урока", section: recap}
+
+  - id: lesson_03
+    concept: "Две координаты можно хранить как один адрес клетки"
+    motivating_problem: "Как не потерять связь между x и y одной клетки?"
+    milestone: "Хранить и рисовать два корабля по адресам"
+    prerequisites: [lesson_02]
+    content: lessons/lesson_03/lesson.md
+    completion_tasks:
+      - lesson_03_exercise_01
+      - lesson_03_exercise_02
+      - lesson_03_exercise_03
+      - lesson_03_project
+    tasks:
+      - {id: lesson_03_address, kind: article, title: "Один адрес — два числа", section: address}
+      - id: lesson_03_exercise_01
+        kind: exercise
+        title: "Сохрани адрес"
+        section: exercise_01
+        student_file: exercises/lesson_03/exercise_01.py
+        template: lessons/lesson_03/exercises/exercise_01.py
+        run_mode: console
+      - {id: lesson_03_unpacking, kind: article, title: "Достаём координаты", section: unpacking}
+      - id: lesson_03_exercise_02
+        kind: exercise
+        title: "Раздели адрес"
+        section: exercise_02
+        student_file: exercises/lesson_03/exercise_02.py
+        template: lessons/lesson_03/exercises/exercise_02.py
+        run_mode: console
+      - id: lesson_03_exercise_03
+        kind: exercise
+        title: "Исправь координаты"
+        section: exercise_03
+        student_file: exercises/lesson_03/exercise_03.py
+        template: lessons/lesson_03/exercises/exercise_03.py
+        run_mode: console
+      - id: lesson_03_project
+        kind: project
+        title: "Пишем игру"
+        section: project
+        student_file: battleship.py
+        template: templates/battleship.py
+      - {id: lesson_03_recap, kind: summary, title: "Итоги урока", section: recap}
+
+  - id: lesson_04
+    concept: "Список хранит несколько значений в одном месте"
+    motivating_problem: "Как собрать адреса всех кораблей вместе?"
+    milestone: "Хранить три корабля в списке и считать их с len"
+    prerequisites: [lesson_03]
+    content: lessons/lesson_04/lesson.md
+    completion_tasks:
+      - lesson_04_exercise_01
+      - lesson_04_exercise_02
+      - lesson_04_exercise_03
+      - lesson_04_project
+    tasks:
+      - {id: lesson_04_lists, kind: article, title: "Несколько значений вместе", section: lists}
+      - id: lesson_04_exercise_01
+        kind: exercise
+        title: "Посчитай числа"
+        section: exercise_01
+        student_file: exercises/lesson_04/exercise_01.py
+        template: lessons/lesson_04/exercises/exercise_01.py
+        run_mode: console
+      - id: lesson_04_exercise_02
+        kind: exercise
+        title: "Посчитай адреса"
+        section: exercise_02
+        student_file: exercises/lesson_04/exercise_02.py
+        template: lessons/lesson_04/exercises/exercise_02.py
+        run_mode: console
+      - id: lesson_04_exercise_03
+        kind: exercise
+        title: "Почини список"
+        section: exercise_03
+        student_file: exercises/lesson_04/exercise_03.py
+        template: lessons/lesson_04/exercises/exercise_03.py
+        run_mode: console
+      - id: lesson_04_project
+        kind: project
+        title: "Пишем игру"
+        section: project
+        student_file: battleship.py
+        template: templates/battleship.py
+      - {id: lesson_04_recap, kind: summary, title: "Итоги урока", section: recap}
+
+  - id: lesson_05
+    concept: "В список можно по очереди добавлять новые значения"
+    motivating_problem: "Как собирать флот постепенно?"
+    milestone: "Построить список из четырёх кораблей с append"
+    prerequisites: [lesson_04]
+    content: lessons/lesson_05/lesson.md
+    completion_tasks:
+      - lesson_05_exercise_01
+      - lesson_05_exercise_02
+      - lesson_05_exercise_03
+      - lesson_05_project
+    tasks:
+      - {id: lesson_05_append, kind: article, title: "Добавляем в список", section: append}
+      - id: lesson_05_exercise_01
+        kind: exercise
+        title: "Добавь число"
+        section: exercise_01
+        student_file: exercises/lesson_05/exercise_01.py
+        template: lessons/lesson_05/exercises/exercise_01.py
+        run_mode: console
+      - id: lesson_05_exercise_02
+        kind: exercise
+        title: "Добавь адрес"
+        section: exercise_02
+        student_file: exercises/lesson_05/exercise_02.py
+        template: lessons/lesson_05/exercises/exercise_02.py
+        run_mode: console
+      - id: lesson_05_exercise_03
+        kind: exercise
+        title: "Расставь по порядку"
+        section: exercise_03
+        student_file: exercises/lesson_05/exercise_03.py
+        template: lessons/lesson_05/exercises/exercise_03.py
+        run_mode: console
+      - id: lesson_05_project
+        kind: project
+        title: "Пишем игру"
+        section: project
+        student_file: battleship.py
+        template: templates/battleship.py
+      - {id: lesson_05_recap, kind: summary, title: "Итоги урока", section: recap}
+
+  - id: lesson_06
+    concept: "Цикл for выполняет один блок команд для каждого значения"
+    motivating_problem: "Как нарисовать большой флот без десяти одинаковых команд?"
+    milestone: "Нарисовать циклом фиксированный флот из 10 кораблей"
+    prerequisites: [lesson_05]
+    content: lessons/lesson_06/lesson.md
+    completion_tasks:
+      - lesson_06_exercise_01
+      - lesson_06_exercise_02
+      - lesson_06_exercise_03
+      - lesson_06_project
+    tasks:
+      - {id: lesson_06_loop, kind: article, title: "Команды по кругу", section: loop}
+      - id: lesson_06_exercise_01
+        kind: exercise
+        title: "Выведи все числа"
+        section: exercise_01
+        student_file: exercises/lesson_06/exercise_01.py
+        template: lessons/lesson_06/exercises/exercise_01.py
+        run_mode: console
+      - id: lesson_06_exercise_03
+        kind: exercise
+        title: "Исправь отступ"
+        section: exercise_03
+        student_file: exercises/lesson_06/exercise_03.py
+        template: lessons/lesson_06/exercises/exercise_03.py
+        run_mode: console
+      - {id: lesson_06_addresses, kind: article, title: "Цикл по адресам", section: addresses}
+      - id: lesson_06_exercise_02
+        kind: exercise
+        title: "Нарисуй корабли циклом"
+        section: exercise_02
+        student_file: exercises/lesson_06/exercise_02.py
+        template: lessons/lesson_06/exercises/exercise_02.py
+      - id: lesson_06_project
+        kind: project
+        title: "Пишем игру"
+        section: project
+        student_file: battleship.py
+        template: templates/battleship.py
+      - id: lesson_06_star
+        kind: star
+        title: "Задача со звёздочкой"
+        section: star
+        student_file: exercises/lesson_06/star.py
+        template: lessons/lesson_06/exercises/star.py
+      - {id: lesson_06_recap, kind: summary, title: "Итоги урока", section: recap}
+
+  - id: lesson_07
+    concept: "Строки хранят текст, а кнопка останавливает программу до нажатия"
+    motivating_problem: "Как закончить расстановку и дать игроку начать бой?"
+    milestone: "Показать сообщение о готовом флоте и дождаться кнопки"
+    prerequisites: [lesson_06]
+    content: lessons/lesson_07/lesson.md
+    completion_tasks:
+      - lesson_07_exercise_01
+      - lesson_07_exercise_02
+      - lesson_07_exercise_03
+      - lesson_07_project
+    tasks:
+      - {id: lesson_07_strings, kind: article, title: "Текст в программе", section: strings}
+      - id: lesson_07_exercise_01
+        kind: exercise
+        title: "Выведи сообщение"
+        section: exercise_01
+        student_file: exercises/lesson_07/exercise_01.py
+        template: lessons/lesson_07/exercises/exercise_01.py
+        run_mode: console
+      - {id: lesson_07_button_api, kind: article, title: "Кнопка перед боем", section: button_api}
+      - id: lesson_07_exercise_02
+        kind: exercise
+        title: "Покажи кнопку"
+        section: exercise_02
+        student_file: exercises/lesson_07/exercise_02.py
+        template: lessons/lesson_07/exercises/exercise_02.py
+      - id: lesson_07_exercise_03
+        kind: exercise
+        title: "Собери кнопку из переменных"
+        section: exercise_03
+        student_file: exercises/lesson_07/exercise_03.py
+        template: lessons/lesson_07/exercises/exercise_03.py
+      - id: lesson_07_project
+        kind: project
+        title: "Пишем игру"
+        section: project
+        student_file: battleship.py
+        template: templates/battleship.py
+      - id: lesson_07_star
+        kind: star
+        title: "Задача со звёздочкой"
+        section: star
+        student_file: exercises/lesson_07/star.py
+        template: lessons/lesson_07/exercises/star.py
+      - {id: lesson_07_recap, kind: summary, title: "Итоги урока", section: recap}

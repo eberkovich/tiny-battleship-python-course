@@ -22,16 +22,43 @@ def test_curriculum_and_sections_are_consistent() -> None:
     assert {task.section for task in lesson.tasks} <= sections.keys()
 
 
+def test_curriculum_defines_complete_three_stage_roadmap() -> None:
+    course = load_course()
+
+    assert len(course.roadmap) == 3
+    assert len(course.roadmap_lessons) == 18
+    assert [stage.title for stage in course.roadmap] == [
+        "Собираем флот",
+        "Расставляем корабли",
+        "Ход игры",
+    ]
+    assert [lesson.id for lesson in course.lessons] == [
+        lesson.id for lesson in course.roadmap_lessons[: len(course.lessons)]
+    ]
+
+
 def test_curriculum_provides_clickable_api_recaps() -> None:
     course = load_course()
 
-    assert set(course.api_references) == {"show_board", "draw_deck", "show_miss"}
+    assert set(course.api_references) == {
+        "show_board",
+        "draw_deck",
+        "show_miss",
+        "show_ship_count",
+        "wait_for_button",
+    }
     assert course.api_references["draw_deck"].introduced_in == "coordinates"
     assert course.api_references["show_miss"].introduced_in == "coordinates"
     assert course.api_references["show_miss"].signature == "show_miss(board, x, y)"
     assert course.api_references["show_miss"].details
     assert not course.api_reference_available("show_miss", "coordinates")
     assert course.api_reference_available("show_miss", "exercise_03")
+    assert course.api_references["show_ship_count"].introduced_in == (
+        "lesson_02_counter"
+    )
+    assert course.api_references["wait_for_button"].introduced_in == (
+        "lesson_07_button_api"
+    )
 
 
 def test_curriculum_loads_console_run_mode(tmp_path: Path) -> None:
@@ -41,10 +68,17 @@ def test_curriculum_loads_console_run_mode(tmp_path: Path) -> None:
 version: 1
 course:
   title: "Курс"
-  description: ["Описание"]
+  goal: "Цель"
+  promise: "Обещание"
+  route: ["Начало", "Конец"]
+  roadmap:
+    - id: stage_01
+      title: "Этап"
+      summary: "Описание"
+      lessons:
+        - {id: lesson_01, title: "Урок", outcome: "Результат"}
 lessons:
   - id: lesson_01
-    title: "Урок"
     content: unused.md
     completion_tasks: [exercise]
     tasks:
@@ -70,10 +104,17 @@ def test_curriculum_rejects_unknown_run_mode(tmp_path: Path) -> None:
 version: 1
 course:
   title: "Курс"
-  description: ["Описание"]
+  goal: "Цель"
+  promise: "Обещание"
+  route: ["Начало", "Конец"]
+  roadmap:
+    - id: stage_01
+      title: "Этап"
+      summary: "Описание"
+      lessons:
+        - {id: lesson_01, title: "Урок", outcome: "Результат"}
 lessons:
   - id: lesson_01
-    title: "Урок"
     content: unused.md
     completion_tasks: [exercise]
     tasks:
@@ -109,10 +150,17 @@ def test_curriculum_rejects_duplicate_task_ids(tmp_path: Path) -> None:
 version: 1
 course:
   title: "Курс"
-  description: ["Описание"]
+  goal: "Цель"
+  promise: "Обещание"
+  route: ["Начало", "Конец"]
+  roadmap:
+    - id: stage_01
+      title: "Этап"
+      summary: "Описание"
+      lessons:
+        - {id: lesson_01, title: "Урок", outcome: "Результат"}
 lessons:
   - id: lesson_01
-    title: "Урок"
     content: unused.md
     completion_tasks: []
     tasks:
@@ -133,16 +181,23 @@ def test_new_lesson_task_ids_must_include_lesson_prefix(tmp_path: Path) -> None:
 version: 1
 course:
   title: "Курс"
-  description: ["Описание"]
+  goal: "Цель"
+  promise: "Обещание"
+  route: ["Начало", "Конец"]
+  roadmap:
+    - id: stage_01
+      title: "Этап"
+      summary: "Описание"
+      lessons:
+        - {id: lesson_01, title: "Первый урок", outcome: "Первый результат"}
+        - {id: lesson_02, title: "Второй урок", outcome: "Второй результат"}
 lessons:
   - id: lesson_01
-    title: "Первый урок"
     content: unused.md
     completion_tasks: []
     tasks:
       - {id: intro, kind: article, title: "Первый", section: intro}
   - id: lesson_02
-    title: "Второй урок"
     content: unused.md
     completion_tasks: []
     tasks:

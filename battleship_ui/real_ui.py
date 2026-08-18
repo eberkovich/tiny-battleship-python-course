@@ -4,6 +4,8 @@ import os
 import time
 from pathlib import Path
 
+os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
+
 import pygame
 
 from battleship_ui.constants import (
@@ -24,6 +26,8 @@ BOARD_ORIGINS = {
 }
 BOARD_HEADER_Y = 88
 SHIP_COUNTER_SIZE = (96, 40)
+PROMPT_CARD_SIZE = (520, 210)
+PROMPT_BUTTON_SIZE = (210, 52)
 
 BACKGROUND = (17, 27, 45)
 TEXT = (239, 246, 255)
@@ -64,6 +68,12 @@ def show_ship_count(board: str, count: int) -> None:
     _state.show_ship_count(board, count)
     if _screen is not None:
         _render()
+
+
+def wait_for_button(message: str, label: str) -> None:
+    _state.wait_for_button(message, label)
+    _ensure_display()
+    _wait_for_prompt_click(message, label)
 
 
 def _ensure_display() -> pygame.Surface:
@@ -138,6 +148,65 @@ def _render() -> None:
         if _state.boards[board].visible:
             _draw_board(screen, board)
     pygame.display.flip()
+
+
+def _prompt_button_rect() -> pygame.Rect:
+    return pygame.Rect(
+        (WINDOW_SIZE[0] - PROMPT_BUTTON_SIZE[0]) // 2,
+        WINDOW_SIZE[1] // 2 + 42,
+        *PROMPT_BUTTON_SIZE,
+    )
+
+
+def _render_prompt(message: str, label: str) -> None:
+    _render()
+    screen = _ensure_display()
+    overlay = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+    overlay.fill((6, 13, 25, 175))
+    screen.blit(overlay, (0, 0))
+
+    card = pygame.Rect(
+        (WINDOW_SIZE[0] - PROMPT_CARD_SIZE[0]) // 2,
+        (WINDOW_SIZE[1] - PROMPT_CARD_SIZE[1]) // 2,
+        *PROMPT_CARD_SIZE,
+    )
+    pygame.draw.rect(screen, SHIP_COUNTER_BACKGROUND, card, border_radius=18)
+    pygame.draw.rect(screen, GRID, card, 2, border_radius=18)
+
+    message_surface = _font(28, bold=True).render(message, True, TEXT)
+    screen.blit(message_surface, message_surface.get_rect(center=(card.centerx, card.y + 66)))
+
+    button = _prompt_button_rect()
+    pygame.draw.rect(screen, SHIP_COUNTER, button, border_radius=12)
+    label_surface = _font(21, bold=True).render(label, True, TEXT)
+    screen.blit(label_surface, label_surface.get_rect(center=button.center))
+    pygame.display.flip()
+
+
+def _wait_for_prompt_click(message: str, label: str) -> None:
+    global _screen
+    button = _prompt_button_rect()
+    _render_prompt(message, label)
+    autoclose_ms = int(os.environ.get("BATTLESHIP_AUTOCLOSE_MS", "0"))
+    started = time.monotonic()
+    clock = pygame.time.Clock()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                _screen = None
+                return
+            if (
+                event.type == pygame.MOUSEBUTTONDOWN
+                and event.button == 1
+                and button.collidepoint(event.pos)
+            ):
+                _render()
+                return
+        if autoclose_ms and (time.monotonic() - started) * 1000 >= autoclose_ms:
+            _render()
+            return
+        clock.tick(60)
 
 
 def _draw_board(screen: pygame.Surface, board: str) -> None:
@@ -242,4 +311,5 @@ __all__ = [
     "draw_deck",
     "show_miss",
     "show_ship_count",
+    "wait_for_button",
 ]

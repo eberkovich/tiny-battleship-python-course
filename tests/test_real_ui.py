@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+import pygame
+
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
@@ -71,3 +73,34 @@ def test_miss_asset_is_packaged_and_scaled_to_fill_a_cell() -> None:
         real_ui.CELL_SIZE,
         real_ui.CELL_SIZE,
     )
+
+
+def test_button_prompt_uses_a_clickable_centered_button(tmp_path: Path) -> None:
+    real_ui.show_board(PLAYER)
+    real_ui._state.wait_for_button("Флот готов!", "Начать бой")
+    real_ui._render_prompt("Флот готов!", "Начать бой")
+    screenshot = tmp_path / "button.png"
+    real_ui._save_screenshot(str(screenshot))
+
+    button = real_ui._prompt_button_rect()
+    assert button.centerx == real_ui.WINDOW_SIZE[0] // 2
+    assert button.width >= 200
+    assert screenshot.stat().st_size > 0
+
+
+def test_wait_for_button_returns_after_click() -> None:
+    real_ui.show_board(PLAYER)
+    pygame.event.post(
+        pygame.event.Event(
+            pygame.MOUSEBUTTONDOWN,
+            {"button": 1, "pos": real_ui._prompt_button_rect().center},
+        )
+    )
+
+    real_ui.wait_for_button("Флот готов!", "Начать бой")
+
+    assert real_ui._snapshot()["events"][-1] == [
+        "button_waited",
+        "Флот готов!",
+        "Начать бой",
+    ]

@@ -1,8 +1,10 @@
 # Tiny Battleship Python Course
 
-Stage 1 is a local macOS lesson in Russian. A child starts from a course home,
-completes three isolated exercises in an external editor, and then adds the
-first two commands to a cumulative `battleship.py` game.
+The current local macOS course contains Lessons 1–7 in Russian. A child starts
+from a course home that shows the complete 18-lesson Part 1 roadmap, practises
+each Python concept in short exercises, and gradually grows a cumulative
+`battleship.py` into a fixed fleet of 10 one-cell ships with a battle-start
+button. Roadmap-only future lessons are visible but cannot be opened yet.
 
 ## Install and run
 
@@ -18,6 +20,16 @@ never overwritten. The launcher opens the correct task in the configured
 editor; save it with `Cmd+S`, then use the single **Запустить** button to check
 the code and see its visual result.
 
+For lesson development, unlock every implemented lesson and step without
+changing saved progress:
+
+```bash
+./run.command --student-dir students/debug --debug
+```
+
+Debug mode still opens and runs files from the selected directory, so use a
+dedicated debug directory when experimenting with source code.
+
 ## Development checks
 
 ```bash
@@ -32,6 +44,7 @@ Run a reference acceptance check directly with:
 ```bash
 .venv/bin/python -m runner.child \
   --mode check \
+  --lesson lesson_01 \
   --task project \
   --file lessons/lesson_01/reference/project.py
 ```

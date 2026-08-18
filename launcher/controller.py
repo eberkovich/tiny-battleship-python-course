@@ -4,8 +4,16 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
-from launcher.course import Course, Lesson, Task, load_course, load_sections
-from launcher.editor import open_in_thonny
+from launcher.course import (
+    Course,
+    Lesson,
+    RoadmapLesson,
+    RoadmapStage,
+    Task,
+    load_course,
+    load_sections,
+)
+from launcher.editor import open_in_idle
 from launcher.theme import DARK_THEME_NAME, LIGHT_THEME_NAME
 from launcher.workspace import Progress, StudentWorkspace
 from runner.process import RunningStudentProcess, start_student_process
@@ -23,8 +31,10 @@ class LauncherController:
         *,
         course: Course | None = None,
         process_starter: ProcessStarter = start_student_process,
-        editor_opener: EditorOpener = open_in_thonny,
+        editor_opener: EditorOpener = open_in_idle,
+        debug: bool = False,
     ) -> None:
+        self.debug = debug
         self.course = course or load_course()
         self.workspace = StudentWorkspace(student_dir, self.course)
         self.workspace.initialize()
@@ -42,6 +52,8 @@ class LauncherController:
         self.message_level = "info"
         self.technical_details = ""
         self.latest_output = ""
+        self.game_message = ""
+        self.game_message_level = "info"
 
     @property
     def current_task(self) -> Task:
@@ -54,6 +66,18 @@ class LauncherController:
     @property
     def busy(self) -> bool:
         return self.job is not None
+
+    @property
+    def game_available(self) -> bool:
+        if self.debug:
+            return True
+        return any(
+            task.kind == "project"
+            and task.student_file == Path("battleship.py")
+            and task.id in self.progress.completed_tasks
+            for lesson in self.course.lessons
+            for task in lesson.tasks
+        )
 
     def show_home(self) -> None:
         if not self.busy:
@@ -75,7 +99,7 @@ class LauncherController:
         )
         self.lesson = lesson
         self.sections = load_sections(lesson.content)
-        self.progress = self.workspace.set_current_task(lesson_id, task_id)
+        self.progress = self._set_current_task(lesson_id, task_id)
         self.view = "lesson"
         self.message = ""
         self.message_level = "info"
@@ -91,9 +115,14 @@ class LauncherController:
             if self.progress.theme == DARK_THEME_NAME
             else DARK_THEME_NAME
         )
-        self.progress = self.workspace.set_theme(theme)
+        if self.debug:
+            self.progress.theme = theme
+        else:
+            self.progress = self.workspace.set_theme(theme)
 
     def lesson_unlocked(self, lesson_id: str) -> bool:
+        if self.debug:
+            return True
         index = next(
             index
             for index, lesson in enumerate(self.course.lessons)
@@ -111,13 +140,48 @@ class LauncherController:
             return "in_progress"
         return "not_started" if self.lesson_unlocked(lesson.id) else "locked"
 
+    @property
+    def current_lesson_number(self) -> int:
+        return self.course.roadmap_position(self.lesson.id)
+
+    @property
+    def total_lesson_count(self) -> int:
+        return len(self.course.roadmap_lessons)
+
+    @property
+    def current_stage(self) -> RoadmapStage:
+        return self.course.roadmap_stage(self.lesson.id)
+
+    @property
+    def current_stage_number(self) -> int:
+        return self.course.roadmap_stage_number(self.lesson.id)
+
+    @property
+    def completed_lesson_count(self) -> int:
+        return sum(
+            self.workspace.lesson_complete(lesson, self.progress)
+            for lesson in self.course.lessons
+        )
+
+    def roadmap_lesson_status(self, lesson: RoadmapLesson) -> str:
+        try:
+            implemented = self.course.lesson(lesson.id)
+        except KeyError:
+            return "future"
+        return self.lesson_status(implemented)
+
+    def next_roadmap_lesson(self) -> RoadmapLesson | None:
+        index = self.course.roadmap_position(self.lesson.id)
+        lessons = self.course.roadmap_lessons
+        return lessons[index] if index < len(lessons) else None
+
     def select_task(self, task_id: str) -> None:
         if self.busy:
             return
         task = self.lesson.task(task_id)
         if not self.task_unlocked(task):
             return
-        self.progress = self.workspace.set_current_task(self.lesson.id, task_id)
+        self.progress = self._set_current_task(self.lesson.id, task_id)
         self.message = ""
         self.message_level = "info"
         self.technical_details = ""
@@ -174,6 +238,20 @@ class LauncherController:
         self.message_level = "info"
         self.technical_details = ""
 
+    def start_game(self) -> None:
+        if self.busy:
+            self.game_message = "Предыдущий запуск ещё работает."
+            self.game_message_level = "info"
+            return
+        if not self.game_available:
+            return
+        source = self.workspace.root / "battleship.py"
+        self.job = self.process_starter(source, mode="play", timeout=None)
+        self.job_kind = "game"
+        self.pending_check = None
+        self.game_message = "Открываю твою игру…"
+        self.game_message_level = "info"
+
     def _start_visual_run(self) -> None:
         source = self.source_path()
         if source is None:
@@ -199,7 +277,8 @@ class LauncherController:
 
         if kind == "check":
             if result.passed:
-                self.progress = self.workspace.mark_passed(self.current_task.id)
+                if not self.debug:
+                    self.progress = self.workspace.mark_passed(self.current_task.id)
                 self.failed_tasks.discard(self.current_task.id)
             else:
                 self.failed_tasks.add(self.current_task.id)
@@ -217,6 +296,13 @@ class LauncherController:
                 self.message_level = "error"
                 self.technical_details = result.technical_details
                 self.pending_check = None
+            return result
+
+        if kind == "game":
+            self.game_message = result.message
+            self.game_message_level = (
+                "error" if result.status == "error" else "success"
+            )
             return result
 
         check_result = self.pending_check
@@ -244,10 +330,17 @@ class LauncherController:
         return task.id in self.progress.completed_tasks
 
     def task_unlocked(self, task: Task) -> bool:
-        return task.kind != "summary" or self.lesson_complete()
+        return self.debug or task.kind != "summary" or self.lesson_complete()
 
     def lesson_complete(self, lesson: Lesson | None = None) -> bool:
         return self.workspace.lesson_complete(lesson or self.lesson, self.progress)
+
+    def _set_current_task(self, lesson_id: str, task_id: str) -> Progress:
+        if self.debug:
+            self.progress.current_lesson = lesson_id
+            self.progress.current_task = task_id
+            return self.progress
+        return self.workspace.set_current_task(lesson_id, task_id)
 
     def shutdown(self) -> None:
         if self.job is not None:

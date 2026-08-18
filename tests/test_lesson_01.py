@@ -1,3 +1,5 @@
+import re
+
 from battleship_ui import fake_ui
 from battleship_ui.constants import DECK_IDLE, ENEMY, PLAYER
 from lessons.lesson_01.acceptance import check
@@ -52,7 +54,10 @@ def test_public_api_is_not_used_before_its_introduction_step() -> None:
     lesson = course.lessons[0]
     sections = load_sections(lesson.content)
 
+    lesson_task_ids = {task.id for task in lesson.tasks}
     for api_name, reference in course.api_references.items():
+        if reference.introduced_in not in lesson_task_ids:
+            continue
         introduction_index = next(
             index
             for index, task in enumerate(lesson.tasks)
@@ -116,6 +121,7 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
     assert "предскажи клетку" not in content
     assert "покажи пальцем" not in content
     assert "thonny" not in content
+    assert re.search(r"\bidle\b", content) is None
     assert "exercise_01.py" not in content
     assert "battleship.py" not in content
     assert "show_board(player)" not in sections["project"].lower()

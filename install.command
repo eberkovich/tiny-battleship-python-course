@@ -26,12 +26,20 @@ trap cleanup EXIT
 
 python_is_compatible() {
     local candidate="$1"
-    "$candidate" -c "import sys; assert (${MIN_PYTHON_MAJOR}, ${MIN_PYTHON_MINOR}) <= sys.version_info < (3, 15); import tkinter" >/dev/null 2>&1
+    "$candidate" -c "import sys; assert (${MIN_PYTHON_MAJOR}, ${MIN_PYTHON_MINOR}) <= sys.version_info < (3, 15); import tkinter, idlelib" >/dev/null 2>&1
 }
 
 python_version_is_supported() {
     local candidate="$1"
     "$candidate" -c "import sys; assert (${MIN_PYTHON_MAJOR}, ${MIN_PYTHON_MINOR}) <= sys.version_info < (3, 15)" >/dev/null 2>&1
+}
+
+python_has_tk() {
+    "$1" -c "import tkinter" >/dev/null 2>&1
+}
+
+python_has_idle() {
+    "$1" -c "import idlelib" >/dev/null 2>&1
 }
 
 find_compatible_python() {
@@ -112,7 +120,7 @@ install_homebrew_tk() {
 }
 
 install_official_python() {
-    [[ "$(uname -s)" == "Darwin" ]] || fail "Python 3.11–3.14 с Tk не найден. Автоматическая установка поддерживается только на macOS."
+    [[ "$(uname -s)" == "Darwin" ]] || fail "Python 3.11–3.14 с Tk и IDLE не найден. Автоматическая установка поддерживается только на macOS."
     command -v curl >/dev/null 2>&1 || fail "Не найдена команда curl."
     command -v shasum >/dev/null 2>&1 || fail "Не найдена команда shasum."
     command -v pkgutil >/dev/null 2>&1 || fail "Не найдена команда pkgutil."
@@ -147,18 +155,25 @@ main() {
     python_bin="$(find_compatible_python || true)"
 
     if [[ -z "$python_bin" && "${BATTLESHIP_INSTALL_CHECK_ONLY:-0}" == "1" ]]; then
-        fail "Python 3.11–3.14 с поддержкой Tk не найден."
+        fail "Python 3.11–3.14 с поддержкой Tk и IDLE не найден."
     fi
 
     if [[ -z "$python_bin" ]]; then
         supported_python="$(find_supported_python || true)"
         if [[ -n "$supported_python" ]]; then
-            homebrew_tk_status=0
-            install_homebrew_tk "$supported_python" || homebrew_tk_status=$?
+            homebrew_tk_status=2
+            if ! python_has_tk "$supported_python"; then
+                homebrew_tk_status=0
+                install_homebrew_tk "$supported_python" || homebrew_tk_status=$?
+            elif ! python_has_idle "$supported_python"; then
+                echo "В найденном Python нет IDLE. Перехожу к официальному установщику Python с IDLE."
+            fi
             case "$homebrew_tk_status" in
                 0)
                     python_bin="$(find_compatible_python || true)"
-                    [[ -n "$python_bin" ]] || fail "Homebrew установил Tk, но подходящий Python не найден."
+                    if [[ -z "$python_bin" ]]; then
+                        echo "Tk установлен, но IDLE всё ещё недоступен. Перехожу к официальному установщику Python с IDLE."
+                    fi
                     ;;
                 1)
                     python_bin="$(find_compatible_python || true)"
@@ -204,11 +219,14 @@ main() {
     "$VENV_DIR/bin/python" -m pip install -e "$PROJECT_DIR[test]" \
         || fail "Не удалось установить зависимости. Проверь подключение к интернету."
 
-    "$VENV_DIR/bin/python" -c "import tkinter, pygame, yaml, thonny, battleship_ui, launcher" \
+    "$VENV_DIR/bin/python" -m pip uninstall -y thonny >/dev/null 2>&1 \
+        || fail "Не удалось удалить старый редактор Thonny."
+
+    "$VENV_DIR/bin/python" -c "import tkinter, idlelib, pygame, yaml, battleship_ui, launcher" \
         || fail "Проверка зависимостей завершилась ошибкой."
 
-    "$VENV_DIR/bin/python" -c "from launcher.editor import ensure_russian_thonny_config; ensure_russian_thonny_config()" \
-        || fail "Не удалось настроить русский интерфейс Thonny."
+    "$VENV_DIR/bin/python" -c "from launcher.editor import ensure_idle_config; ensure_idle_config()" \
+        || fail "Не удалось настроить размер шрифта IDLE."
 
     echo
     echo "Установка завершена."

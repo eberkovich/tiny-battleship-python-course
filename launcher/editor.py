@@ -6,30 +6,51 @@ import sys
 from pathlib import Path
 
 
-def thonny_user_dir() -> Path:
-    return Path(sys.prefix) / ".thonny"
+IDLE_FONT_FAMILY = "Menlo"
+IDLE_FONT_SIZE = 18
 
 
-def ensure_russian_thonny_config(user_dir: Path | None = None) -> Path:
-    directory = user_dir or thonny_user_dir()
-    configuration = directory / "configuration.ini"
+def idle_user_dir() -> Path:
+    return Path.home() / ".idlerc"
+
+
+def ensure_idle_config(user_dir: Path | None = None) -> Path:
+    directory = user_dir or idle_user_dir()
+    configuration = directory / "config-main.cfg"
+    parser = configparser.ConfigParser()
     if configuration.exists():
+        parser.read(configuration, encoding="utf-8")
+
+    font_options = ("font", "font-size", "font-bold")
+    has_font_preference = parser.has_section("EditorWindow") and any(
+        parser.has_option("EditorWindow", option) for option in font_options
+    )
+    if has_font_preference:
         return configuration
 
     directory.mkdir(parents=True, exist_ok=True)
-    parser = configparser.ConfigParser()
-    parser["general"] = {"language": "ru_RU"}
+    if not parser.has_section("EditorWindow"):
+        parser.add_section("EditorWindow")
+    parser.set("EditorWindow", "font", IDLE_FONT_FAMILY)
+    parser.set("EditorWindow", "font-size", str(IDLE_FONT_SIZE))
+    parser.set("EditorWindow", "font-bold", "0")
     with configuration.open("w", encoding="utf-8") as stream:
         parser.write(stream)
     return configuration
 
 
 def editor_command(source: Path) -> list[str]:
-    return [sys.executable, "-m", "thonny", str(source.resolve())]
+    return [
+        sys.executable,
+        "-m",
+        "idlelib",
+        "-e",
+        str(source.resolve()),
+    ]
 
 
-def open_in_thonny(source: Path) -> subprocess.Popen[bytes]:
-    ensure_russian_thonny_config()
+def open_in_idle(source: Path) -> subprocess.Popen[bytes]:
+    ensure_idle_config()
     return subprocess.Popen(
         editor_command(source),
         cwd=source.resolve().parent,
@@ -37,4 +58,3 @@ def open_in_thonny(source: Path) -> subprocess.Popen[bytes]:
         stderr=subprocess.DEVNULL,
         start_new_session=True,
     )
-

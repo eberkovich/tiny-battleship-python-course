@@ -11,7 +11,7 @@ import pygame
 
 from battleship_ui.icons import draw_ship_icon
 from launcher.controller import LauncherController
-from launcher.course import Task
+from launcher.course import RoadmapLesson, RoadmapStage, Task
 from launcher.theme import DARK_THEME_NAME, THEMES, ThemePalette
 
 
@@ -32,10 +32,13 @@ OUTPUT_PADDING_Y = 12
 OUTPUT_LINE_HEIGHT = 22
 OUTPUT_MAX_LINES = 6
 DIVIDER_HEIGHT = 40
+GLOBAL_TOOLBAR_BOTTOM = 64
+HOME_SCROLL_VIEW_TOP = 136
+HOME_PLAN_REVEAL_TOP = HOME_SCROLL_VIEW_TOP + 86
 TASK_ICON_SIZE = 36
 TASK_ICON_RENDER_SCALE = 4
-SIDEBAR_TASK_HEIGHT = 54
-SIDEBAR_TASK_GAP = 6
+SIDEBAR_TASK_HEIGHT = 50
+SIDEBAR_TASK_GAP = 4
 DIALOG_OVERLAY_ALPHA = 135
 
 
@@ -44,16 +47,6 @@ class Button:
     label: str
     rect: pygame.Rect
     action: str
-
-
-@dataclass(frozen=True)
-class ProgressSegment:
-    task_id: str
-    symbol: str
-    number: int | None
-    optional: bool
-    state: str
-    selected: bool
 
 
 def _clean_markdown(text: str) -> str:
@@ -151,17 +144,30 @@ class LauncherApp:
         self.scroll = 0
         self.buttons: list[Button] = []
         self.task_rects: list[tuple[pygame.Rect, str]] = []
+        self.task_status_rects: dict[str, pygame.Rect] = {}
         self.lesson_rects: list[tuple[pygame.Rect, str]] = []
         self.api_links: list[tuple[pygame.Rect, str]] = []
         self.api_dialog: str | None = None
+        self.command_reference_open = False
+        self.reference_api_links: list[tuple[pygame.Rect, str]] = []
+        self.copy_signature_links: list[tuple[pygame.Rect, str]] = []
+        self.copied_signature: str | None = None
+        self.clipboard_error = False
         self.note_card_rect: pygame.Rect | None = None
         self.output_card_rect: pygame.Rect | None = None
+        self.debug_badge_rect: pygame.Rect | None = None
+        self.home_title_rect: pygame.Rect | None = None
+        self.lesson_title_rect: pygame.Rect | None = None
+        self.home_plan_expanded = False
+        self.home_content_height = WINDOW_SIZE[1]
+        self.home_plan_top = 0
         self.font = pygame.font.SysFont("Arial", 20)
         self.small_font = pygame.font.SysFont("Arial", 16)
         self.code_font = pygame.font.SysFont("Menlo", 18)
         self.note_font = pygame.font.SysFont("Arial", 15, italic=True)
         self.title_font = pygame.font.SysFont("Arial", 30, bold=True)
         self.hero_font = pygame.font.SysFont("Arial", 40, bold=True)
+        self.home_goal_font = pygame.font.SysFont("Arial", 26, bold=True)
         self.task_font = pygame.font.SysFont("Arial", 15, bold=True)
         self.task_icon_font = pygame.font.SysFont(
             "Arial", 15 * TASK_ICON_RENDER_SCALE, bold=True
@@ -206,7 +212,11 @@ class LauncherApp:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self._click(event.pos)
-                elif event.type == pygame.MOUSEWHEEL and self.api_dialog is None:
+                elif (
+                    event.type == pygame.MOUSEWHEEL
+                    and self.api_dialog is None
+                    and not self.command_reference_open
+                ):
                     self.scroll = max(0, self.scroll - event.y * 32)
             self.controller.poll()
             self.render()
@@ -218,12 +228,39 @@ class LauncherApp:
 
     def _click(self, position: tuple[int, int]) -> None:
         if self.api_dialog is not None:
+            for rect, signature in self.copy_signature_links:
+                if rect.collidepoint(position):
+                    self._copy_signature(signature)
+                    return
             for button in self.buttons:
                 if (
                     button.action == "close_api"
                     and button.rect.collidepoint(position)
                 ):
                     self.api_dialog = None
+                    self.copied_signature = None
+                    self.clipboard_error = False
+                    return
+            return
+        if self.command_reference_open:
+            for rect, signature in self.copy_signature_links:
+                if rect.collidepoint(position):
+                    self._copy_signature(signature)
+                    return
+            for rect, api_name in self.reference_api_links:
+                if rect.collidepoint(position):
+                    self.api_dialog = api_name
+                    self.copied_signature = None
+                    self.clipboard_error = False
+                    return
+            for button in self.buttons:
+                if (
+                    button.action == "close_reference"
+                    and button.rect.collidepoint(position)
+                ):
+                    self.command_reference_open = False
+                    self.copied_signature = None
+                    self.clipboard_error = False
                     return
             return
         if self.controller.busy:
@@ -247,38 +284,179 @@ class LauncherApp:
                 continue
             if button.action == "home":
                 self.controller.show_home()
+                self.scroll = 0
             elif button.action == "continue":
                 self.controller.continue_course()
+                self.scroll = 0
+            elif button.action == "toggle_plan":
+                self.home_plan_expanded = not self.home_plan_expanded
+                self.scroll = (
+                    max(0, self.home_plan_top - HOME_PLAN_REVEAL_TOP)
+                    if self.home_plan_expanded
+                    else 0
+                )
             elif button.action == "open":
                 self.controller.open_code()
             elif button.action == "run":
                 self.controller.start_run()
+            elif button.action == "game":
+                self.controller.start_game()
             elif button.action == "previous":
                 self.controller.move(-1)
                 self.scroll = 0
             elif button.action == "next":
                 self.controller.move(1)
                 self.scroll = 0
+            elif button.action == "next_lesson":
+                lesson_index = self.controller.course.lessons.index(
+                    self.controller.lesson
+                )
+                next_lesson = self.controller.course.lessons[lesson_index + 1]
+                self.controller.enter_lesson(next_lesson.id)
+                self.scroll = 0
             elif button.action == "theme":
                 self.controller.toggle_theme()
+            elif button.action == "command_reference":
+                self.command_reference_open = True
+                self.copied_signature = None
+                self.clipboard_error = False
             return
 
     def render(self) -> None:
         self.screen.fill(self.theme.background)
         self.buttons = []
         self.task_rects = []
+        self.task_status_rects = {}
         self.lesson_rects = []
         self.api_links = []
+        self.reference_api_links = []
+        self.copy_signature_links = []
         self.note_card_rect = None
+        self.debug_badge_rect = None
+        self.home_title_rect = None
+        self.lesson_title_rect = None
         if self.controller.view == "home":
             self._render_home()
+            self.scroll = min(
+                self.scroll,
+                max(
+                    0,
+                    self.home_content_height - WINDOW_SIZE[1],
+                    self.home_plan_top - HOME_PLAN_REVEAL_TOP
+                    if self.home_plan_expanded
+                    else 0,
+                ),
+            )
         else:
             self._render_sidebar()
             self._render_lesson_content()
         self._render_theme_switch()
+        self._render_command_reference_button()
+        self._render_game_button()
+        self._render_debug_badge()
+        self._render_game_message()
+        if self.command_reference_open:
+            self._render_command_reference()
         if self.api_dialog is not None:
+            self.copy_signature_links = []
             self._render_api_dialog()
         pygame.display.flip()
+
+    def _render_debug_badge(self) -> None:
+        if not self.controller.debug:
+            return
+        rect = pygame.Rect(WINDOW_SIZE[0] - 680, 16, 180, 38)
+        pygame.draw.rect(self.screen, self.theme.panel, rect, border_radius=9)
+        pygame.draw.rect(self.screen, self.theme.gold, rect, 2, border_radius=9)
+        label = self.small_font.render(
+            "РЕЖИМ ОТЛАДКИ", True, self.theme.gold
+        )
+        self.screen.blit(label, label.get_rect(center=rect.center))
+        self.debug_badge_rect = rect
+
+    def _render_game_button(self) -> None:
+        if not self.controller.game_available:
+            return
+        rect = pygame.Rect(WINDOW_SIZE[0] - 484, 16, 138, 38)
+        hovered = rect.collidepoint(pygame.mouse.get_pos())
+        color = (
+            self.theme.button_disabled
+            if self.controller.busy
+            else self.theme.button_hover
+            if hovered
+            else self.theme.button
+        )
+        pygame.draw.rect(self.screen, color, rect, border_radius=9)
+        draw_ship_icon(
+            self.screen,
+            (rect.x + 20, rect.centery),
+            self.theme.button_text,
+            scale=0.5,
+        )
+        label = self.small_font.render("Моя игра", True, self.theme.button_text)
+        self.screen.blit(
+            label,
+            label.get_rect(midleft=(rect.x + 38, rect.centery)),
+        )
+        self.buttons.append(Button("Моя игра", rect, "game"))
+
+    def _render_game_message(self) -> None:
+        if not self.controller.game_message:
+            return
+        color = {
+            "success": self.theme.success,
+            "error": self.theme.error,
+        }.get(self.controller.game_message_level, self.theme.muted)
+        message = _wrap(
+            self.small_font,
+            self.controller.game_message,
+            465 if self.controller.debug else 650,
+        )[0]
+        surface = self.small_font.render(message, True, color)
+        self.screen.blit(surface, (20, 26))
+
+    def _render_command_reference_button(self) -> None:
+        rect = pygame.Rect(WINDOW_SIZE[0] - 330, 16, 168, 38)
+        hovered = rect.collidepoint(pygame.mouse.get_pos())
+        color = (
+            self.theme.button_disabled
+            if self.controller.busy
+            else self.theme.button_hover
+            if hovered
+            else self.theme.button
+        )
+        pygame.draw.rect(self.screen, color, rect, border_radius=9)
+
+        icon_x = rect.x + 20
+        icon_y = rect.centery
+        pygame.draw.polygon(
+            self.screen,
+            self.theme.button_text,
+            [
+                (icon_x - 8, icon_y - 8),
+                (icon_x - 1, icon_y - 5),
+                (icon_x - 1, icon_y + 8),
+                (icon_x - 8, icon_y + 5),
+            ],
+        )
+        pygame.draw.polygon(
+            self.screen,
+            self.theme.button_text,
+            [
+                (icon_x + 8, icon_y - 8),
+                (icon_x + 1, icon_y - 5),
+                (icon_x + 1, icon_y + 8),
+                (icon_x + 8, icon_y + 5),
+            ],
+        )
+        surface = self.small_font.render(
+            "Справочник", True, self.theme.button_text
+        )
+        self.screen.blit(
+            surface,
+            surface.get_rect(midleft=(rect.x + 38, rect.centery)),
+        )
+        self.buttons.append(Button("Справочник", rect, "command_reference"))
 
     def _render_theme_switch(self) -> None:
         rect = pygame.Rect(WINDOW_SIZE[0] - 146, 16, 128, 38)
@@ -332,70 +510,395 @@ class LauncherApp:
         )
         self.buttons.append(Button(label, rect, "theme"))
 
+    def _render_command_reference(self) -> None:
+        overlay = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, DIALOG_OVERLAY_ALPHA))
+        self.screen.blit(overlay, (0, 0))
+
+        dialog = pygame.Rect(0, 0, 860, 620)
+        dialog.center = (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2)
+        pygame.draw.rect(
+            self.screen, self.theme.content_card, dialog, border_radius=16
+        )
+        pygame.draw.rect(
+            self.screen, self.theme.accent, dialog, 2, border_radius=16
+        )
+
+        self.screen.blit(
+            self.title_font.render(
+                "Справочник команд", True, self.theme.text
+            ),
+            (dialog.x + 28, dialog.y + 24),
+        )
+        self.screen.blit(
+            self.small_font.render(
+                "Здесь собраны все вспомогательные команды игры.",
+                True,
+                self.theme.muted,
+            ),
+            (dialog.x + 28, dialog.y + 66),
+        )
+
+        row_x = dialog.x + 28
+        row_width = dialog.width - 56
+        row_y = dialog.y + 102
+        for api_name, reference in self.controller.course.api_references.items():
+            row = pygame.Rect(row_x, row_y, row_width, 72)
+            pygame.draw.rect(
+                self.screen, self.theme.note_background, row, border_radius=9
+            )
+            self.screen.blit(
+                self.code_font.render(
+                    reference.signature, True, self.theme.text
+                ),
+                (row.x + 16, row.y + 9),
+            )
+            summary = _wrap(self.small_font, reference.summary, row.width - 280)[0]
+            self.screen.blit(
+                self.small_font.render(summary, True, self.theme.muted),
+                (row.x + 16, row.y + 42),
+            )
+
+            details_rect = pygame.Rect(row.right - 232, row.y + 19, 104, 34)
+            copy_rect = pygame.Rect(row.right - 116, row.y + 19, 104, 34)
+            self._draw_reference_action(details_rect, "Подробнее")
+            copy_label = "Копировать"
+            if self.copied_signature == reference.signature:
+                copy_label = (
+                    "Не скопировано"
+                    if self.clipboard_error
+                    else "Скопировано"
+                )
+            self._draw_reference_action(copy_rect, copy_label)
+            self.reference_api_links.append((details_rect, api_name))
+            self.copy_signature_links.append((copy_rect, reference.signature))
+            row_y += 80
+
+        self._add_button(
+            "Закрыть",
+            dialog.right - 138,
+            dialog.bottom - 50,
+            110,
+            "close_reference",
+            height=36,
+        )
+
+    def _draw_reference_action(self, rect: pygame.Rect, label: str) -> None:
+        color = (
+            self.theme.button_hover
+            if rect.collidepoint(pygame.mouse.get_pos())
+            else self.theme.button
+        )
+        pygame.draw.rect(self.screen, color, rect, border_radius=7)
+        font = (
+            self.task_font
+            if self.task_font.size(label)[0] <= rect.width - 12
+            else self.small_font
+        )
+        surface = font.render(label, True, self.theme.button_text)
+        self.screen.blit(surface, surface.get_rect(center=rect.center))
+
+    def _copy_signature(self, signature: str) -> None:
+        self.copied_signature = signature
+        self.clipboard_error = False
+        try:
+            self._set_clipboard_text(signature)
+        except (pygame.error, RuntimeError):
+            self.clipboard_error = True
+
+    @staticmethod
+    def _set_clipboard_text(text: str) -> None:
+        if not pygame.scrap.get_init():
+            pygame.scrap.init()
+        pygame.scrap.put(pygame.SCRAP_TEXT, text.encode("utf-8"))
+
     def _render_home(self) -> None:
-        title = self.hero_font.render(
-            self.controller.course.title, True, self.theme.text
+        offset = -self.scroll
+        course = self.controller.course
+        draw_ship_icon(
+            self.screen,
+            (75, 101),
+            self.theme.project,
+            scale=1.25,
         )
-        self.screen.blit(title, (60, 52))
-        subtitle = self.font.render(
-            "Курс, в котором каждый урок меняет твою игру",
+        title = self.hero_font.render(course.title, True, self.theme.text)
+        self.home_title_rect = title.get_rect(topleft=(108, 77))
+        self.screen.blit(title, self.home_title_rect)
+
+        previous_clip = self.screen.get_clip()
+        self.screen.set_clip(
+            pygame.Rect(
+                0,
+                HOME_SCROLL_VIEW_TOP,
+                WINDOW_SIZE[0],
+                WINDOW_SIZE[1] - HOME_SCROLL_VIEW_TOP,
+            )
+        )
+
+        hero = pygame.Rect(60, 144 + offset, 1060, 212)
+        pygame.draw.rect(self.screen, self.theme.card, hero, border_radius=18)
+        self.screen.blit(
+            self.small_font.render("ТВОЯ ЦЕЛЬ", True, self.theme.accent),
+            (hero.x + 28, hero.y + 22),
+        )
+        goal_lines = _wrap(self.home_goal_font, course.goal, 675)[:3]
+        for index, line in enumerate(goal_lines):
+            self.screen.blit(
+                self.home_goal_font.render(line, True, self.theme.text),
+                (hero.x + 28, hero.y + 49 + index * 31),
+            )
+        promise_y = hero.y + 55 + len(goal_lines) * 31
+        promise_lines = _wrap(self.small_font, course.promise, 675)[:2]
+        for index, line in enumerate(promise_lines):
+            self.screen.blit(
+                self.small_font.render(line, True, self.theme.muted),
+                (hero.x + 28, promise_y + index * 21),
+            )
+        self._render_home_route(course.route, hero.x + 28, hero.bottom - 43)
+        self._render_home_progress(
+            pygame.Rect(hero.right - 305, hero.y + 22, 277, hero.height - 44)
+        )
+
+        section_y = 386 + offset
+        self.screen.blit(
+            self.title_font.render("Путь к готовой игре", True, self.theme.text),
+            (60, section_y),
+        )
+        subtitle = self.small_font.render(
+            "Три этапа — каждый заканчивается видимым результатом.",
             True,
-            self.theme.accent,
+            self.theme.muted,
         )
-        self.screen.blit(subtitle, (62, 108))
+        self.screen.blit(subtitle, (60, section_y + 39))
 
-        intro_rect = pygame.Rect(60, 158, 1060, 150)
-        pygame.draw.rect(self.screen, self.theme.card, intro_rect, border_radius=14)
-        y = intro_rect.y + 24
-        for paragraph in self.controller.course.description:
-            surface = self.font.render(paragraph, True, self.theme.text)
-            self.screen.blit(surface, (intro_rect.x + 28, y))
-            y += 34
+        card_y = section_y + 76
+        card_width = 342
+        for index, stage in enumerate(course.roadmap, start=1):
+            rect = pygame.Rect(60 + (index - 1) * 359, card_y, card_width, 154)
+            self._render_home_stage(stage, index, rect)
 
-        first_task = self.controller.course.lessons[0].tasks[0]
+        actions_y = card_y + 177
+        first_task = course.lessons[0].tasks[0]
         has_progress = bool(
             self.controller.progress.completed_tasks
             or self.controller.progress.earned_stars
             or self.controller.progress.current_task != first_task.id
         )
-        action = "Продолжить" if has_progress else "Начать первый урок"
-        self._add_button(action, 60, 330, 230, "continue")
+        action = (
+            f"Продолжить урок {self.controller.current_lesson_number}"
+            if has_progress
+            else "Начать первый урок"
+        )
+        self._add_button(action, 60, actions_y, 250, "continue", height=48)
+        toggle = (
+            "Скрыть полный план"
+            if self.home_plan_expanded
+            else "Показать все 18 уроков"
+        )
+        self._add_button(toggle, 326, actions_y, 245, "toggle_plan", height=48)
+        pace = self.small_font.render(
+            f"{self.controller.total_lesson_count} коротких уроков · Иди в своём темпе",
+            True,
+            self.theme.muted,
+        )
+        self.screen.blit(pace, (596, actions_y + 15))
 
-        heading = self.title_font.render("Уроки", True, self.theme.text)
-        self.screen.blit(heading, (60, 410))
-        y = 462
-        for number, lesson in enumerate(self.controller.course.lessons, start=1):
-            rect = pygame.Rect(60, y, 760, 92)
-            status = self.controller.lesson_status(lesson)
-            unlocked = status != "locked"
+        self.home_plan_top = actions_y - offset + 76
+
+        if self.home_plan_expanded:
+            self.home_content_height = (
+                self._render_full_roadmap(self.home_plan_top + offset)
+                - offset
+                + 34
+            )
+        else:
+            self.home_content_height = WINDOW_SIZE[1]
+        self.screen.set_clip(previous_clip)
+
+    def _render_home_route(
+        self, route: tuple[str, ...], x: int, y: int
+    ) -> None:
+        cursor = x
+        for index, item in enumerate(route):
+            label = self.task_font.render(item, True, self.theme.text)
+            width = label.get_width() + 18
+            rect = pygame.Rect(cursor, y, width, 28)
+            pygame.draw.rect(
+                self.screen, self.theme.note_background, rect, border_radius=8
+            )
+            self.screen.blit(label, label.get_rect(center=rect.center))
+            cursor = rect.right + 8
+            if index < len(route) - 1:
+                arrow = self.small_font.render("→", True, self.theme.muted)
+                self.screen.blit(arrow, (cursor, y + 4))
+                cursor += arrow.get_width() + 8
+
+    def _render_home_progress(self, rect: pygame.Rect) -> None:
+        pygame.draw.rect(
+            self.screen, self.theme.note_background, rect, border_radius=14
+        )
+        self.screen.blit(
+            self.small_font.render("СЕЙЧАС", True, self.theme.accent),
+            (rect.x + 20, rect.y + 18),
+        )
+        lesson = self.title_font.render(
+            f"Урок {self.controller.current_lesson_number} из "
+            f"{self.controller.total_lesson_count}",
+            True,
+            self.theme.text,
+        )
+        self.screen.blit(lesson, (rect.x + 20, rect.y + 43))
+        stage = self.small_font.render(
+            f"Этап {self.controller.current_stage_number} · "
+            f"{self.controller.current_stage.title}",
+            True,
+            self.theme.muted,
+        )
+        self.screen.blit(stage, (rect.x + 20, rect.y + 81))
+        track = pygame.Rect(rect.x + 20, rect.y + 113, rect.width - 40, 11)
+        pygame.draw.rect(
+            self.screen, self.theme.progress_idle, track, border_radius=6
+        )
+        completed = self.controller.completed_lesson_count
+        fill_width = round(track.width * completed / self.controller.total_lesson_count)
+        if fill_width:
             pygame.draw.rect(
                 self.screen,
-                self.theme.card if unlocked else self.theme.panel,
-                rect,
-                border_radius=12,
+                self.theme.accent,
+                (track.x, track.y, fill_width, track.height),
+                border_radius=6,
             )
-            number_color = self.theme.accent if unlocked else self.theme.muted
-            number_surface = self.title_font.render(str(number), True, number_color)
-            title_color = self.theme.text if unlocked else self.theme.muted
-            title_surface = self.font.render(lesson.title, True, title_color)
-            status_text = {
-                "completed": "Пройден",
-                "in_progress": "Продолжить",
-                "not_started": "Не начат",
-                "locked": "Откроется после предыдущего урока",
-            }[status]
-            status_color = (
-                self.theme.success if status == "completed" else self.theme.muted
+        progress = self.small_font.render(
+            f"Пройдено: {completed}", True, self.theme.muted
+        )
+        self.screen.blit(progress, (track.x, track.bottom + 8))
+
+    def _render_home_stage(
+        self, stage: RoadmapStage, number: int, rect: pygame.Rect
+    ) -> None:
+        current = stage.id == self.controller.current_stage.id
+        pygame.draw.rect(self.screen, self.theme.card, rect, border_radius=15)
+        if current:
+            pygame.draw.rect(
+                self.screen, self.theme.accent, rect, 2, border_radius=15
             )
-            self.screen.blit(number_surface, (rect.x + 24, rect.y + 25))
-            self.screen.blit(title_surface, (rect.x + 74, rect.y + 20))
+        badge = pygame.Rect(rect.x + 18, rect.y + 17, 34, 34)
+        pygame.draw.rect(
+            self.screen, self.theme.note_background, badge, border_radius=10
+        )
+        number_surface = self.font.render(str(number), True, self.theme.accent)
+        self.screen.blit(number_surface, number_surface.get_rect(center=badge.center))
+        marker = self._roadmap_stage_marker(stage)
+        if marker == "current":
+            label = self.small_font.render("ТЫ ЗДЕСЬ", True, self.theme.accent)
+            self.screen.blit(label, (rect.right - label.get_width() - 18, rect.y + 21))
+        elif marker == "planned":
+            label = self.small_font.render("В ПЛАНЕ", True, self.theme.muted)
             self.screen.blit(
-                self.small_font.render(status_text, True, status_color),
-                (rect.x + 74, rect.y + 54),
+                label,
+                (rect.right - label.get_width() - 18, rect.y + 21),
             )
-            if unlocked:
-                self.lesson_rects.append((rect, lesson.id))
-            y += 108
+        else:
+            self._draw_lock((rect.right - 29, rect.y + 33), self.theme.muted)
+        self.screen.blit(
+            self.font.render(stage.title, True, self.theme.text),
+            (rect.x + 18, rect.y + 61),
+        )
+        first = self.controller.course.roadmap_position(stage.lessons[0].id)
+        last = self.controller.course.roadmap_position(stage.lessons[-1].id)
+        self.screen.blit(
+            self.task_font.render(
+                f"Уроки {first}–{last}", True, self.theme.project
+            ),
+            (rect.x + 18, rect.y + 91),
+        )
+        lines = _wrap(self.small_font, stage.summary, rect.width - 36)[:2]
+        for index, line in enumerate(lines):
+            self.screen.blit(
+                self.small_font.render(line, True, self.theme.muted),
+                (rect.x + 18, rect.y + 116 + index * 19),
+            )
+
+    def _roadmap_stage_marker(self, stage: RoadmapStage) -> str:
+        if stage.id == self.controller.current_stage.id:
+            return "current"
+        if self.controller.debug and all(
+            self.controller.roadmap_lesson_status(lesson) == "future"
+            for lesson in stage.lessons
+        ):
+            return "planned"
+        return "locked"
+
+    def _roadmap_entry_marker(self, status: str) -> str | None:
+        if status == "completed":
+            return "completed"
+        if status == "future" and self.controller.debug:
+            return "planned"
+        if status in {"locked", "future"}:
+            return "locked"
+        return None
+
+    def _render_full_roadmap(self, top: int) -> int:
+        course = self.controller.course
+        offset_top = top
+        height = 342
+        panel = pygame.Rect(60, offset_top, 1060, height)
+        pygame.draw.rect(self.screen, self.theme.card, panel, border_radius=16)
+        self.screen.blit(
+            self.title_font.render("Все уроки", True, self.theme.text),
+            (panel.x + 24, panel.y + 20),
+        )
+        column_width = 328
+        for stage_index, stage in enumerate(course.roadmap):
+            x = panel.x + 24 + stage_index * 344
+            self.screen.blit(
+                self.task_font.render(
+                    f"Этап {stage_index + 1} · {stage.title}",
+                    True,
+                    self.theme.accent,
+                ),
+                (x, panel.y + 65),
+            )
+            y = panel.y + 94
+            for planned in stage.lessons:
+                number = course.roadmap_position(planned.id)
+                status = self.controller.roadmap_lesson_status(planned)
+                row = pygame.Rect(x, y, column_width, 32)
+                unlocked = status not in {"locked", "future"}
+                if unlocked:
+                    pygame.draw.rect(
+                        self.screen,
+                        self.theme.note_background,
+                        row,
+                        border_radius=7,
+                    )
+                color = self.theme.text if unlocked else self.theme.muted
+                number_surface = self.task_font.render(str(number), True, self.theme.project)
+                self.screen.blit(number_surface, (row.x + 8, row.y + 7))
+                title = _wrap(self.task_font, planned.title, row.width - 72)[0]
+                self.screen.blit(
+                    self.task_font.render(title, True, color),
+                    (row.x + 36, row.y + 7),
+                )
+                marker = self._roadmap_entry_marker(status)
+                if marker == "completed":
+                    self._draw_check((row.right - 17, row.centery), self.theme.success)
+                elif marker == "planned":
+                    planned_label = self.task_font.render(
+                        "план", True, self.theme.muted
+                    )
+                    self.screen.blit(
+                        planned_label,
+                        planned_label.get_rect(
+                            midright=(row.right - 7, row.centery)
+                        ),
+                    )
+                elif marker == "locked":
+                    self._draw_lock((row.right - 17, row.centery), self.theme.muted)
+                if unlocked:
+                    self.lesson_rects.append((row, planned.id))
+                y += 36
+        return panel.bottom
 
     def _render_sidebar(self) -> None:
         pygame.draw.rect(
@@ -403,14 +906,15 @@ class LauncherApp:
             self.theme.panel,
             (0, 0, SIDEBAR_WIDTH, WINDOW_SIZE[1]),
         )
-        self._add_button("Все уроки", 18, 16, 125, "home", height=38)
-        lesson_number = self.controller.course.lessons.index(
-            self.controller.lesson
-        ) + 1
+        self._add_button("Все уроки", 18, 76, 125, "home", height=38)
         lesson_label = self.small_font.render(
-            f"УРОК {lesson_number}", True, self.theme.accent
+            f"УРОК {self.controller.current_lesson_number} ИЗ "
+            f"{self.controller.total_lesson_count} · "
+            f"ЭТАП {self.controller.current_stage_number}",
+            True,
+            self.theme.accent,
         )
-        self.screen.blit(lesson_label, (20, 68))
+        self.screen.blit(lesson_label, (20, 126))
         title_lines = _wrap(
             self.task_font,
             self.controller.lesson.title,
@@ -419,11 +923,10 @@ class LauncherApp:
         for index, line in enumerate(title_lines):
             self.screen.blit(
                 self.task_font.render(line, True, self.theme.text),
-                (20, 91 + index * 20),
+                (20, 149 + index * 20),
             )
 
-        self._render_progress(20, 137)
-        y = 184
+        y = 195
         for task in self.controller.lesson.tasks:
             rect = pygame.Rect(14, y, SIDEBAR_WIDTH - 28, SIDEBAR_TASK_HEIGHT)
             unlocked = self.controller.task_unlocked(task)
@@ -444,7 +947,12 @@ class LauncherApp:
                 )
             color = self._task_color(task) if unlocked else self.theme.muted
             self._draw_task_icon(task, (rect.x + 27, rect.centery), color)
-            task_lines = _wrap(self.task_font, task.title, rect.width - 66)[:2]
+            status_rect = self._draw_task_status_mark(
+                task, (rect.right - 24, rect.centery)
+            )
+            if status_rect is not None:
+                self.task_status_rects[task.id] = status_rect
+            task_lines = _wrap(self.task_font, task.title, rect.width - 94)[:2]
             title_y = rect.centery - len(task_lines) * 9
             for index, line in enumerate(task_lines):
                 self.screen.blit(
@@ -463,125 +971,29 @@ class LauncherApp:
                 )
             y += SIDEBAR_TASK_HEIGHT + SIDEBAR_TASK_GAP
 
-    def _render_progress(self, x: int, y: int) -> None:
-        cursor_x = x
-        for segment in self._progress_segments():
-            if segment.optional:
-                cursor_x += 8
-            width = 54 if segment.optional else 42
-            rect = pygame.Rect(cursor_x, y, width, 26)
-            color = {
-                "passed": self.theme.success,
-                "failed": self.theme.error,
-                "not_started": self.theme.progress_idle,
-            }[segment.state]
-            pygame.draw.rect(self.screen, color, rect, border_radius=6)
-            outline = self._progress_outline_color(segment)
-            if outline is not None:
-                pygame.draw.rect(self.screen, outline, rect, 2, border_radius=6)
-            self._draw_progress_marker(segment, rect)
-            cursor_x += width + 6
-
-    def _progress_outline_color(
-        self,
-        segment: ProgressSegment,
-    ) -> tuple[int, int, int] | None:
-        return self.theme.text if segment.selected else None
-
-    def _progress_segments(self) -> list[ProgressSegment]:
-        required_ids = set(self.controller.lesson.completion_tasks)
-        exercise_number = 0
-        exercise_numbers: dict[str, int] = {}
-        for task in self.controller.lesson.tasks:
-            if task.kind in {"exercise", "star"}:
-                exercise_number += 1
-                exercise_numbers[task.id] = exercise_number
-
-        segments = []
-        for task in self.controller.lesson.tasks:
-            if task.id not in required_ids and task.kind != "star":
-                continue
-            if self.controller.task_passed(task):
-                state = "passed"
-            elif task.id in self.controller.failed_tasks:
-                state = "failed"
-            else:
-                state = "not_started"
-            symbol = (
-                "star"
-                if task.kind == "star"
-                else "ship"
-                if task.kind == "project"
-                else "number"
-            )
-            segments.append(
-                ProgressSegment(
-                    task_id=task.id,
-                    symbol=symbol,
-                    number=exercise_numbers.get(task.id),
-                    optional=task.kind == "star",
-                    state=state,
-                    selected=task.id == self.controller.current_task.id,
-                )
-            )
-        return segments
-
-    def _draw_progress_marker(
-        self, segment: ProgressSegment, rect: pygame.Rect
-    ) -> None:
-        if segment.symbol == "star":
-            self._draw_star(
-                (rect.x + 15, rect.centery), self.theme.gold, radius=8
-            )
-            if segment.state == "passed":
-                self._draw_check(
-                    (rect.x + 37, rect.centery), self.theme.button_text
-                )
-                return
-            marker = {
-                "failed": "!",
-                "not_started": str(segment.number),
-            }[segment.state]
-            marker_surface = self.small_font.render(
-                marker, True, self.theme.button_text
-            )
-            self.screen.blit(
-                marker_surface,
-                marker_surface.get_rect(center=(rect.x + 37, rect.centery)),
-            )
-            return
-        if segment.state == "passed":
-            self._draw_check(rect.center, self.theme.button_text)
-            return
-        if segment.state == "failed":
-            marker = "!"
-            marker_surface = self.small_font.render(
-                marker, True, self.theme.button_text
-            )
-            self.screen.blit(marker_surface, marker_surface.get_rect(center=rect.center))
-            return
-        if segment.symbol == "ship":
-            self._draw_ship(
-                (rect.centerx, rect.centery), self.theme.button_text, scale=0.7
-            )
-            return
-        number = self.small_font.render(
-            str(segment.number), True, self.theme.button_text
-        )
-        self.screen.blit(number, number.get_rect(center=rect.center))
-
     def _render_lesson_content(self) -> None:
         left = SIDEBAR_WIDTH + 34
         width = WINDOW_SIZE[0] - left - 34
         button_y = 700
         task = self.controller.current_task
         self.output_card_rect = None
-        self._draw_task_icon(task, (left + 17, 48), self._task_color(task))
+        self._draw_task_icon(task, (left + 17, 98), self._task_color(task))
         title = self.title_font.render(task.title, True, self.theme.text)
-        self.screen.blit(title, (left + 42, 28))
+        self.lesson_title_rect = title.get_rect(topleft=(left + 42, 78))
+        self.screen.blit(title, self.lesson_title_rect)
 
-        body_top = 82
+        body_top = 132
         section_blocks = _markdown_blocks(self.controller.sections[task.section])
+        if task.kind == "summary":
+            next_lesson = self.controller.next_roadmap_lesson()
+            if next_lesson is not None:
+                number = self.controller.course.roadmap_position(next_lesson.id)
+                section_blocks.extend(
+                    [
+                        ("divider", ""),
+                        ("text", f"Дальше — урок {number}. {next_lesson.title}"),
+                    ]
+                )
         note_values = [value for kind, value in section_blocks if kind == "note"]
         message_lines: list[str] = []
         message_color = self.theme.muted
@@ -663,7 +1075,8 @@ class LauncherApp:
             )
             self._add_button("Запустить", left + 325, button_y, 135, "run")
         can_advance = (
-            not task.is_coding
+            self.controller.debug
+            or not task.is_coding
             or task.kind == "star"
             or self.controller.task_passed(task)
         )
@@ -679,6 +1092,22 @@ class LauncherApp:
                 self._add_button(
                     "Дальше", left + width - 120, button_y, 120, "next"
                 )
+        if task.kind == "summary" and (
+            self.controller.debug or self.controller.lesson_complete()
+        ):
+            lesson_index = self.controller.course.lessons.index(
+                self.controller.lesson
+            )
+            if lesson_index + 1 < len(self.controller.course.lessons):
+                next_lesson = self.controller.course.lessons[lesson_index + 1]
+                if self.controller.lesson_unlocked(next_lesson.id):
+                    self._add_button(
+                        "Следующий урок",
+                        left + width - 180,
+                        button_y,
+                        180,
+                        "next_lesson",
+                    )
 
     def _render_markdown(self, text: str, rect: pygame.Rect) -> None:
         self._render_markdown_blocks(_markdown_blocks(text), rect)
@@ -1002,6 +1431,21 @@ class LauncherApp:
             reference.signature, True, self.theme.code_text
         )
         self.screen.blit(signature, (code_rect.x + 14, code_rect.y + 7))
+        copy_label = "Копировать"
+        if self.copied_signature == reference.signature:
+            copy_label = (
+                "Не скопировано"
+                if self.clipboard_error
+                else "Скопировано"
+            )
+        copy_surface = self.small_font.render(
+            copy_label, True, self.theme.accent
+        )
+        self.screen.blit(
+            copy_surface,
+            copy_surface.get_rect(midright=(code_rect.right - 14, code_rect.centery)),
+        )
+        self.copy_signature_links.append((code_rect, reference.signature))
 
         y = dialog.y + 147
         for line in _wrap(self.font, reference.summary, dialog.width - 64):
@@ -1059,6 +1503,41 @@ class LauncherApp:
             icon_surface, (TASK_ICON_SIZE, TASK_ICON_SIZE)
         )
         self.screen.blit(icon, icon.get_rect(center=center))
+
+    def _draw_task_status_mark(
+        self,
+        task: Task,
+        center: tuple[int, int],
+    ) -> pygame.Rect | None:
+        rect = pygame.Rect(0, 0, 24, 24)
+        rect.center = center
+        if self._task_has_completion_badge(task):
+            pygame.draw.circle(self.screen, self.theme.success, center, 12)
+            x, y = center
+            pygame.draw.lines(
+                self.screen,
+                self.theme.button_text,
+                False,
+                [(x - 8, y), (x - 3, y + 5), (x + 9, y - 7)],
+                3,
+            )
+        elif self._task_has_failure_badge(task):
+            pygame.draw.circle(self.screen, self.theme.error, center, 12)
+            marker = self.font.render("!", True, self.theme.button_text)
+            self.screen.blit(marker, marker.get_rect(center=center))
+        else:
+            return None
+        return rect
+
+    def _task_has_completion_badge(self, task: Task) -> bool:
+        return task.is_coding and self.controller.task_passed(task)
+
+    def _task_has_failure_badge(self, task: Task) -> bool:
+        return (
+            task.is_coding
+            and not self.controller.task_passed(task)
+            and task.id in self.controller.failed_tasks
+        )
 
     def _draw_task_icon_shape(
         self,
@@ -1288,6 +1767,6 @@ class LauncherApp:
         self.buttons.append(Button(label, rect, action))
 
 
-def run_launcher(student_dir: Path) -> None:
-    controller = LauncherController(student_dir)
+def run_launcher(student_dir: Path, *, debug: bool = False) -> None:
+    controller = LauncherController(student_dir, debug=debug)
     LauncherApp(controller).run()

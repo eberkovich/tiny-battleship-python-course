@@ -59,6 +59,11 @@ class GameState:
         board_state.ship_count = count
         self.events.append(("ship_count_shown", board, count))
 
+    def wait_for_button(self, message: str, label: str) -> None:
+        self._validate_text(message)
+        self._validate_text(label)
+        self.events.append(("button_waited", message, label))
+
     def draw_deck(self, board: str, x: int, y: int, state: str) -> None:
         self._validate_board(board)
         self._validate_coordinate(x, y)
@@ -101,4 +106,11 @@ class GameState:
             raise BattleshipUIError(
                 "invalid_coordinate",
                 "Координаты клетки должны быть числами от 1 до 10.",
+            )
+
+    @staticmethod
+    def _validate_text(value: str) -> None:
+        if not isinstance(value, str) or not value.strip():
+            raise BattleshipUIError(
+                "invalid_text", "Текст сообщения и кнопки не должен быть пустым."
             )

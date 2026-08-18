@@ -180,3 +180,25 @@ def test_student_output_is_bounded(tmp_path: Path) -> None:
     assert result.passed
     assert len(result.output) < 4100
     assert result.output.endswith("… вывод сокращён …")
+
+
+def test_play_does_not_capture_pygame_banner_as_student_output() -> None:
+    job = start_student_process(
+        REFERENCE_ROOT / "project.py",
+        mode="play",
+        timeout=5.0,
+        extra_environment={
+            "SDL_VIDEODRIVER": "dummy",
+            "SDL_AUDIODRIVER": "dummy",
+            "BATTLESHIP_AUTOCLOSE_MS": "30",
+        },
+    )
+    deadline = time.monotonic() + 5.0
+    result = None
+    while result is None and time.monotonic() < deadline:
+        result = job.poll_result()
+        time.sleep(0.01)
+
+    assert result is not None
+    assert result.passed
+    assert result.output == ""

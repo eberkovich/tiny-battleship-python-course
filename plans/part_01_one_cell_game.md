@@ -1,5 +1,7 @@
 # Part 1 Curriculum Plan: One-Cell Battleship
 
+Completed phase: Phase A — Lessons 2–7
+
 ## Outcome
 
 Part 1 ends with a complete game made only of one-cell ships: the child places
@@ -28,7 +30,7 @@ not use a two-dimensional array or expose zero-based grid indexing.
 
 ## Lesson sequence
 
-### Phase A: Python foundations and a fixed fleet
+### Phase A: «Собираем флот» — Python foundations and a fixed fleet
 
 #### 1. Helper commands and coordinates
 
@@ -81,7 +83,7 @@ not use a two-dimensional array or expose zero-based grid indexing.
 - **Game milestone:** show **«Флот готов!»** and wait for
   **«Начать бой»**.
 
-### Phase B: Valid interactive fleet setup
+### Phase B: «Расставляем корабли» — valid interactive fleet setup
 
 #### 8. A simple decision
 
@@ -127,7 +129,7 @@ not use a two-dimensional array or expose zero-based grid indexing.
 - **Game milestone:** create 10 valid hidden enemy ships and show the enemy
   counter.
 
-### Phase C: Shooting and the complete battle
+### Phase C: «Ход игры» — shooting and the complete battle
 
 #### 14. One player shot
 
@@ -183,10 +185,10 @@ shape and authoring checks in `context/lesson_content.md`.
 
 ## Required Part 1 UI API
 
-Lesson 1 keeps its current taught surface. `show_ship_count` is already present
-in both backends but is first explained and used in Lesson 2. Add `DECK_SUNK`,
-`wait_for_cell`, and `wait_for_button` only when their introduction lessons are
-implemented:
+Lesson 1 keeps its original taught surface. `show_ship_count` is introduced in
+Lesson 2 and `wait_for_button` in Lesson 7; both are implemented in Phase A.
+Add `DECK_SUNK` and `wait_for_cell` only when their later introduction lessons
+are implemented:
 
 ```python
 PLAYER
@@ -250,6 +252,28 @@ focused tests affected by the change. Reuse parameterized reference and
 structural curriculum tests; do not create exact-prose, exact-source, or visual
 tests unless they protect a settled requirement that cannot be checked more
 semantically.
+
+## Phase A completion evidence
+
+Phase A was completed on 2026-08-19 without activating Phase B.
+
+- Lessons 2–7 introduce `print`, variables, cell addresses, lists, `append`,
+  `for`, strings, `show_ship_count`, and `wait_for_button` in prerequisite
+  order. Every coding task has a passing reference through its own lesson
+  checker.
+- The cumulative project grows through fleets of 1, 2, 3, 4, and finally 10
+  fixed non-touching one-cell ships, then waits at **«Начать бой»**.
+- Real and fake `wait_for_button` implementations have matching signatures;
+  the real prompt returns on a click and the fake backend records a semantic
+  event. Check and visual-play subprocesses pass for the Lesson 7 project.
+- The course home shows the complete 18-lesson roadmap while exposing only the
+  seven implemented lessons. Lesson 2 console flow, Lesson 6 project, Lesson 7
+  summary, and game button prompt were inspected. Shared layouts and assets
+  remain readable in both dark and light launcher themes.
+- Lessons 2–7 each contain three required exercises that rise from a small
+  example through completion or debugging to the cumulative game milestone.
+- Shell checks, compilation, Lesson 1 regressions, all Phase A references, and
+  the complete suite pass: `128 passed`.
 
 Before changing this plan, rerun the reference solution and repeat this audit.
 Any new child-visible syntax, standard-library operation, API call, or game rule

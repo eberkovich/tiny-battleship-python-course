@@ -32,6 +32,11 @@ punctuation, or line-based syntax.
 - Before the child must read or write new syntax, explain its terms and visible
   marks in concrete language: what each name means, what parentheses and commas
   do, and what Python will do with the whole line.
+- For each new Python construction, explain the concrete problem it solves,
+  how to read it aloud, what Python does in order, what value or state changes,
+  the meaning of new punctuation, and one likely mistake. Give a complete
+  example whose values differ from the following task. Difficult concepts may
+  need several small examples rather than one dense article.
 - When explaining the course's support layer to the child, call its public API
   **«вспомогательные команды»**, not a framework, library, or engine. First
   state the concrete game the child will finish and which game rules the child
@@ -44,7 +49,7 @@ A lesson normally contains:
 1. a motivating problem;
 2. a short explanation;
 3. an optional interactive question;
-4. two or three isolated exercises;
+4. normally three or four short isolated exercises;
 5. a cumulative Battleship project upgrade named **«Пишем игру»**;
 6. an optional **«Задача со звёздочкой»**;
 7. a summary named **«Итоги урока»**.
@@ -77,6 +82,12 @@ step.
   provide the complete explanation inline. On later pages, the launcher turns
   its name into an underlined clickable recap. A command must never appear as a
   reference before its introduction.
+- The launcher's fixed command reference is available as a recall aid during
+  exercises and may show the complete API before individual commands are
+  taught. This does not count as introducing a command: lesson text, examples,
+  starters, tasks, and clickable in-page mentions must still follow the normal
+  prerequisite order. Lesson text must remain understandable without opening
+  the reference.
 - After a coding-task goal, show the workflow note as a compact, unframed fixed
   strip in smaller muted italics. Align it with the task card and place it
   directly above the action buttons; contextual feedback appears immediately
@@ -116,16 +127,27 @@ form, short purpose, and argument summary. Recap metadata must contain only
 concepts already introduced at that point in the course. Follow the
 introduction/reference presentation rule above.
 
-Before the first exercise uses `print`, introduce it as a Python function, show
-the exact `print(value)` form, explain its argument, and demonstrate the
-launcher card named **«Результат программы»**. State that `print` helps inspect
-a value and does not change the game. Later exercises may use that card only
-after this explanation.
+Before the first exercise uses `print`, introduce it as a Python function in
+general terms: it shows a person the value passed to it. Show the exact
+`print(value)` form, explain its argument, give an example and its visible
+output, and mention common purposes such as showing a result, a message, or a
+value the program currently stores. Do not define `print` through the
+launcher's output card or contrast it with the game UI. Later console exercises
+may rely on the already introduced visible output.
 
 ## Exercises and project tasks
 
 - State an unambiguous visible goal and name the relevant API commands without
   showing the final solution.
+- Increase difficulty within a lesson. Start with one small demonstrated
+  action, then ask the child to change or complete familiar code, diagnose or
+  verify a result, combine the new idea with known material, and finally apply
+  it independently in **«Пишем игру»**. Use only the steps that help the
+  concept; do not add filler to reach a fixed exercise count.
+- Vary the work itself, not only constants or coordinates. Suitable forms
+  include completing a line, changing a value and observing the result,
+  correcting a deliberate mistake, combining two familiar operations, and
+  producing a visible game result.
 - Keep starter context out of the goal. After every coding-task description,
   add one separate note block in this form:
 
@@ -138,6 +160,10 @@ after this explanation.
   implementation in child-facing text. Keep editor, save, and Run directions
   inside the strip; do not mix them into the task goal.
 - Make the child think rather than copy an example directly.
+- Every exercise must produce immediate observable feedback. Use `print` for
+  values and calculations, the game window for boards and game state, and
+  deliberate broken-code tasks for debugging. Do not create passive exercises
+  whose only action is reading or continuing.
 - For a console exercise, state the expected visible output and keep it short
   enough to read in the launcher's result card. Do not require a pygame window
   when printed output is the complete observable result.
@@ -151,10 +177,19 @@ after this explanation.
   hint must use only concepts already introduced before the task.
 - Do not repeat behavior already completed and checked unless repetition is an
   explicit learning objective.
+- Treat every **«Пишем игру»** task as an incremental edit to the same
+  `battleship.py`. Begin its goal with a concrete verb such as **«Добавь»**,
+  **«Продолжи»**, or **«Замени только…»**; state which existing visible behavior
+  must remain; and identify the exact old fragment when replacement is needed.
+  Never ask the child to recreate already completed game behavior.
+- Keep teaching-only experiments, including temporary `print` calls, in
+  isolated exercise files. The cumulative project should contain only code
+  that contributes to the game or to a deliberately introduced debugging
+  step, and temporary debugging code must be removed by an explicit task.
 - When an isolated task depends on earlier behavior, put the previously taught
   setup in its starter and ask only for the new result; do not explain that
   prefilled setup in the child-facing task or workflow strip.
-- Use **«редактор»** in child-facing text; do not name Thonny or student files.
+- Use **«редактор»** in child-facing text; do not name IDLE or student files.
   Tool names and filenames may appear in parent/developer documentation.
 
 Include a question step only when the launcher can collect an answer and give
@@ -191,4 +226,6 @@ in every intermediate lesson.
 
 Before accepting a lesson, review it for age appropriateness, excessive text,
 long gaps between interactions, accidental answer disclosure, and any API or
-concept used before its explanation.
+concept used before its explanation. Also verify that its exercises rise in
+difficulty, differ in purpose, and leave the cumulative game with no unrelated
+training code.

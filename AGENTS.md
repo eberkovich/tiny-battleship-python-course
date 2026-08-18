@@ -13,23 +13,23 @@ repository, not the detailed product design:
 - `context/architecture.md` is the source of truth for settled product and
   technical decisions;
 - `context/lesson_content.md` is the source of truth for lesson-authoring rules;
-- the highest-numbered `plans/stage_NN_*.md` file defines the active scope and
-  completion criteria unless it contains `Status: complete`;
+- a plan with an explicit `Current phase:` marker defines the active scope and
+  completion criteria; completed `plans/stage_NN_*.md` files are historical
+  stage records;
 - `COURSE_DESIGN.md` and `CURRICULUM.yaml`, when present, contain supporting
   course rationale and lesson metadata; they must conform to both context
   documents.
 
 Read the relevant documents before architectural, curriculum, or implementation
-work. Do not silently change a settled decision or expand the active stage.
-Files in `plans/` that do not start with `stage_NN_` are design plans and never
-activate implementation scope. Earlier numbered stages must be complete and
-are normally frozen. Mark the active stage `Status: complete` only after its
-definition of done and verification evidence are recorded; then create the
-next zero-padded stage file. If the highest-numbered stage is complete, there
-is no active implementation stage.
+work. Do not silently change a settled decision or expand the active phase.
+Only one plan may contain an active `Current phase:` marker. Keep completed
+stage files frozen as historical records. Clear or advance the marker only
+after the current phase's definition of done and verification evidence are
+recorded. Do not create a separate stage file when an existing plan already
+defines the requested phase precisely.
 
 Any proposed deviation from this file, `context/architecture.md`,
-`context/lesson_content.md`, or the active stage plan must be explicitly
+`context/lesson_content.md`, or the active plan phase must be explicitly
 discussed with and approved by the user before it is implemented. Update every
 affected document in the same change so the documented decisions and the
 implementation never knowingly diverge.
@@ -53,7 +53,7 @@ check each claim against the relevant state and domain invariants first.
 
 Before changing files:
 
-1. Read the architecture and active stage.
+1. Read the architecture and active plan phase.
 2. Inspect existing related code, lessons, and tests.
 3. Check the working tree when version-control metadata is available and
    preserve unrelated work.
@@ -75,10 +75,14 @@ For every implementation change:
 1. Add or update the smallest relevant test.
 2. Run focused tests and current-lesson acceptance checks.
 3. Run earlier-lesson regressions affected by the change.
-4. Run the full suite at each phase checkpoint and before stage completion or
-   handoff, not after every small content or implementation edit.
+4. Run the full suite at each phase checkpoint and before phase or stage
+   completion or handoff, not after every small content or implementation edit.
 5. Update concise documentation when behavior, public APIs, file layout, or
    commands change.
+
+For every layout change, verify that ordinary UI regions do not overlap each
+other or render beneath fixed controls at the supported window size. Intentional
+modal overlays are the only exception.
 
 When the student-facing UI API changes, review the complete API for consistent
 naming, verb meaning, argument order, defaults, abstraction level, and
@@ -124,5 +128,5 @@ Before finishing, check that the change:
 - adds no out-of-scope infrastructure;
 - passes all relevant tests.
 
-Keep the active stage status accurate. Mark it complete only after its
+Keep the active plan phase status accurate. Mark it complete only after its
 definition of done has been verified and completion evidence recorded.

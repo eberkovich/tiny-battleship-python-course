@@ -27,6 +27,10 @@ def show_ship_count(board: str, count: int) -> None:
     _backend.show_ship_count(board, count)
 
 
+def wait_for_button(message: str, label: str) -> None:
+    _backend.wait_for_button(message, label)
+
+
 __all__ = [
     "PLAYER",
     "ENEMY",
@@ -35,4 +39,5 @@ __all__ = [
     "draw_deck",
     "show_miss",
     "show_ship_count",
+    "wait_for_button",
 ]

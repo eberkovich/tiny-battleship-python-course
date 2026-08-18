@@ -35,6 +35,22 @@ def _write_functional_fake_python(directory: Path, name: str = "python3") -> Non
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
 
 
+def _write_python_with_tk_without_idle(directory: Path) -> None:
+    path = directory / "python3"
+    path.write_text(
+        "#!/bin/sh\n"
+        "case \"$2\" in\n"
+        "  *\"import tkinter, idlelib\"*) exit 1 ;;\n"
+        "  *\"sys.version_info\"*) exit 0 ;;\n"
+        "  *\"import tkinter\"*) exit 0 ;;\n"
+        "  *\"import idlelib\"*) exit 1 ;;\n"
+        "esac\n"
+        "exit 0\n",
+        encoding="utf-8",
+    )
+    path.chmod(path.stat().st_mode | stat.S_IXUSR)
+
+
 def _write_homebrew_python_without_tk(directory: Path) -> Path:
     path = directory / "python3"
     path.write_text(
@@ -154,6 +170,19 @@ def test_installer_rejects_python2_or_missing_python(tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "Python 3.11–3.14" in result.stderr
+
+
+def test_installer_rejects_python_without_idle_in_check_only_mode(
+    tmp_path: Path,
+) -> None:
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    _write_python_with_tk_without_idle(fake_bin)
+
+    result = _run_check_only(PROJECT_ROOT / "install.command", fake_bin)
+
+    assert result.returncode != 0
+    assert "Tk и IDLE" in result.stderr
 
 
 def test_installer_finds_versioned_homebrew_python_without_python3_link(
@@ -309,8 +338,12 @@ def test_installer_and_gitignore_track_stage_dependencies_and_output() -> None:
 
     assert "3.13.15" in installer
     assert "3b7eaf7f29825f796e8267024435540d" in installer
-    for dependency in ("pygame-ce==2.5.8", "PyYAML==6.0.3", "thonny==5.0.0"):
+    for dependency in ("pygame-ce==2.5.8", "PyYAML==6.0.3"):
         assert dependency in pyproject
+    assert "thonny" not in pyproject.lower()
+    assert "import tkinter, idlelib" in installer
+    assert "pip uninstall -y thonny" in installer
+    assert "ensure_idle_config" in installer
     for generated in (".venv/", "students/", "screenshots/"):
         assert generated in ignored
 

@@ -43,8 +43,17 @@ term, or another settled teaching contract.
 ## Technology choices
 
 - Use `pygame-ce` for both the real game UI and the V1 launcher.
-- Use Thonny as the external V1 code editor. The installer provides it, and the
-  launcher opens the exact file for the selected task in Thonny.
+- Use IDLE from the selected Python installation as the external V1 code
+  editor. The installer verifies IDLE and Tk availability, and the launcher
+  opens the exact file for the selected task directly in an editor window.
+  Because IDLE is supplied as Python's standard-library `idlelib` module rather
+  than a project package, a compatible interpreter without IDLE triggers the
+  official Python installer; this installs Python with IDLE alongside existing
+  interpreters without replacing the system Python.
+- On first setup, configure IDLE with normal-weight Menlo at 18 pt so code is
+  comfortable for a child to read. Store this in IDLE's normal user
+  configuration and do not overwrite any existing IDLE font preference;
+  settings changed later inside IDLE remain authoritative.
 - Keep the launcher and the student's game in separate processes.
 - Run checks in a separate subprocess using the fake UI.
 - Do not build a general GUI framework on top of pygame. The launcher needs
@@ -135,11 +144,51 @@ when the cumulative program is large enough to justify the recovery workflow.
 
 The launcher has two navigation levels:
 
-- **Course home** — a short Russian introduction explaining what the child will
-  build, a lesson list, and **«Начать первый урок»** or **«Продолжить»**. This
-  introduction is not Lesson 0.
+- **Course home** — the final game goal, current progress, the three course
+  stages, an expandable roadmap of all 18 Part 1 lessons, and
+  **«Начать первый урок»** or **«Продолжить урок N»**. This introduction is not
+  Lesson 0.
 - **Lesson screen** — **«Все уроки»**, the lesson title and steps, required-task
   progress, and navigation to the next unlocked lesson.
+
+The course home first states the concrete result: a complete Battleship game
+with 10 one-cell ships for the child and 10 for the computer. Its supporting
+promise is: **«Ты сам напишешь игру: расставишь флот, добавишь выстрелы и
+определение победителя.»** A short visual route shows the major outcomes:
+**«Расставить флот → Начать бой → Стрелять по очереди → Победа!»**
+
+Use **«Этап»**, never **«Глава»**, for the three child-facing roadmap groups:
+
+1. **«Собираем флот»** — Lessons 1–7;
+2. **«Расставляем корабли»** — Lessons 8–13;
+3. **«Ход игры»** — Lessons 14–18.
+
+The compact roadmap view shows the current stage, current lesson number,
+completed lessons out of 18, and one stage card for each group. The complete
+18-lesson list is initially hidden under **«Показать все 18 уроков»** and may be
+expanded without changing persisted progress. Implemented lessons follow the
+normal access rules. Planned but not yet implemented lessons remain visible as
+future work and are never selectable. In debug mode, all implemented lessons
+and steps are unlocked; debug mode does not turn roadmap-only entries into
+executable lessons. To avoid implying a progress restriction, debug mode marks
+roadmap-only stages and lessons as **«В ПЛАНЕ»** instead of showing lock icons.
+
+The debug badge, game launcher, command reference, and theme switch occupy a
+reserved fixed toolbar above ordinary content on every screen. Page headers
+and scrollable content begin below it, and scrolling is clipped at the relevant
+content boundary. Ordinary layout regions never overlap or render beneath
+fixed controls; only intentional modal overlays may cover the interface.
+
+Opening **«Показать все 18 уроков»** automatically scrolls down until the full
+lesson plan is visible while leaving the toggle accessible. Pressing
+**«Скрыть полный план»** collapses the plan and returns the course home to its
+top position.
+
+The lesson header shows its position as **«Урок N из 18 · Этап K»**. On
+**«Итоги урока»**, show only the next lesson's number and title when a next
+lesson exists; do not repeat its outcome as a second sentence. Derive the
+total, numbering, stage membership, titles, and next-lesson preview from
+curriculum metadata rather than hard-coding them in the launcher.
 
 Completed lessons remain available. The current lesson is available; later
 lessons are visible but locked until all required coding tasks in the current
@@ -150,6 +199,27 @@ saved current step, or its first step when no current step has been saved. The
 current step is always unlocked; a locked step cannot be selected or saved as
 current. When all required tasks pass, unlock the summary; the optional star
 task remains available.
+
+For development and content review, the launcher accepts `--debug`. This mode
+unlocks every implemented lesson and every step, including summaries, and shows
+a visible **«РЕЖИМ ОТЛАДКИ»** badge. Debug navigation, theme changes, and
+successful runs do not modify persisted progress or completion. Student mode
+remains the default; debug mode still opens and executes files from the
+selected student directory and never overwrites an existing source file.
+
+A fixed **«Справочник»** button is visible beside the theme switch on the
+course home and every lesson page. It opens the command reference without
+changing lesson progress. The reference lists the complete public helper API so
+the child can explore it and return to it throughout the course. Each entry
+comes from `CURRICULUM.yaml`, opens the existing full signature recap, and
+provides a one-click copy action for the exact command signature with visible
+success or failure feedback.
+
+A fixed **«Моя игра»** button appears beside the theme switch after the first
+cumulative **«Пишем игру»** task passes; debug mode always exposes it. It opens
+the student's current `battleship.py` directly in visual play mode, without an
+exercise check and without changing progress. The launcher reports launch or
+runtime errors in Russian.
 
 ## Lesson presentation
 
@@ -169,6 +239,13 @@ Use these internal step kinds and icons:
 - `project` — ship;
 - `star` — five-point star;
 - `summary` — finish flag in soft violet, distinct from green completion.
+
+Every coding-task card keeps its exercise, project, or star icon on the left
+and gains a large green ✓ marker on the right after completion. A red `!`
+marker in the same position marks the latest failed attempt for the current
+launcher session. The opened-page heading keeps only the task-type icon, and
+the selected card keeps its turquoise outline. Do not add a separate lesson
+progress row or star counter; the task cards themselves show progress.
 
 Child-facing titles, wording, explanation order, and authoring requirements are
 defined in `context/lesson_content.md`. A `summary` is informational, not
@@ -209,6 +286,12 @@ recap with the command's signature, short purpose, and argument summary. Store
 both the introduction step and recap content in course metadata so the launcher
 remains lesson-agnostic; the modal and links use the shared renderer and theme
 palettes.
+
+The fixed command reference is a lookup aid, not a second teaching path. It may
+show commands before their lesson introduction, but lessons, tasks, examples,
+starters, and clickable in-page references must still follow the prerequisite
+rules. The reference derives signatures, summaries, and argument details from
+the same curriculum metadata as in-page recaps.
 
 The launcher offers dark and light schemes through one fixed top-right switch
 on every screen. Both schemes share the same layout, rendering and event logic,
@@ -258,17 +341,6 @@ Show feedback inside the selected task near its actions. Do not reserve an
 empty status panel or show placeholder messages such as **«Выбери шаг урока»**.
 Use the generic reminder **«Сохрани код в редакторе: Cmd+S»**.
 
-Show every coding task as one segment in the progress bar. Required exercises
-use their exercise numbers, the cumulative project uses a ship symbol, and an
-optional star exercise uses a star with its exercise number, for example `★4`.
-Separate the star segment slightly without turning it into a second caption or
-counter. Green ✓ means passed, grey number or symbol means not attempted, red !
-means the latest attempt failed, and an outline marks the selected task. Do not
-rely on color alone. The star symbol and extra spacing are the optional task's
-only permanent distinction; it has an outline only while selected. Persist
-successful completion; failed state is temporary. Articles, questions, and
-summaries are excluded. The star never blocks lesson completion.
-
 Exercise, project, and star completion are recorded separately. Source code and
 verification traces are never stored in progress. Completed tasks may be
 reopened, but the launcher never restores or overwrites their files.
@@ -317,8 +389,10 @@ trigger the Python.org fallback.
 7. Create a project-local `.venv` with the selected Python 3 interpreter and
    use `.venv/bin/python` for every subsequent project command.
 8. Install all pinned project dependencies into that virtual environment,
-   including `pygame-ce` and Thonny, and verify that the launcher, UI, and editor
-   can be started.
+   including `pygame-ce`, and verify that the launcher, UI, and Python's IDLE
+   editor can be started. Remove the obsolete Thonny package from an existing
+   project environment during migration. Apply the 18 pt IDLE default only
+   when the user has no existing IDLE font preference.
 9. Be safe to run repeatedly without overwriting student workspaces or progress.
 10. Fail with a nonzero exit status and an actionable Russian message when
    installation cannot be completed.
@@ -334,12 +408,15 @@ project dependency, dependency version, or supported Python version changes.
 
 ## Curriculum and lesson files
 
-For V1, one `CURRICULUM.yaml` is sufficient. It defines lesson order and each
-lesson's compact pedagogical contract: the new concept, motivating problem,
-game milestone, prerequisites, required behavior, paths, and star challenge. It
-also stores each public API command's introduction step and the signature recap
-used by later clickable mentions. Its lesson content must follow
-`context/lesson_content.md`.
+For V1, one `CURRICULUM.yaml` is sufficient. It defines the child-facing
+18-lesson roadmap and its three stages, plus the implemented lesson order and
+each lesson's compact pedagogical contract: the new concept, motivating
+problem, game milestone, prerequisites, required behavior, paths, and star
+challenge. Roadmap entries may describe future lessons without making them
+executable; implemented lessons must match their roadmap IDs, titles, order,
+and stage membership. The file also stores each public API command's
+introduction step and the signature recap used by later clickable mentions.
+Its lesson content must follow `context/lesson_content.md`.
 
 Task IDs are globally unique across the course because progress, checker
 routing, and API introduction references store them directly. Prefix every new
@@ -507,18 +584,21 @@ show_board(board)
 draw_deck(board, x, y, state=DECK_IDLE)
 show_miss(board, x, y)
 show_ship_count(board, count)
+wait_for_button(message, label)
 ```
 
 `show_board` reveals a board, `draw_deck` places or updates a deck, and
 `show_miss` displays an unsuccessful shot. `show_ship_count` shows or updates
-the selected board's remaining-ship counter. Untouched water already exists
-and does not need a public drawing operation. `show_ship_count` is implemented
-for a later game milestone and is not introduced or required in Lesson 1.
+the selected board's remaining-ship counter. `wait_for_button` shows a message
+and labeled button and blocks until the button is pressed. Untouched water
+already exists and does not need a public drawing operation. The counter is
+introduced in Lesson 2 and the button in Lesson 7; neither is introduced or
+required in Lesson 1.
 
 The real and fake implementations must provide the same student-facing API.
-Later lessons may add deck damage and sunk states, blocking cell or button
-input, placement feedback, and messages only when those capabilities are first
-taught and needed. Before adding or renaming anything, review the complete API
+Later lessons may add deck damage and sunk states, blocking cell input, and
+placement feedback only when those capabilities are first taught and needed.
+Before adding or renaming anything, review the complete API
 for consistent verbs, argument order, defaults, terminology, and abstraction
 level. During Lesson 1 Run, the runner keeps the finished pygame window open
 internally until it is closed.

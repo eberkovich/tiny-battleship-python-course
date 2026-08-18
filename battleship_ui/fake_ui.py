@@ -24,6 +24,10 @@ def show_ship_count(board: str, count: int) -> None:
     _state.show_ship_count(board, count)
 
 
+def wait_for_button(message: str, label: str) -> None:
+    _state.wait_for_button(message, label)
+
+
 def _configure_inputs(*, cells: list[tuple[str, int, int]]) -> None:
     global _scripted_cells
     validated = []
@@ -66,4 +70,5 @@ __all__ = [
     "draw_deck",
     "show_miss",
     "show_ship_count",
+    "wait_for_button",
 ]
