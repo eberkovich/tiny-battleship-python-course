@@ -6,6 +6,9 @@ Current stage: `stage_01_lesson_01_vertical_slice.md`
 | --- | --- | --- |
 | 01 | In progress | Revise the completed vertical slice after the first child-facing launcher review, then repeat full and visual verification |
 
+Part 1 curriculum design: `part_01_one_cell_game.md`. It is derived from the
+complete reference program but does not activate later implementation stages.
+
 ## Workflow
 
 1. Read `AGENTS.md`, `context/architecture.md`, `context/lesson_content.md`,

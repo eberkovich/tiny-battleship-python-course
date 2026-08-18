@@ -176,6 +176,16 @@ padding, and a quiet background so it remains secondary to the exercise. Show
 contextual feedback immediately above it. The card uses shared layout and theme
 palette constants in both schemes.
 
+Before the first console exercise is activated, capture bounded student
+`stdout` for every coding run. When it is non-empty, show only the latest run's
+output in a distinct fixed card named
+**«Результат программы»** above contextual check feedback. Use a small terminal
+icon, monospace text, and a code-like background so the card cannot be confused
+with lesson-content cards or the quiet workflow note. Hide it before the first
+output and never reserve an empty placeholder. Keep it visible after a failed
+check or runtime error when partial output exists. Do not show runner protocol
+lines in this card.
+
 On the page that first introduces a public game API command, show its complete
 description inline and render its name as ordinary text. Only later mentions of
 that command become underlined clickable references; a command is never a
@@ -212,13 +222,22 @@ explicitly requires a project extension. It never blocks lesson completion.
 Each coding task has two child-facing actions:
 
 - **«Открыть редактор»** opens the correct student file;
-- **«Запустить»** reads the saved file, checks it with the fake UI, and then
-  runs it with the real UI.
+- **«Запустить»** reads the saved file, checks it in a subprocess, and presents
+  the result using the task's declared output surface.
 
-A behavioral failure still opens the real UI so the child can inspect the
-result. Syntax errors, runtime failures before useful drawing, and timeouts are
-reported without repeating the run. Only a successful behavioral check records
-completion.
+Game output is the default. Before the first console exercise is added, task
+metadata gains an optional `run_mode: console`; omitted `run_mode` means
+`game`. Both kinds run once through the checker and may display captured
+`stdout`. A `console` task stops after that run and never opens pygame. A `game`
+task keeps the existing check-then-real-UI flow; it may also display printed
+output. This distinction belongs to lesson metadata so the launcher remains
+lesson-agnostic.
+
+For a `game` task, a behavioral failure still opens the real UI so the child can
+inspect the result. For a `console` task, the captured output is the visual
+result and the program is not repeated. Syntax errors, runtime failures before
+useful drawing, and timeouts are reported without repeating the run. Only a
+successful behavioral check records completion.
 
 Show feedback inside the selected task near its actions. Do not reserve an
 empty status panel or show placeholder messages such as **«Выбери шаг урока»**.
@@ -238,6 +257,9 @@ summaries are excluded. The star never blocks lesson completion.
 Exercise, project, and star completion are recorded separately. Source code and
 verification traces are never stored in progress. Completed tasks may be
 reopened, but the launcher never restores or overwrites their files.
+Captured output is transient: keep only the latest attempt in memory, clear it
+when changing tasks or starting another run, and never write it to progress or
+telemetry.
 
 ## macOS installation
 
