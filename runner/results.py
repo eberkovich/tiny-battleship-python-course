@@ -9,6 +9,7 @@ class RunResult:
     code: str
     message: str
     technical_details: str = ""
+    output: str = ""
 
     @property
     def passed(self) -> bool:
@@ -24,5 +25,5 @@ class RunResult:
             code=str(data["code"]),
             message=str(data["message"]),
             technical_details=str(data.get("technical_details", "")),
+            output=str(data.get("output", "")),
         )
-

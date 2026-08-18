@@ -51,6 +51,7 @@ def start_student_process(
     source: Path,
     *,
     mode: str,
+    lesson_id: str | None = None,
     task_id: str | None = None,
     timeout: float | None = None,
     extra_environment: dict[str, str] | None = None,
@@ -64,8 +65,10 @@ def start_student_process(
         "--file",
         str(source.resolve()),
     ]
-    if task_id is not None:
-        command.extend(("--task", task_id))
+    if mode == "check":
+        if lesson_id is None or task_id is None:
+            raise ValueError("Check mode requires lesson_id and task_id")
+        command.extend(("--lesson", lesson_id, "--task", task_id))
 
     environment = os.environ.copy()
     existing_path = environment.get("PYTHONPATH")
@@ -88,13 +91,22 @@ def start_student_process(
     return RunningStudentProcess(process, time.monotonic(), timeout)
 
 
-def run_check(source: Path, task_id: str, timeout: float = 5.0) -> RunResult:
+def run_check(
+    source: Path,
+    task_id: str,
+    *,
+    lesson_id: str,
+    timeout: float = 5.0,
+) -> RunResult:
     job = start_student_process(
-        source, mode="check", task_id=task_id, timeout=timeout
+        source,
+        mode="check",
+        lesson_id=lesson_id,
+        task_id=task_id,
+        timeout=timeout,
     )
     while True:
         result = job.poll_result()
         if result is not None:
             return result
         time.sleep(0.01)
-

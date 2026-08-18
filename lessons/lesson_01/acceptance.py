@@ -38,7 +38,11 @@ def _require_visible(
     )
 
 
-def check(task_id: str, snapshot: dict[str, object]) -> AcceptanceOutcome:
+def check(
+    task_id: str,
+    snapshot: dict[str, object],
+    output: str,
+) -> AcceptanceOutcome:
     if task_id == "exercise_01":
         failure = _require_visible(snapshot, PLAYER)
         return failure or AcceptanceOutcome(True, "Отлично! Твоё поле видно.")

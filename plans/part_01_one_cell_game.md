@@ -3,9 +3,10 @@
 ## Outcome
 
 Part 1 ends with a complete game made only of one-cell ships: the child places
-a valid fleet, the computer creates a hidden valid fleet, both sides take
-non-repeating turns, hits sink ships, counters update, and the game announces a
-winner. The target program is `reference/part_01_game.py`.
+a valid fleet of 10 ships, the computer creates a hidden valid fleet of 10
+ships, both sides take non-repeating turns, hits sink ships, counters update,
+and the game announces a winner. The target program is
+`reference/part_01_game.py`.
 
 The reference deliberately uses straightforward procedural Python: one small
 validation function and otherwise visible top-level game flow. Lesson projects
@@ -70,7 +71,7 @@ not use a two-dimensional array or expose zero-based grid indexing.
 - **Learn:** repetition, indentation, iteration, and address unpacking.
 - **Practice:** repeat one visible action, then iterate over a short address
   list.
-- **Game milestone:** extend the fixed fleet to five ships and replace repeated
+- **Game milestone:** extend the fixed fleet to 10 ships and replace repeated
   drawing calls with one loop.
 
 #### 7. Text and a button
@@ -115,7 +116,7 @@ not use a two-dimensional array or expose zero-based grid indexing.
 
 - **Learn:** `while`, nested flow, and uppercase `FLEET_SIZE`; reuse `append`.
 - **Practice:** repeat a small action until a visible target is reached.
-- **Game milestone:** accept cells until five valid player ships exist, update
+- **Game milestone:** accept cells until 10 valid player ships exist, update
   the counter, and then start battle.
 
 #### 13. Enemy fleet
@@ -123,7 +124,7 @@ not use a two-dimensional array or expose zero-based grid indexing.
 - **Learn:** write an import, use `randint`, and introduce uppercase
   `BOARD_SIZE`.
 - **Practice:** generate visible numbers and cells before using hidden state.
-- **Game milestone:** create five valid hidden enemy ships and show the enemy
+- **Game milestone:** create 10 valid hidden enemy ships and show the enemy
   counter.
 
 ### Phase C: Shooting and the complete battle
@@ -182,8 +183,10 @@ shape and authoring checks in `context/lesson_content.md`.
 
 ## Required Part 1 UI API
 
-Lesson 1 keeps its current public surface. Add each later capability to the
-real and fake backends only when its introduction lesson is implemented:
+Lesson 1 keeps its current taught surface. `show_ship_count` is already present
+in both backends but is first explained and used in Lesson 2. Add `DECK_SUNK`,
+`wait_for_cell`, and `wait_for_button` only when their introduction lessons are
+implemented:
 
 ```python
 PLAYER
@@ -227,6 +230,26 @@ target program:
 Preliminary exercises additionally use the teaching-only `print` function,
 introduced in Lesson 2 together with the launcher output card. It is tracked
 even though it does not remain in the final reference game.
+
+## Verification checkpoints
+
+Use three checkpoints rather than treating every lesson as a full release:
+
+1. **Phase A, Lessons 2–7:** run all new reference cases, affected Lesson 1
+   regressions, the full suite, and one dark/light inspection of each new
+   launcher or game capability.
+2. **Phase B, Lessons 8–13:** additionally run deterministic player-placement
+   scenarios covering acceptance and rejection, then all earlier regressions
+   and the full suite.
+3. **Phase C, Lessons 14–18:** run complete victory and defeat scenarios,
+   repeated- and invalid-shot cases, every lesson reference, the full suite,
+   and final dark/light visual inspection.
+
+Between checkpoints, run the current lesson's reference solutions and only the
+focused tests affected by the change. Reuse parameterized reference and
+structural curriculum tests; do not create exact-prose, exact-source, or visual
+tests unless they protect a settled requirement that cannot be checked more
+semantically.
 
 Before changing this plan, rerun the reference solution and repeat this audit.
 Any new child-visible syntax, standard-library operation, API call, or game rule

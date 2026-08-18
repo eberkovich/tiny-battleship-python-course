@@ -145,7 +145,7 @@ until the first lesson that needs them.
 
 1. Add/update the smallest focused test, then implement the behavior.
 2. Run affected tests and Lesson 1 acceptance through the subprocess/fake UI.
-3. Run the full suite.
+3. Run the full suite before the stage checkpoint or handoff.
 4. For rendering changes, inspect a headless screenshot and periodically the
    real macOS window.
 5. Review the diff for student ownership, procedural API, Russian content,

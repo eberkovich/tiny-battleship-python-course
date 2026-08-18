@@ -41,6 +41,7 @@ class LauncherController:
         self.message = ""
         self.message_level = "info"
         self.technical_details = ""
+        self.latest_output = ""
 
     @property
     def current_task(self) -> Task:
@@ -60,6 +61,7 @@ class LauncherController:
             self.message = ""
             self.message_level = "info"
             self.technical_details = ""
+            self.latest_output = ""
 
     def enter_lesson(self, lesson_id: str) -> None:
         if self.busy or not self.lesson_unlocked(lesson_id):
@@ -78,6 +80,7 @@ class LauncherController:
         self.message = ""
         self.message_level = "info"
         self.technical_details = ""
+        self.latest_output = ""
 
     def continue_course(self) -> None:
         self.enter_lesson(self.progress.current_lesson)
@@ -118,6 +121,7 @@ class LauncherController:
         self.message = ""
         self.message_level = "info"
         self.technical_details = ""
+        self.latest_output = ""
 
     def move(self, offset: int) -> None:
         index = max(0, min(len(self.lesson.tasks) - 1, self.current_index + offset))
@@ -159,11 +163,13 @@ class LauncherController:
         self.job = self.process_starter(
             source,
             mode="check",
+            lesson_id=self.lesson.id,
             task_id=self.current_task.id,
             timeout=5.0,
         )
         self.job_kind = "check"
         self.pending_check = None
+        self.latest_output = ""
         self.message = "Проверяю сохранённый код…"
         self.message_level = "info"
         self.technical_details = ""
@@ -188,6 +194,8 @@ class LauncherController:
         self.job = None
         self.job_kind = None
         self._report_technical_details(result)
+        if result.output:
+            self.latest_output = result.output
 
         if kind == "check":
             if result.passed:
@@ -195,6 +203,12 @@ class LauncherController:
                 self.failed_tasks.discard(self.current_task.id)
             else:
                 self.failed_tasks.add(self.current_task.id)
+            if self.current_task.run_mode == "console":
+                self.pending_check = None
+                self.message = result.message
+                self.message_level = "success" if result.passed else "error"
+                self.technical_details = result.technical_details
+                return result
             self.pending_check = result
             if result.status in {"passed", "failed"}:
                 self._start_visual_run()

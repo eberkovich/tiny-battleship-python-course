@@ -18,8 +18,8 @@ test = [
     "pytest==9.1.1",
 ]
 
-[tool.setuptools]
-packages = ["battleship_ui", "launcher", "runner", "lessons", "lessons.lesson_01"]
+[tool.setuptools.packages.find]
+include = ["battleship_ui*", "launcher*", "runner*", "lessons*"]
 
 [tool.setuptools.package-data]
 battleship_ui = ["assets/*.png"]

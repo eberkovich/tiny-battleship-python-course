@@ -79,6 +79,15 @@ def test_ship_count_is_hidden_at_zero_until_shown_and_can_be_updated() -> None:
     ]
 
 
+def test_checker_can_prepare_deterministic_cell_inputs() -> None:
+    fake_ui._configure_inputs(cells=[(PLAYER, 2, 4), (ENEMY, 7, 3)])
+
+    assert fake_ui._take_cell_input(PLAYER) == (2, 4)
+    assert fake_ui._remaining_inputs() == ((ENEMY, 7, 3),)
+    assert fake_ui._take_cell_input(ENEMY) == (7, 3)
+    assert fake_ui._remaining_inputs() == ()
+
+
 @pytest.mark.parametrize(
     "call, code",
     [

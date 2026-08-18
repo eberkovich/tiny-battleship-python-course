@@ -119,6 +119,53 @@ def test_single_run_checks_then_opens_real_ui_and_updates_progress(
     assert any(button.action == "next" for button in app.buttons)
 
 
+def test_console_run_shows_output_without_opening_game_ui(tmp_path: Path) -> None:
+    course = load_course()
+    lesson = course.lessons[0]
+    console_task = replace(lesson.task("exercise_01"), run_mode="console")
+    console_lesson = replace(
+        lesson,
+        tasks=tuple(
+            console_task if task.id == console_task.id else task
+            for task in lesson.tasks
+        ),
+    )
+    calls = []
+
+    def starter(source, **options):
+        calls.append(options["mode"])
+        return ImmediateJob(
+            RunResult("passed", "passed", "Верно!", output="42")
+        )
+
+    controller = LauncherController(
+        tmp_path / "student",
+        course=replace(course, lessons=(console_lesson,)),
+        process_starter=starter,
+    )
+    controller.enter_lesson("lesson_01")
+    controller.select_task("exercise_01")
+    controller.start_run()
+    controller.poll()
+
+    assert calls == ["check"]
+    assert not controller.busy
+    assert controller.latest_output == "42"
+    assert controller.message == "Верно!"
+    assert "exercise_01" in controller.progress.completed_tasks
+
+    app = LauncherApp(controller)
+    app.render()
+    initial_rect = app.output_card_rect.copy()
+    assert initial_rect.width == 700
+    app.scroll = 120
+    app.render()
+    assert app.output_card_rect == initial_rect
+    controller.toggle_theme()
+    app.render()
+    assert app.output_card_rect == initial_rect
+
+
 def test_behavior_failure_still_opens_real_ui_and_preserves_progress(
     tmp_path: Path,
 ) -> None:
@@ -367,6 +414,47 @@ def test_next_lesson_stays_locked_until_previous_lesson_is_complete(
     assert controller.lesson_unlocked("lesson_02")
     controller.enter_lesson("lesson_02")
     assert controller.lesson.id == "lesson_02"
+
+
+def test_run_passes_selected_lesson_to_checker(tmp_path: Path) -> None:
+    first_course = load_course()
+    first = first_course.lessons[0]
+    template = tmp_path / "lesson_02.py"
+    template.write_text("from battleship_ui import *\n", encoding="utf-8")
+    second_task = Task(
+        "lesson_02_exercise_01",
+        "exercise",
+        "Новое упражнение",
+        "api",
+        student_file=Path("exercises/lesson_02/exercise_01.py"),
+        template=template,
+    )
+    second = Lesson(
+        id="lesson_02",
+        title="Второй урок",
+        content=first.content,
+        completion_tasks=(second_task.id,),
+        tasks=(second_task,),
+    )
+    calls = []
+
+    def starter(source, **options):
+        calls.append((source, options))
+        return ImmediateJob(RunResult("passed", "passed", "Готово"))
+
+    controller = LauncherController(
+        tmp_path / "student",
+        course=replace(first_course, lessons=(first, second)),
+        process_starter=starter,
+    )
+    for task_id in first.completion_tasks:
+        controller.progress = controller.workspace.mark_passed(task_id)
+    controller.enter_lesson("lesson_02")
+    controller.start_run()
+
+    assert calls[0][1]["mode"] == "check"
+    assert calls[0][1]["lesson_id"] == "lesson_02"
+    assert calls[0][1]["task_id"] == "lesson_02_exercise_01"
 
 
 def test_run_command_initializes_cyrillic_student_workspace_end_to_end(

@@ -180,6 +180,15 @@ For every exercise, project milestone, and star task:
 - run that solution through the same behavioral checker used for student code;
 - ensure the checker tests only requirements stated to the child.
 
+Cover these requirements economically. Prefer one parameterized reference test
+and shared structural lesson validation over separate boilerplate tests for
+every task. Add focused failing examples only for meaningful game rules,
+prerequisite boundaries, and runner error paths. Do not lock ordinary editorial
+wording into tests; assert exact text or reading order only when it carries an
+essential explanation, required term, or task contract. Complete end-to-end
+win/loss and cumulative-game scenarios belong at phase checkpoints rather than
+in every intermediate lesson.
+
 Before accepting a lesson, review it for age appropriateness, excessive text,
 long gaps between interactions, accidental answer disclosure, and any API or
 concept used before its explanation.

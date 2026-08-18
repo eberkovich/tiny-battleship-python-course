@@ -27,6 +27,10 @@ NOTE_PADDING_X = CONTENT_PADDING_X
 NOTE_PADDING_Y = 10
 NOTE_LINE_HEIGHT = 21
 NOTE_LINE_GAP = 2
+OUTPUT_PADDING_X = 18
+OUTPUT_PADDING_Y = 12
+OUTPUT_LINE_HEIGHT = 22
+OUTPUT_MAX_LINES = 6
 DIVIDER_HEIGHT = 40
 TASK_ICON_SIZE = 36
 TASK_ICON_RENDER_SCALE = 4
@@ -151,6 +155,7 @@ class LauncherApp:
         self.api_links: list[tuple[pygame.Rect, str]] = []
         self.api_dialog: str | None = None
         self.note_card_rect: pygame.Rect | None = None
+        self.output_card_rect: pygame.Rect | None = None
         self.font = pygame.font.SysFont("Arial", 20)
         self.small_font = pygame.font.SysFont("Arial", 16)
         self.code_font = pygame.font.SysFont("Menlo", 18)
@@ -570,6 +575,7 @@ class LauncherApp:
         width = WINDOW_SIZE[0] - left - 34
         button_y = 700
         task = self.controller.current_task
+        self.output_card_rect = None
         self._draw_task_icon(task, (left + 17, 48), self._task_color(task))
         title = self.title_font.render(task.title, True, self.theme.text)
         self.screen.blit(title, (left + 42, 28))
@@ -593,9 +599,20 @@ class LauncherApp:
             note_value = note_values[0]
             note_height = self._note_card_height(note_value, width)
             note_top = button_y - 14 - note_height
-            content_bottom = note_top - 14
+            fixed_top = note_top
+            message_y: int | None = None
             if message_lines:
-                content_bottom -= len(message_lines) * 20 + 10
+                message_y = fixed_top - 10 - len(message_lines) * 20
+                fixed_top = message_y
+            output_top: int | None = None
+            if self.controller.latest_output:
+                output_height = self._output_card_height(
+                    self.controller.latest_output,
+                    width,
+                )
+                output_top = fixed_top - 10 - output_height
+                fixed_top = output_top
+            content_bottom = fixed_top - 14
             content_rect = pygame.Rect(
                 left, body_top, width, content_bottom - body_top
             )
@@ -604,19 +621,39 @@ class LauncherApp:
                 content_rect,
             )
             self._render_fixed_note(note_value, left, note_top, width)
-            if message_lines:
+            if output_top is not None:
+                self._render_output_card(
+                    self.controller.latest_output,
+                    left,
+                    output_top,
+                    width,
+                )
+            if message_y is not None:
                 card_x = left + (width - min(CONTENT_COLUMN_WIDTH, width)) // 2
-                message_y = note_top - 10 - len(message_lines) * 20
                 for index, line in enumerate(message_lines):
                     self.screen.blit(
                         self.small_font.render(line, True, message_color),
                         (card_x + CONTENT_PADDING_X, message_y + index * 20),
                     )
         else:
-            content_rect = pygame.Rect(
-                left, body_top, width, 665 - body_top
-            )
+            content_bottom = 665
+            output_top = None
+            if task.is_coding and self.controller.latest_output:
+                output_height = self._output_card_height(
+                    self.controller.latest_output,
+                    width,
+                )
+                output_top = content_bottom - output_height
+                content_bottom = output_top - 14
+            content_rect = pygame.Rect(left, body_top, width, content_bottom - body_top)
             self._render_markdown_blocks(section_blocks, content_rect)
+            if output_top is not None:
+                self._render_output_card(
+                    self.controller.latest_output,
+                    left,
+                    output_top,
+                    width,
+                )
 
         if self.controller.current_index > 0:
             self._add_button("Назад", left, button_y, 105, "previous")
@@ -729,6 +766,61 @@ class LauncherApp:
             self._markdown_group_height([("note", value)], inner_width)
             + NOTE_PADDING_Y * 2
         )
+
+    def _output_lines(self, value: str, available_width: int) -> list[str]:
+        card_width = min(CONTENT_COLUMN_WIDTH, available_width)
+        inner_width = card_width - OUTPUT_PADDING_X * 2
+        lines: list[str] = []
+        for raw_line in value.splitlines() or [""]:
+            lines.extend(_wrap(self.code_font, raw_line, inner_width))
+        if len(lines) > OUTPUT_MAX_LINES:
+            return lines[: OUTPUT_MAX_LINES - 1] + ["…"]
+        return lines
+
+    def _output_card_height(self, value: str, available_width: int) -> int:
+        line_count = len(self._output_lines(value, available_width))
+        return OUTPUT_PADDING_Y * 2 + 22 + 6 + line_count * OUTPUT_LINE_HEIGHT
+
+    def _render_output_card(
+        self,
+        value: str,
+        left: int,
+        top: int,
+        available_width: int,
+    ) -> None:
+        card_width = min(CONTENT_COLUMN_WIDTH, available_width)
+        card_x = left + (available_width - card_width) // 2
+        card = pygame.Rect(
+            card_x,
+            top,
+            card_width,
+            self._output_card_height(value, available_width),
+        )
+        pygame.draw.rect(
+            self.screen,
+            self.theme.code_background,
+            card,
+            border_radius=10,
+        )
+        icon = pygame.Rect(card.x + OUTPUT_PADDING_X, card.y + OUTPUT_PADDING_Y, 22, 18)
+        pygame.draw.rect(self.screen, self.theme.code_text, icon, 2, border_radius=3)
+        prompt = self.small_font.render(">_", True, self.theme.code_text)
+        self.screen.blit(prompt, prompt.get_rect(center=icon.center))
+        title = self.small_font.render(
+            "Результат программы",
+            True,
+            self.theme.code_text,
+        )
+        self.screen.blit(
+            title,
+            (icon.right + 9, card.y + OUTPUT_PADDING_Y - 1),
+        )
+        line_y = card.y + OUTPUT_PADDING_Y + 28
+        for line in self._output_lines(value, available_width):
+            rendered = self.code_font.render(line, True, self.theme.code_text)
+            self.screen.blit(rendered, (card.x + OUTPUT_PADDING_X, line_y))
+            line_y += OUTPUT_LINE_HEIGHT
+        self.output_card_rect = card
 
     def _render_fixed_note(
         self,

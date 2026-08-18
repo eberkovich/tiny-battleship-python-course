@@ -9,6 +9,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REFERENCE = PROJECT_ROOT / "reference" / "part_01_game.py"
 
 
+def flatten_cells(cells: list[tuple[int, int]]) -> list[int]:
+    return [coordinate for cell in cells for coordinate in cell]
+
+
 class ScriptedBattleshipUI:
     def __init__(self, cells: list[tuple[str, int, int]]):
         self.cells = list(cells)
@@ -58,38 +62,50 @@ class ScriptedBattleshipUI:
 
 
 def test_complete_part_one_reference_plays_to_victory(monkeypatch) -> None:
-    player_ships = [(1, 1), (3, 1), (5, 1), (7, 1), (9, 1)]
-    enemy_ships = [(1, 3), (3, 3), (5, 3), (7, 3), (9, 3)]
+    player_ships = [
+        (1, 1),
+        (3, 1),
+        (5, 1),
+        (7, 1),
+        (9, 1),
+        (1, 3),
+        (3, 3),
+        (5, 3),
+        (7, 3),
+        (9, 3),
+    ]
+    enemy_ships = [
+        (1, 5),
+        (3, 5),
+        (5, 5),
+        (7, 5),
+        (9, 5),
+        (1, 7),
+        (3, 7),
+        (5, 7),
+        (7, 7),
+        (9, 7),
+    ]
     ui = ScriptedBattleshipUI(
         [("player", 1, 1), ("player", 2, 2)]
         + [("player", x, y) for x, y in player_ships[1:]]
-        + [("enemy", 1, 3), ("enemy", 1, 3)]
+        + [("enemy", 1, 5), ("enemy", 1, 5)]
         + [("enemy", x, y) for x, y in enemy_ships[1:]]
     )
-    random_values = [
-        1,
-        3,
-        3,
-        3,
-        5,
-        3,
-        7,
-        3,
-        9,
-        3,
-        1,
-        1,
-        1,
-        1,
-        2,
-        1,
-        4,
-        10,
-        6,
-        10,
-        8,
-        10,
+    computer_candidates = [
+        (1, 1),
+        (1, 1),
+        (2, 1),
+        (2, 10),
+        (3, 10),
+        (4, 10),
+        (5, 10),
+        (6, 10),
+        (7, 10),
+        (8, 10),
+        (9, 10),
     ]
+    random_values = flatten_cells(enemy_ships + computer_candidates)
 
     monkeypatch.setitem(sys.modules, "battleship_ui", ui.module())
     monkeypatch.setattr(random, "randint", lambda _start, _end: random_values.pop(0))
@@ -99,7 +115,7 @@ def test_complete_part_one_reference_plays_to_victory(monkeypatch) -> None:
     assert ui.cells == []
     assert random_values == []
     assert ui.visible_boards == ["player", "enemy"]
-    assert ui.counts == {"player": 4, "enemy": 0}
+    assert ui.counts == {"player": 9, "enemy": 0}
     assert ui.decks[("player", 1, 1)] == "deck_sunk"
     assert all(
         ui.decks[("player", x, y)] == "deck_idle" for x, y in player_ships[1:]
@@ -107,7 +123,7 @@ def test_complete_part_one_reference_plays_to_victory(monkeypatch) -> None:
     assert all(
         ui.decks[("enemy", x, y)] == "deck_sunk" for x, y in enemy_ships
     )
-    assert {("player", x, 10) for x in (4, 6, 8)} <= ui.misses
+    assert {("player", x, 10) for x in range(2, 10)} <= ui.misses
     assert ("player", 2, 1) not in ui.misses
     assert ui.buttons == [
         ("Корабли не должны соприкасаться.", "Попробовать ещё"),
@@ -130,34 +146,36 @@ def test_complete_part_one_reference_plays_to_victory(monkeypatch) -> None:
 
 
 def test_complete_part_one_reference_plays_to_defeat(monkeypatch) -> None:
-    player_ships = [(1, 1), (3, 1), (5, 1), (7, 1), (9, 1)]
-    player_misses = [(2, 5), (4, 5), (6, 5), (8, 5), (10, 5)]
+    player_ships = [
+        (1, 1),
+        (3, 1),
+        (5, 1),
+        (7, 1),
+        (9, 1),
+        (1, 3),
+        (3, 3),
+        (5, 3),
+        (7, 3),
+        (9, 3),
+    ]
+    enemy_ships = [
+        (1, 5),
+        (3, 5),
+        (5, 5),
+        (7, 5),
+        (9, 5),
+        (1, 7),
+        (3, 7),
+        (5, 7),
+        (7, 7),
+        (9, 7),
+    ]
+    player_misses = [(x, 9) for x in range(1, 11)]
     ui = ScriptedBattleshipUI(
         [("player", x, y) for x, y in player_ships]
         + [("enemy", x, y) for x, y in player_misses]
     )
-    random_values = [
-        1,
-        3,
-        3,
-        3,
-        5,
-        3,
-        7,
-        3,
-        9,
-        3,
-        1,
-        1,
-        3,
-        1,
-        5,
-        1,
-        7,
-        1,
-        9,
-        1,
-    ]
+    random_values = flatten_cells(enemy_ships + player_ships)
 
     monkeypatch.setitem(sys.modules, "battleship_ui", ui.module())
     monkeypatch.setattr(random, "randint", lambda _start, _end: random_values.pop(0))
@@ -166,7 +184,7 @@ def test_complete_part_one_reference_plays_to_defeat(monkeypatch) -> None:
 
     assert ui.cells == []
     assert random_values == []
-    assert ui.counts == {"player": 0, "enemy": 5}
+    assert ui.counts == {"player": 0, "enemy": 10}
     assert all(
         ui.decks[("player", x, y)] == "deck_sunk" for x, y in player_ships
     )

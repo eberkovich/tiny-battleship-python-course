@@ -25,6 +25,21 @@ The project has three product-level parts:
 The subprocess runner/verifier supports the launcher; it is not a separate
 product area.
 
+## Verification strategy
+
+Test count is not a goal. Use shared structural validators and parameterized
+reference runs across lessons. Every coding task still needs a passing reference
+solution executed by the same behavioral checker as student code, while focused
+failure cases cover only important rules and error paths. Run focused checks
+while building a lesson; run the full regression suite and complete behavioral
+scenarios at each Part 1 phase checkpoint and before handoff.
+
+Do not duplicate tests for theme palettes or visual variants. Test shared logic
+once and inspect both themes when a new visual capability appears. Avoid
+pixel-perfect, exact-source, and broad exact-prose assertions. Exact lesson text
+or ordering may be asserted only when it protects a prerequisite, required
+term, or another settled teaching contract.
+
 ## Technology choices
 
 - Use `pygame-ce` for both the real game UI and the V1 launcher.
@@ -225,8 +240,8 @@ Each coding task has two child-facing actions:
 - **«Запустить»** reads the saved file, checks it in a subprocess, and presents
   the result using the task's declared output surface.
 
-Game output is the default. Before the first console exercise is added, task
-metadata gains an optional `run_mode: console`; omitted `run_mode` means
+Game output is the default. Task metadata has an optional
+`run_mode: console`; omitted `run_mode` means
 `game`. Both kinds run once through the checker and may display captured
 `stdout`. A `console` task stops after that run and never opens pygame. A `game`
 task keeps the existing check-then-real-UI flow; it may also display printed
@@ -326,6 +341,13 @@ also stores each public API command's introduction step and the signature recap
 used by later clickable mentions. Its lesson content must follow
 `context/lesson_content.md`.
 
+Task IDs are globally unique across the course because progress, checker
+routing, and API introduction references store them directly. Prefix every new
+task ID with its lesson ID, for example `lesson_02_project` or
+`lesson_02_exercise_01`. Keep Lesson 1's existing unprefixed IDs unchanged so
+existing student progress remains valid. IDs are internal and are never shown
+to the child.
+
 A coding task may define an optional ordered list of short Russian hints
 directly in its metadata:
 
@@ -349,6 +371,15 @@ Detailed material stays in its natural format:
   student's workspace on first initialization;
 - `lessons/<lesson>/acceptance.py` — executable behavioral checks;
 - `battleship.py` in the selected student directory — the cumulative game.
+
+An acceptance module exposes
+`check(task_id, snapshot, output)`. The runner passes bounded captured `stdout`
+as `output`. An interactive task may additionally expose
+`prepare(task_id, fake_ui)`; the runner calls it before student code so the
+checker can configure deterministic private fake-UI input queues. Student code
+never sees or configures those queues. Add multi-scenario execution only when
+the first task whose behavior cannot be verified by one deterministic scenario
+is implemented.
 
 Do not add per-lesson manifests until one shared curriculum file causes actual
 friction.
@@ -434,6 +465,9 @@ The final game has two main phases:
 1. **Fleet setup** — place and validate the player's ships and create the
    enemy fleet.
 2. **Gameplay** — alternate player and computer shots until one fleet is sunk.
+
+Each side has exactly 10 ships. In Part 1 all 10 ships have one deck; Part 2
+keeps the same ship count while adding multi-deck ships.
 
 During interactive player setup, each accepted cell click either extends one
 existing ship or creates a new one-deck ship. Student code must reject a deck

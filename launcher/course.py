@@ -18,6 +18,7 @@ class Task:
     section: str
     student_file: Path | None = None
     template: Path | None = None
+    run_mode: str = "game"
 
     @property
     def is_coding(self) -> bool:
@@ -97,6 +98,7 @@ def load_course(curriculum_path: Path | None = None) -> Course:
     lessons = []
     task_ids: set[str] = set()
     for lesson_data in raw["lessons"]:
+        lesson_id = _required_text(lesson_data, "id")
         tasks = []
         for item in lesson_data["tasks"]:
             student_file = item.get("student_file")
@@ -108,14 +110,26 @@ def load_course(curriculum_path: Path | None = None) -> Course:
                 section=_required_text(item, "section"),
                 student_file=Path(student_file) if student_file else None,
                 template=PROJECT_ROOT / template if template else None,
+                run_mode=str(item.get("run_mode", "game")),
             )
+            if task.run_mode not in {"game", "console"}:
+                raise ValueError(f"Unknown run mode for {task.id}: {task.run_mode}")
+            if task.run_mode == "console" and not task.is_coding:
+                raise ValueError(f"Console task requires a student file: {task.id}")
+            if lesson_id != "lesson_01" and not task.id.startswith(
+                f"{lesson_id}_"
+            ):
+                raise ValueError(
+                    f"Task IDs after Lesson 1 must start with {lesson_id}_: "
+                    f"{task.id}"
+                )
             if task.id in task_ids:
                 raise ValueError(f"Task IDs must be unique across the course: {task.id}")
             task_ids.add(task.id)
             tasks.append(task)
         lessons.append(
             Lesson(
-                id=_required_text(lesson_data, "id"),
+                id=lesson_id,
                 title=_required_text(lesson_data, "title"),
                 content=PROJECT_ROOT / _required_text(lesson_data, "content"),
                 completion_tasks=tuple(lesson_data["completion_tasks"]),

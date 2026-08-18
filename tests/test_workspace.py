@@ -1,5 +1,8 @@
 import json
+import tomllib
 from pathlib import Path
+
+import pytest
 
 from launcher.course import load_course, load_lesson, load_sections
 from launcher.theme import DARK_THEME_NAME
@@ -29,6 +32,127 @@ def test_curriculum_provides_clickable_api_recaps() -> None:
     assert course.api_references["show_miss"].details
     assert not course.api_reference_available("show_miss", "coordinates")
     assert course.api_reference_available("show_miss", "exercise_03")
+
+
+def test_curriculum_loads_console_run_mode(tmp_path: Path) -> None:
+    curriculum = tmp_path / "curriculum.yaml"
+    curriculum.write_text(
+        """
+version: 1
+course:
+  title: "Курс"
+  description: ["Описание"]
+lessons:
+  - id: lesson_01
+    title: "Урок"
+    content: unused.md
+    completion_tasks: [exercise]
+    tasks:
+      - id: exercise
+        kind: exercise
+        title: "Упражнение"
+        section: exercise
+        student_file: exercise.py
+        run_mode: console
+""".strip(),
+        encoding="utf-8",
+    )
+
+    course = load_course(curriculum)
+
+    assert course.lessons[0].tasks[0].run_mode == "console"
+
+
+def test_curriculum_rejects_unknown_run_mode(tmp_path: Path) -> None:
+    curriculum = tmp_path / "curriculum.yaml"
+    curriculum.write_text(
+        """
+version: 1
+course:
+  title: "Курс"
+  description: ["Описание"]
+lessons:
+  - id: lesson_01
+    title: "Урок"
+    content: unused.md
+    completion_tasks: [exercise]
+    tasks:
+      - id: exercise
+        kind: exercise
+        title: "Упражнение"
+        section: exercise
+        student_file: exercise.py
+        run_mode: paper
+""".strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="Unknown run mode"):
+        load_course(curriculum)
+
+
+def test_packaging_discovers_future_lesson_modules() -> None:
+    configuration = tomllib.loads(
+        (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    includes = configuration["tool"]["setuptools"]["packages"]["find"]["include"]
+    assert "lessons*" in includes
+
+
+def test_curriculum_rejects_duplicate_task_ids(tmp_path: Path) -> None:
+    curriculum = tmp_path / "curriculum.yaml"
+    curriculum.write_text(
+        """
+version: 1
+course:
+  title: "Курс"
+  description: ["Описание"]
+lessons:
+  - id: lesson_01
+    title: "Урок"
+    content: unused.md
+    completion_tasks: []
+    tasks:
+      - {id: intro, kind: article, title: "Первый", section: intro}
+      - {id: intro, kind: article, title: "Второй", section: second}
+""".strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="unique across the course"):
+        load_course(curriculum)
+
+
+def test_new_lesson_task_ids_must_include_lesson_prefix(tmp_path: Path) -> None:
+    curriculum = tmp_path / "curriculum.yaml"
+    curriculum.write_text(
+        """
+version: 1
+course:
+  title: "Курс"
+  description: ["Описание"]
+lessons:
+  - id: lesson_01
+    title: "Первый урок"
+    content: unused.md
+    completion_tasks: []
+    tasks:
+      - {id: intro, kind: article, title: "Первый", section: intro}
+  - id: lesson_02
+    title: "Второй урок"
+    content: unused.md
+    completion_tasks: []
+    tasks:
+      - {id: project, kind: project, title: "Проект", section: project}
+""".strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="must start with lesson_02_"):
+        load_course(curriculum)
 
 
 def test_workspace_initialization_preserves_existing_source(tmp_path: Path) -> None:

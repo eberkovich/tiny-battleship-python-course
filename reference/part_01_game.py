@@ -4,7 +4,7 @@ from battleship_ui import *
 
 
 BOARD_SIZE = 10
-FLEET_SIZE = 5
+FLEET_SIZE = 10
 
 
 def can_place_ship(x, y, ships):
