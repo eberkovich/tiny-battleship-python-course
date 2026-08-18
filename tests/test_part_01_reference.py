@@ -77,8 +77,12 @@ def test_complete_part_one_reference_plays_to_victory(monkeypatch) -> None:
         3,
         9,
         3,
+        1,
+        1,
+        1,
+        1,
         2,
-        10,
+        1,
         4,
         10,
         6,
@@ -95,14 +99,16 @@ def test_complete_part_one_reference_plays_to_victory(monkeypatch) -> None:
     assert ui.cells == []
     assert random_values == []
     assert ui.visible_boards == ["player", "enemy"]
-    assert ui.counts == {"player": 5, "enemy": 0}
+    assert ui.counts == {"player": 4, "enemy": 0}
+    assert ui.decks[("player", 1, 1)] == "deck_sunk"
     assert all(
-        ui.decks[("player", x, y)] == "deck_idle" for x, y in player_ships
+        ui.decks[("player", x, y)] == "deck_idle" for x, y in player_ships[1:]
     )
     assert all(
         ui.decks[("enemy", x, y)] == "deck_sunk" for x, y in enemy_ships
     )
-    assert {("player", x, 10) for x in (2, 4, 6, 8)} <= ui.misses
+    assert {("player", x, 10) for x in (4, 6, 8)} <= ui.misses
+    assert ("player", 2, 1) not in ui.misses
     assert ui.buttons == [
         ("Корабли не должны соприкасаться.", "Попробовать ещё"),
         ("Флот готов!", "Начать бой"),
@@ -115,6 +121,12 @@ def test_complete_part_one_reference_plays_to_victory(monkeypatch) -> None:
     assert not can_place_ship(4, 4, ships)
     assert not can_place_ship(6, 5, ships)
     assert can_place_ship(7, 5, ships)
+    can_computer_shoot = namespace["can_computer_shoot"]
+    assert not can_computer_shoot(3, 3, [(3, 3)], [])
+    assert not can_computer_shoot(5, 5, [], [(5, 5)])
+    assert not can_computer_shoot(4, 4, [], [(5, 5)])
+    assert not can_computer_shoot(6, 5, [], [(5, 5)])
+    assert can_computer_shoot(7, 5, [], [(5, 5)])
 
 
 def test_complete_part_one_reference_plays_to_defeat(monkeypatch) -> None:

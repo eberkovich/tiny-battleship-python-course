@@ -14,6 +14,14 @@ def can_place_ship(x, y, ships):
     return True
 
 
+def can_computer_shoot(x, y, computer_shots, sunk_player_ships):
+    if (x, y) in computer_shots:
+        return False
+    if not can_place_ship(x, y, sunk_player_ships):
+        return False
+    return True
+
+
 # Показываем игровые поля.
 show_board(PLAYER)
 show_board(ENEMY)
@@ -53,6 +61,7 @@ show_ship_count(ENEMY, len(enemy_ships))
 # Игрок и компьютер стреляют по очереди.
 player_shots = []
 computer_shots = []
+sunk_player_ships = []
 
 while len(player_ships) > 0 and len(enemy_ships) > 0:
     x, y = wait_for_cell(ENEMY)
@@ -75,7 +84,12 @@ while len(player_ships) > 0 and len(enemy_ships) > 0:
         computer_x = randint(1, BOARD_SIZE)
         computer_y = randint(1, BOARD_SIZE)
 
-        while (computer_x, computer_y) in computer_shots:
+        while not can_computer_shoot(
+            computer_x,
+            computer_y,
+            computer_shots,
+            sunk_player_ships,
+        ):
             computer_x = randint(1, BOARD_SIZE)
             computer_y = randint(1, BOARD_SIZE)
 
@@ -83,6 +97,7 @@ while len(player_ships) > 0 and len(enemy_ships) > 0:
 
         if (computer_x, computer_y) in player_ships:
             player_ships.remove((computer_x, computer_y))
+            sunk_player_ships.append((computer_x, computer_y))
             draw_deck(PLAYER, computer_x, computer_y, DECK_SUNK)
         else:
             show_miss(PLAYER, computer_x, computer_y)

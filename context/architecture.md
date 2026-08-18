@@ -326,6 +326,22 @@ also stores each public API command's introduction step and the signature recap
 used by later clickable mentions. Its lesson content must follow
 `context/lesson_content.md`.
 
+A coding task may define an optional ordered list of short Russian hints
+directly in its metadata:
+
+```yaml
+hints:
+  - "Первая подсказка."
+  - "Следующая подсказка."
+```
+
+When hints are present, the launcher initially hides them under
+**«Показать подсказку»** and reveals one hint at a time in their YAML order.
+Revealed hints remain visible while the task is open and never change task
+status or progress. A task without `hints` shows no hint control. Implement
+this generic launcher behavior only when the first lesson that uses hints is
+implemented.
+
 Detailed material stays in its natural format:
 
 - `lessons/<lesson>/lesson.md` — child-facing content;

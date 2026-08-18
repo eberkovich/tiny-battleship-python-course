@@ -14,7 +14,7 @@ child-facing content.
 
 ## Pacing contract
 
-The sequence below is a minimum of 17 short lessons, not a target to compress.
+The sequence below is a minimum of 18 short lessons, not a target to compress.
 Child testing may split a difficult lesson further. Do not merge lessons merely
 to preserve a smaller count.
 
@@ -143,15 +143,32 @@ not use a two-dimensional array or expose zero-based grid indexing.
 - **Game milestone:** let the player keep shooting until the enemy fleet is
   empty, rejecting repeated cells.
 
-#### 16. Computer shot
+#### 16. One random computer shot
 
-- **Learn:** reuse randomness, history, membership, and removal.
-- **Practice:** rebuild the known player-shot algorithm with scripted random
-  values.
-- **Game milestone:** replace the player-only loop with one player turn followed
-  by one non-repeating computer turn; update both boards and counters.
+- **Learn:** reuse randomness, membership, and removal for the other board.
+- **Practice:** resolve one prepared random cell as a hit or miss.
+- **Game milestone:** after the player's turn, let the computer choose one
+  random cell, resolve the shot, and update the player board and counter. This
+  first version does not yet filter repeated or useless cells.
 
-#### 17. Complete battle
+#### 17. A careful computer shot
+
+- **Learn:** use `not`, a shot-history list, a sunk-ship list, and a small
+  validation function; reuse the known no-touch neighbour calculation.
+- **Practice:** decide which prepared candidate cells the computer may shoot.
+- **Game milestone:** implement
+  `can_computer_shoot(x, y, computer_shots, sunk_player_ships)` so the computer
+  rejects cells it has already fired at and all horizontal, vertical, and
+  diagonal neighbours of sunk one-cell ships.
+- **Progressive hints:**
+  1. «Сначала проверь, нет ли адреса клетки среди прошлых выстрелов компьютера.»
+  2. «Храни адреса потопленных кораблей игрока в отдельном списке.»
+  3. «Вспомни проверку расстановки кораблей: она уже умеет находить занятую и
+     соседние клетки.»
+  4. «Функция может сначала отклонить повторный выстрел, затем клетку рядом с
+     потопленным кораблём, а во всех остальных случаях разрешить выстрел.»
+
+#### 18. Complete battle
 
 - **Learn:** combine both turns with `while`, `and`, `>`, and the final `==`
   result.
@@ -198,13 +215,14 @@ target program:
 - variables, constants, numbers, strings, assignment, and indentation;
 - lists, coordinate pairs, unpacking, `len`, `append`, `remove`, and
   membership with `in`;
-- arithmetic subtraction, `abs`, comparisons, booleans, and `and`;
+- arithmetic subtraction, `abs`, comparisons, booleans, `and`, and `not`;
 - `if`/`else`, `for`, `while`, nested control flow, `def`, parameters, and
   `return`;
 - random integers;
 - coordinates, no-touch placement including diagonals, fleet completion,
-  hidden enemy ships, shot history, repeated-shot prevention, hit/miss/sunk
-  rendering, counters, alternating turns, and win/loss.
+  hidden enemy ships, shot history, repeated-shot prevention, avoidance of sunk
+  one-cell ships and all their neighbours, hit/miss/sunk rendering, counters,
+  alternating turns, and win/loss.
 
 Preliminary exercises additionally use the teaching-only `print` function,
 introduced in Lesson 2 together with the launcher output card. It is tracked

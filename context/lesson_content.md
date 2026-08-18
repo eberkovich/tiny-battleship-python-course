@@ -142,6 +142,13 @@ after this explanation.
   enough to read in the launcher's result card. Do not require a pygame window
   when printed output is the complete observable result.
 - Do not show reference solutions in child-facing text.
+- Add hints only when a task is demonstrably difficult without them; discussion
+  of a difficult concept alone is not a reason to add hints to other tasks.
+  Store short ordered hint strings in the task's optional `hints` list in
+  `CURRICULUM.yaml`. Make them progressive: first restate or split the problem,
+  then point to relevant known ideas, and only in the final hint offer
+  pseudocode when necessary. Do not reveal the complete Python solution. Every
+  hint must use only concepts already introduced before the task.
 - Do not repeat behavior already completed and checked unless repetition is an
   explicit learning objective.
 - When an isolated task depends on earlier behavior, put the previously taught
