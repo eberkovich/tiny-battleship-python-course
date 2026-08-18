@@ -1,0 +1,31 @@
+from lessons.phase_a_checks import (
+    ENEMY,
+    PLAYER,
+    expect_decks,
+    expect_misses,
+    expect_output,
+    expect_project_fleet,
+    failed,
+    passed,
+)
+
+
+FLEET = (
+    (1, 1), (3, 1), (5, 1), (7, 1), (9, 1),
+    (1, 3), (3, 3), (5, 3), (7, 3), (9, 3),
+)
+
+
+def check(task_id: str, snapshot: dict[str, object], output: str):
+    if task_id == "lesson_06_exercise_01":
+        return expect_output(output, "2\n4\n6\n8")
+    if task_id == "lesson_06_exercise_03":
+        return expect_output(output, "1\n3\n5")
+    if task_id == "lesson_06_exercise_02":
+        failure = expect_decks(snapshot, PLAYER, ((2, 4), (5, 4), (8, 4)))
+        return failure or passed("Верно! Цикл нарисовал три корабля.")
+    if task_id == "lesson_06_project":
+        return expect_project_fleet(snapshot, FLEET, 10)
+    if task_id == "lesson_06_star":
+        return expect_misses(snapshot, ENEMY, ((2, 2), (5, 5), (8, 8)))
+    return failed("Для этого задания пока нет проверки.")
