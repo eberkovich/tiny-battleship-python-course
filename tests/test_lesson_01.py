@@ -71,7 +71,9 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
     content = "\n".join(sections.values()).lower()
 
     for required in (
-        "команды игрового поля",
+        "первое знакомство",
+        "вспомогательные команды",
+        "как устроена команда",
         "координаты и корабли",
         "нарисуй однопалубный корабль",
         "пишем игру",
@@ -79,21 +81,26 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
         "итоги урока",
     ):
         assert required in content
-    assert [task.id for task in lesson.tasks[:3]] == [
+    assert [task.id for task in lesson.tasks[:4]] == [
+        "intro",
         "api",
         "exercise_01",
         "coordinates",
     ]
+    assert lesson.task("intro").title == "Первое знакомство"
     assert lesson.task("recap").kind == "summary"
     assert "show_board" in sections["api"]
     assert "draw_deck" not in sections["api"]
     assert "show_miss" not in sections["api"]
     assert "draw_deck" in sections["coordinates"]
     assert "deck_idle" in sections["coordinates"].lower()
-    assert sections["coordinates"].index("Каждая клетка") < sections[
+    assert "Система координат — это способ дать каждой клетке точный адрес" in sections[
+        "coordinates"
+    ]
+    assert sections["coordinates"].index("Система координат") < sections[
         "coordinates"
     ].index("draw_deck")
-    assert sections["coordinates"].index("Каждая клетка") < sections[
+    assert sections["coordinates"].index("Система координат") < sections[
         "coordinates"
     ].index("show_miss")
     assert "`board` —" in sections["api"]
@@ -113,16 +120,25 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
     assert "battleship.py" not in content
     assert "show_board(player)" not in sections["project"].lower()
     assert "show_board(enemy)" not in sections["project"].lower()
+    assert sections["intro"].count("\n---\n") == 0
     assert sections["api"].count("\n---\n") == 2
     assert sections["coordinates"].count("\n---\n") == 2
     assert "framework" not in content
     assert "фреймвор" not in content
     assert "библиотек" not in content
-    assert "полностью создашь игру «морской бой»" in sections["api"].lower()
-    assert "каждый такой корабль занимает одну клетку" in sections["api"].lower()
-    assert "сам напишешь всю логику игры" in sections["api"].lower()
-    assert "вспомогательные команды" in sections["api"].lower()
+    assert "полностью создашь игру «морской бой»" in sections["intro"].lower()
+    assert "каждый такой корабль занимает одну клетку" in sections["intro"].lower()
+    assert "сам напишешь всю логику игры" in sections["intro"].lower()
+    assert "вспомогательные команды" in sections["intro"].lower()
+    assert "следующих разделах" in sections["intro"].lower()
     assert "подключает вспомогательные команды" in sections["api"].lower()
+    assert "функции python" in sections["api"].lower()
+    assert "вызовом функции" in sections["api"].lower()
+    assert "аргументом" in sections["api"].lower()
+    assert "синтаксисом вызова" in sections["api"].lower()
+    assert sections["coordinates"].index("разделяют запятыми") < sections[
+        "coordinates"
+    ].index("draw_deck(board")
     for task in lesson.tasks:
         if not task.is_coding:
             continue

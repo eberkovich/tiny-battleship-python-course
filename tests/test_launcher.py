@@ -275,7 +275,7 @@ def test_opening_lesson_shows_saved_current_step(tmp_path: Path) -> None:
     student = tmp_path / "student"
     controller = LauncherController(student)
     controller.enter_lesson("lesson_01")
-    assert controller.current_task.id == "api"
+    assert controller.current_task.id == "intro"
 
     controller.select_task("coordinates")
     reopened = LauncherController(student)
@@ -338,6 +338,7 @@ def test_summary_has_its_own_kind_and_finish_color(tmp_path: Path) -> None:
     assert app._task_color(controller.current_task) == app.theme.summary
     assert not controller.current_task.is_coding
     assert "recap" in {task_id for _, task_id in app.task_rects}
+    assert max(rect.bottom for rect, _ in app.task_rects) <= app.screen.get_height()
 
 
 def test_next_lesson_stays_locked_until_previous_lesson_is_complete(

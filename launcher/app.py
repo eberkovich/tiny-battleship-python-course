@@ -30,6 +30,8 @@ NOTE_LINE_GAP = 2
 DIVIDER_HEIGHT = 40
 TASK_ICON_SIZE = 36
 TASK_ICON_RENDER_SCALE = 4
+SIDEBAR_TASK_HEIGHT = 54
+SIDEBAR_TASK_GAP = 6
 DIALOG_OVERLAY_ALPHA = 135
 
 
@@ -418,7 +420,7 @@ class LauncherApp:
         self._render_progress(20, 137)
         y = 184
         for task in self.controller.lesson.tasks:
-            rect = pygame.Rect(14, y, SIDEBAR_WIDTH - 28, 61)
+            rect = pygame.Rect(14, y, SIDEBAR_WIDTH - 28, SIDEBAR_TASK_HEIGHT)
             unlocked = self.controller.task_unlocked(task)
             active = task.id == self.controller.current_task.id
             pygame.draw.rect(
@@ -454,7 +456,7 @@ class LauncherApp:
                 self._draw_lock(
                     (rect.right - 22, rect.centery), self.theme.muted
                 )
-            y += 67
+            y += SIDEBAR_TASK_HEIGHT + SIDEBAR_TASK_GAP
 
     def _render_progress(self, x: int, y: int) -> None:
         cursor_x = x

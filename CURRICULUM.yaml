@@ -43,9 +43,13 @@ lessons:
       - exercise_03
       - project
     tasks:
+      - id: intro
+        kind: article
+        title: "Первое знакомство"
+        section: intro
       - id: api
         kind: article
-        title: "Команды игрового поля"
+        title: "Как устроена команда"
         section: api
       - id: exercise_01
         kind: exercise
