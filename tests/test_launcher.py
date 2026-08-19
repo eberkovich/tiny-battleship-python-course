@@ -63,6 +63,25 @@ def test_markdown_note_is_a_distinct_content_block() -> None:
     ]
 
 
+def test_markdown_recap_is_a_distinct_content_block() -> None:
+    blocks = _markdown_blocks(
+        "Исправь программу.\n\n"
+        "> [!RECAP]\n"
+        "> На всякий случай: индексы списка начинаются с нуля.\n\n"
+        "> [!NOTE]\n"
+        "> Открой редактор → сохрани изменения → нажми **«Запустить»**."
+    )
+
+    assert blocks == [
+        ("text", "Исправь программу."),
+        ("recap", "На всякий случай: индексы списка начинаются с нуля."),
+        (
+            "note",
+            "Открой редактор → сохрани изменения → нажми **«Запустить»**.",
+        ),
+    ]
+
+
 def test_editor_command_passes_exact_cyrillic_path_without_shell(tmp_path: Path) -> None:
     source = tmp_path / "Ученик 1" / "мой код.py"
     command = editor_command(source)

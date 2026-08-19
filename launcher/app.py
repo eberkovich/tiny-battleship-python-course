@@ -27,6 +27,8 @@ NOTE_PADDING_X = CONTENT_PADDING_X
 NOTE_PADDING_Y = 10
 NOTE_LINE_HEIGHT = 21
 NOTE_LINE_GAP = 2
+RECAP_PADDING_X = 20
+RECAP_PADDING_Y = 14
 OUTPUT_PADDING_X = 18
 OUTPUT_PADDING_Y = 12
 OUTPUT_LINE_HEIGHT = 22
@@ -73,30 +75,31 @@ def _wrap(font: pygame.font.Font, text: str, width: int) -> list[str]:
 def _markdown_blocks(text: str) -> list[tuple[str, str]]:
     blocks: list[tuple[str, str]] = []
     in_code = False
-    in_note = False
+    callout_kind: str | None = None
     paragraph: list[str] = []
-    note: list[str] = []
+    callout: list[str] = []
 
     def flush_paragraph() -> None:
         if paragraph:
             blocks.append(("text", " ".join(paragraph)))
             paragraph.clear()
 
-    def flush_note() -> None:
-        if note:
-            blocks.append(("note", "\n".join(note)))
-            note.clear()
+    def flush_callout() -> None:
+        nonlocal callout_kind
+        if callout and callout_kind is not None:
+            blocks.append((callout_kind, "\n".join(callout)))
+            callout.clear()
+        callout_kind = None
 
     for raw_line in text.splitlines():
         stripped = raw_line.strip()
-        if in_note:
+        if callout_kind is not None:
             if stripped.startswith(">"):
-                note_line = stripped[1:].strip()
-                if note_line:
-                    note.append(note_line)
+                callout_line = stripped[1:].strip()
+                if callout_line:
+                    callout.append(callout_line)
                 continue
-            flush_note()
-            in_note = False
+            flush_callout()
         if stripped.startswith(FENCE):
             flush_paragraph()
             in_code = not in_code
@@ -107,7 +110,12 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
             flush_paragraph()
             if blocks and blocks[-1][0] == "space":
                 blocks.pop()
-            in_note = True
+            callout_kind = "note"
+        elif stripped == "> [!RECAP]":
+            flush_paragraph()
+            if blocks and blocks[-1][0] == "space":
+                blocks.pop()
+            callout_kind = "recap"
         elif stripped == "---":
             flush_paragraph()
             if blocks and blocks[-1][0] == "space":
@@ -127,7 +135,7 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
         else:
             paragraph.append(stripped)
     flush_paragraph()
-    flush_note()
+    flush_callout()
     while blocks and blocks[-1][0] == "space":
         blocks.pop()
     return blocks
@@ -1133,9 +1141,9 @@ class LauncherApp:
             if block[0] == "divider":
                 flush_group()
                 items.append(("divider", []))
-            elif block[0] == "note":
+            elif block[0] in {"note", "recap"}:
                 flush_group()
-                items.append(("note", [block]))
+                items.append((block[0], [block]))
             else:
                 group.append(block)
         flush_group()
@@ -1157,11 +1165,15 @@ class LauncherApp:
             item_inner_width = (
                 card_width - NOTE_PADDING_X * 2
                 if item_kind == "note"
+                else card_width - RECAP_PADDING_X * 2
+                if item_kind == "recap"
                 else inner_width
             )
             item_padding_y = (
                 NOTE_PADDING_Y if item_kind == "note" else CONTENT_PADDING_Y
             )
+            if item_kind == "recap":
+                item_padding_y = RECAP_PADDING_Y
             content_height = self._markdown_group_height(group, item_inner_width)
             card = pygame.Rect(
                 card_x,
@@ -1169,18 +1181,29 @@ class LauncherApp:
                 card_width,
                 content_height + item_padding_y * 2,
             )
-            pygame.draw.rect(
-                self.screen,
-                self.theme.note_background
-                if item_kind == "note"
-                else self.theme.content_card,
-                card,
-                border_radius=14,
-            )
+            background = {
+                "note": self.theme.note_background,
+                "recap": self.theme.recap_background,
+            }.get(item_kind, self.theme.content_card)
+            pygame.draw.rect(self.screen, background, card, border_radius=14)
+            if item_kind == "recap":
+                pygame.draw.rect(
+                    self.screen,
+                    self.theme.recap_border,
+                    card,
+                    width=2,
+                    border_radius=14,
+                )
             self._draw_markdown_group(
                 group,
                 card.x
-                + (NOTE_PADDING_X if item_kind == "note" else CONTENT_PADDING_X),
+                + (
+                    NOTE_PADDING_X
+                    if item_kind == "note"
+                    else RECAP_PADDING_X
+                    if item_kind == "recap"
+                    else CONTENT_PADDING_X
+                ),
                 card.y + item_padding_y,
                 item_inner_width,
             )

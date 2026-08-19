@@ -59,10 +59,10 @@ class GameState:
         board_state.ship_count = count
         self.events.append(("ship_count_shown", board, count))
 
-    def wait_for_button(self, message: str, label: str) -> None:
+    def show_message(self, message: str, label: str) -> None:
         self._validate_text(message)
         self._validate_text(label)
-        self.events.append(("button_waited", message, label))
+        self.events.append(("message_shown", message, label))
 
     def draw_deck(self, board: str, x: int, y: int, state: str) -> None:
         self._validate_board(board)

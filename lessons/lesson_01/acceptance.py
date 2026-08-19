@@ -82,16 +82,13 @@ def check(
             failure = _require_visible(snapshot, board)
             if failure:
                 return failure
-        for x in (3, 4, 5):
-            if _cell(snapshot, PLAYER, x, 5) != ("deck", DECK_IDLE):
+        ships = ((2, 2), (3, 5), (4, 8), (9, 2), (8, 5), (7, 8))
+        for x, y in ships:
+            if _cell(snapshot, PLAYER, x, y) != ("deck", DECK_IDLE):
                 return AcceptanceOutcome(
                     False,
-                    "Проверь корабль: нужны палубы (3, 5), (4, 5) и (5, 5).",
+                    f"Не найден корабль в клетке ({x}, {y}). Проверь отражение.",
                 )
-        if _cell(snapshot, ENEMY, 7, 3) != ("water", "miss"):
-            return AcceptanceOutcome(
-                False, "Добавь промах на поле противника в клетке (7, 3)."
-            )
-        return AcceptanceOutcome(True, "Звёздочка твоя! Все клетки найдены.")
+        return AcceptanceOutcome(True, "Звёздочка твоя! Флот стал зеркальным.")
 
     return AcceptanceOutcome(False, "Для этого задания пока нет проверки.")

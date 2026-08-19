@@ -39,7 +39,7 @@ class ScriptedBattleshipUI:
         assert board == expected_board
         return x, y
 
-    def wait_for_button(self, message: str, label: str) -> None:
+    def show_message(self, message: str, label: str) -> None:
         self.buttons.append((message, label))
 
     def module(self) -> types.ModuleType:
@@ -54,7 +54,7 @@ class ScriptedBattleshipUI:
             "show_miss": self.show_miss,
             "show_ship_count": self.show_ship_count,
             "wait_for_cell": self.wait_for_cell,
-            "wait_for_button": self.wait_for_button,
+            "show_message": self.show_message,
         }
         module.__dict__.update(exports)
         module.__all__ = list(exports)

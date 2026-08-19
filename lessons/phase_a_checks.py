@@ -81,11 +81,11 @@ def expect_misses(
     return passed("Звёздочка твоя! Все промахи показаны циклом.")
 
 
-def button_events(snapshot: dict[str, object]) -> list[tuple[str, str]]:
+def message_events(snapshot: dict[str, object]) -> list[tuple[str, str]]:
     return [
         (str(event[1]), str(event[2]))
         for event in snapshot["events"]
-        if event[0] == "button_waited"
+        if event[0] == "message_shown"
     ]
 
 
@@ -93,7 +93,7 @@ __all__ = [
     "AcceptanceOutcome",
     "ENEMY",
     "PLAYER",
-    "button_events",
+    "message_events",
     "expect_decks",
     "expect_misses",
     "expect_output",

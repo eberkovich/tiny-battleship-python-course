@@ -123,6 +123,7 @@ Each student directory contains only that child's mutable state:
 
 ```text
 child_1/
+├── .course_templates.json
 ├── battleship.py
 ├── exercises/
 │   └── lesson_01/
@@ -133,9 +134,11 @@ child_1/
 └── progress.json
 ```
 
-The launcher may initialize a missing student directory from a shared template,
-but it must never overwrite an existing student source file, including
-`battleship.py` or an exercise.
+The launcher initializes missing student files from shared templates and stores
+their checksums in `.course_templates.json`. On a later course update, it may
+refresh a source file only while that file is still byte-for-byte identical to
+the last starter installed there. It must preserve every edited or untracked
+existing source file, including `battleship.py` and exercises.
 
 Checkpoint creation and restoration are deferred beyond Stage 1. Add them only
 when the cumulative program is large enough to justify the recovery workflow.
@@ -205,7 +208,7 @@ unlocks every implemented lesson and every step, including summaries, and shows
 a visible **«РЕЖИМ ОТЛАДКИ»** badge. Debug navigation, theme changes, and
 successful runs do not modify persisted progress or completion. Student mode
 remains the default; debug mode still opens and executes files from the
-selected student directory and never overwrites an existing source file.
+selected student directory and never overwrites student edits.
 
 A fixed **«Справочник»** button is visible beside the theme switch on the
 course home and every lesson page. It opens the command reference without
@@ -267,6 +270,12 @@ buttons. Keep it compact and unframed, with smaller muted text, restrained
 padding, and a quiet background so it remains secondary to the exercise. Show
 contextual feedback immediately above it. The card uses shared layout and theme
 palette constants in both schemes.
+
+Render Markdown `> [!RECAP]` inside the scrollable task description as a quiet
+framed card with a distinct background. Its text starts with
+**«На всякий случай:»** and briefly recalls prerequisite knowledge without
+linking away from the task or revealing its solution. Use the same content and
+layout in both themes; colors come only from shared theme palette constants.
 
 Before the first console exercise is activated, capture bounded student
 `stdout` for every coding run. When it is non-empty, show only the latest run's
@@ -451,7 +460,7 @@ Detailed material stays in its natural format:
 
 - `lessons/<lesson>/lesson.md` — child-facing content;
 - `lessons/<lesson>/exercises/` — immutable starter templates copied into each
-  student's workspace on first initialization;
+  student's workspace and safely refreshed while the copy remains untouched;
 - `lessons/<lesson>/acceptance.py` — executable behavioral checks;
 - `battleship.py` in the selected student directory — the cumulative game.
 
@@ -568,7 +577,7 @@ When student code determines that the fleet is valid and complete, it makes a
 blocking procedural call:
 
 ```python
-wait_for_button("Флот готов!", "Начать бой")
+show_message("Флот готов!", "Начать бой")
 ```
 
 The pygame implementation handles the button and its events internally. The
@@ -590,15 +599,15 @@ show_board(board)
 draw_deck(board, x, y, state=DECK_IDLE)
 show_miss(board, x, y)
 show_ship_count(board, count)
-wait_for_button(message, label)
+show_message(message, label)
 ```
 
 `show_board` reveals a board, `draw_deck` places or updates a deck, and
 `show_miss` displays an unsuccessful shot. `show_ship_count` shows or updates
-the selected board's remaining-ship counter. `wait_for_button` shows a message
-and labeled button and blocks until the button is pressed. Untouched water
+the selected board's remaining-ship counter. `show_message` shows a dialog with
+a message and labeled button and blocks until the button is pressed. Untouched water
 already exists and does not need a public drawing operation. The counter is
-introduced in Lesson 2 and the button in Lesson 7; neither is introduced or
+introduced in Lesson 2 and the dialog command in Lesson 7; neither is introduced or
 required in Lesson 1.
 
 The real and fake implementations must provide the same student-facing API.

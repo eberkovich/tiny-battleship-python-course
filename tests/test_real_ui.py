@@ -77,7 +77,7 @@ def test_miss_asset_is_packaged_and_scaled_to_fill_a_cell() -> None:
 
 def test_button_prompt_uses_a_clickable_centered_button(tmp_path: Path) -> None:
     real_ui.show_board(PLAYER)
-    real_ui._state.wait_for_button("Флот готов!", "Начать бой")
+    real_ui._state.show_message("Флот готов!", "Начать бой")
     real_ui._render_prompt("Флот готов!", "Начать бой")
     screenshot = tmp_path / "button.png"
     real_ui._save_screenshot(str(screenshot))
@@ -88,7 +88,7 @@ def test_button_prompt_uses_a_clickable_centered_button(tmp_path: Path) -> None:
     assert screenshot.stat().st_size > 0
 
 
-def test_wait_for_button_returns_after_click() -> None:
+def test_show_message_returns_after_click() -> None:
     real_ui.show_board(PLAYER)
     pygame.event.post(
         pygame.event.Event(
@@ -97,10 +97,10 @@ def test_wait_for_button_returns_after_click() -> None:
         )
     )
 
-    real_ui.wait_for_button("Флот готов!", "Начать бой")
+    real_ui.show_message("Флот готов!", "Начать бой")
 
     assert real_ui._snapshot()["events"][-1] == [
-        "button_waited",
+        "message_shown",
         "Флот готов!",
         "Начать бой",
     ]

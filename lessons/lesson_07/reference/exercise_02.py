@@ -1,3 +1,3 @@
 from battleship_ui import *
 
-wait_for_button("Корабль выбран", "Готово")
+show_message("Корабль выбран", "Готово")

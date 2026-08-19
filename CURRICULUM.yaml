@@ -19,7 +19,7 @@ course:
         - {id: lesson_04, title: "Список кораблей", outcome: "Хранить три корабля в списке и считать их с len."}
         - {id: lesson_05, title: "Изменяем список", outcome: "Построить список из четырёх кораблей с append."}
         - {id: lesson_06, title: "Повторяем команды", outcome: "Нарисовать циклом фиксированный флот из 10 кораблей."}
-        - {id: lesson_07, title: "Флот готов", outcome: "Показать сообщение о готовом флоте и дождаться кнопки."}
+        - {id: lesson_07, title: "Флот готов", outcome: "Показать диалог о готовом флоте и дождаться нажатия кнопки."}
     - id: stage_02
       title: "Расставляем корабли"
       summary: "Выбор клеток и проверка правильного расстояния между кораблями."
@@ -70,10 +70,10 @@ api_reference:
     details:
       - "board — PLAYER для твоего поля или ENEMY для поля противника."
       - "count — целое неотрицательное количество кораблей."
-  wait_for_button:
+  show_message:
     introduced_in: lesson_07_button_api
-    signature: "wait_for_button(message, label)"
-    summary: "Показывает сообщение и ждёт нажатия кнопки."
+    signature: "show_message(message, label)"
+    summary: "Показывает диалог с сообщением и ждёт нажатия кнопки."
     details:
       - "message — текст сообщения."
       - "label — текст на кнопке."
@@ -229,9 +229,9 @@ lessons:
       - {id: lesson_03_recap, kind: summary, title: "Итоги урока", section: recap}
 
   - id: lesson_04
-    concept: "Список хранит несколько значений в одном месте"
-    motivating_problem: "Как собрать адреса всех кораблей вместе?"
-    milestone: "Хранить три корабля в списке и считать их с len"
+    concept: "Список хранит значения по порядку, а индекс выбирает одно из них"
+    motivating_problem: "Как собрать весь флот и получать адрес каждого корабля?"
+    milestone: "Хранить три корабля в списке, получать их по индексам и считать с len"
     prerequisites: [lesson_03]
     content: lessons/lesson_04/lesson.md
     completion_tasks:
@@ -243,25 +243,25 @@ lessons:
       - {id: lesson_04_lists, kind: article, title: "Несколько значений вместе", section: lists}
       - id: lesson_04_exercise_01
         kind: exercise
-        title: "Посчитай числа"
+        title: "Собери список"
         section: exercise_01
         student_file: exercises/lesson_04/exercise_01.py
         template: lessons/lesson_04/exercises/exercise_01.py
         run_mode: console
+      - {id: lesson_04_access, kind: article, title: "Как взять значение", section: access}
       - id: lesson_04_exercise_02
         kind: exercise
-        title: "Посчитай адреса"
+        title: "Выбери число"
         section: exercise_02
         student_file: exercises/lesson_04/exercise_02.py
         template: lessons/lesson_04/exercises/exercise_02.py
         run_mode: console
       - id: lesson_04_exercise_03
         kind: exercise
-        title: "Почини список"
+        title: "Найди последний корабль"
         section: exercise_03
         student_file: exercises/lesson_04/exercise_03.py
         template: lessons/lesson_04/exercises/exercise_03.py
-        run_mode: console
       - id: lesson_04_project
         kind: project
         title: "Пишем игру"
@@ -292,11 +292,10 @@ lessons:
         run_mode: console
       - id: lesson_05_exercise_02
         kind: exercise
-        title: "Добавь адрес"
+        title: "Добавь и покажи корабль"
         section: exercise_02
         student_file: exercises/lesson_05/exercise_02.py
         template: lessons/lesson_05/exercises/exercise_02.py
-        run_mode: console
       - id: lesson_05_exercise_03
         kind: exercise
         title: "Расставь по порядку"
@@ -361,9 +360,9 @@ lessons:
       - {id: lesson_06_recap, kind: summary, title: "Итоги урока", section: recap}
 
   - id: lesson_07
-    concept: "Строки хранят текст, а кнопка останавливает программу до нажатия"
+    concept: "Строки хранят текст, а диалог останавливает программу до нажатия кнопки"
     motivating_problem: "Как закончить расстановку и дать игроку начать бой?"
-    milestone: "Показать сообщение о готовом флоте и дождаться кнопки"
+    milestone: "Показать диалог о готовом флоте и дождаться нажатия кнопки"
     prerequisites: [lesson_06]
     content: lessons/lesson_07/lesson.md
     completion_tasks:
@@ -380,16 +379,16 @@ lessons:
         student_file: exercises/lesson_07/exercise_01.py
         template: lessons/lesson_07/exercises/exercise_01.py
         run_mode: console
-      - {id: lesson_07_button_api, kind: article, title: "Кнопка перед боем", section: button_api}
+      - {id: lesson_07_button_api, kind: article, title: "Диалог перед боем", section: button_api}
       - id: lesson_07_exercise_02
         kind: exercise
-        title: "Покажи кнопку"
+        title: "Покажи диалог"
         section: exercise_02
         student_file: exercises/lesson_07/exercise_02.py
         template: lessons/lesson_07/exercises/exercise_02.py
       - id: lesson_07_exercise_03
         kind: exercise
-        title: "Собери кнопку из переменных"
+        title: "Исправь аргументы"
         section: exercise_03
         student_file: exercises/lesson_07/exercise_03.py
         template: lessons/lesson_07/exercises/exercise_03.py

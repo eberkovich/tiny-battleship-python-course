@@ -27,8 +27,8 @@ def show_ship_count(board: str, count: int) -> None:
     _backend.show_ship_count(board, count)
 
 
-def wait_for_button(message: str, label: str) -> None:
-    _backend.wait_for_button(message, label)
+def show_message(message: str, label: str) -> None:
+    _backend.show_message(message, label)
 
 
 __all__ = [
@@ -39,5 +39,5 @@ __all__ = [
     "draw_deck",
     "show_miss",
     "show_ship_count",
-    "wait_for_button",
+    "show_message",
 ]

@@ -38,6 +38,8 @@ not use a two-dimensional array or expose zero-based grid indexing.
   and coordinates.
 - **Practice:** complete the existing Lesson 1 exercises.
 - **Game milestone:** show both 10×10 boards.
+- **Optional challenge:** mirror three prepared ships across the board by
+  reasoning about coordinate pairs.
 
 #### 2. Variables
 
@@ -56,16 +58,18 @@ not use a two-dimensional array or expose zero-based grid indexing.
 
 #### 4. A list of addresses
 
-- **Learn:** a list literal and `len`.
-- **Practice:** build and count short lists of familiar values, then addresses.
-- **Game milestone:** store three fixed ship addresses, draw them with repeated
-  calls, and derive the counter with `len`.
+- **Learn:** why programs group related values, a list literal, `len`, and
+  zero-based element access by index.
+- **Practice:** construct and count a familiar list, select one value, then
+  diagnose a wrong index while drawing from a list of addresses.
+- **Game milestone:** store three fixed ship addresses, retrieve and draw them
+  by index with repeated calls, and derive the counter with `len`.
 
 #### 5. Changing a list
 
 - **Learn:** an empty list and `append`.
-- **Practice:** add familiar values, observe order and changing `len`, then add
-  addresses.
+- **Practice:** add a familiar value and observe `len`, retrieve and draw a
+  newly added address, then diagnose commands that build the wrong order.
 - **Game milestone:** build the fixed fleet step by step and add a fourth ship.
 
 #### 6. `for` loop
@@ -75,13 +79,18 @@ not use a two-dimensional array or expose zero-based grid indexing.
   list.
 - **Game milestone:** extend the fixed fleet to 10 ships and replace repeated
   drawing calls with one loop.
+- **Optional challenge:** diagnose several interacting coordinate, board, and
+  counter errors in a prepared fleet program.
 
 #### 7. Text and a button
 
-- **Learn:** string values and `wait_for_button(message, label)`.
-- **Practice:** change message and button text in small examples.
+- **Learn:** string values and `show_message(message, label)`.
+- **Practice:** create and print a string, show a button, then diagnose swapped
+  message and label arguments.
 - **Game milestone:** show **«Флот готов!»** and wait for
   **«Начать бой»**.
+- **Optional challenge:** combine a list of strings, one loop, and one button
+  call into a four-step battle countdown.
 
 ### Phase B: «Расставляем корабли» — valid interactive fleet setup
 
@@ -186,7 +195,7 @@ shape and authoring checks in `context/lesson_content.md`.
 ## Required Part 1 UI API
 
 Lesson 1 keeps its original taught surface. `show_ship_count` is introduced in
-Lesson 2 and `wait_for_button` in Lesson 7; both are implemented in Phase A.
+Lesson 2 and `show_message` in Lesson 7; both are implemented in Phase A.
 Add `DECK_SUNK` and `wait_for_cell` only when their later introduction lessons
 are implemented:
 
@@ -202,11 +211,11 @@ draw_deck(board, x, y, state)
 show_miss(board, x, y)
 show_ship_count(board, count)
 wait_for_cell(board)
-wait_for_button(message, label)
+show_message(message, label)
 ```
 
-`wait_for_cell` returns the selected `(x, y)` pair. `wait_for_button` shows a
-message and blocks until its labeled button is pressed. These functions handle
+`wait_for_cell` returns the selected `(x, y)` pair. `show_message` shows a
+dialog with a message and blocks until its labeled button is pressed. These functions handle
 pygame events only; all placement, shooting, turn, fleet, and victory decisions
 remain in student code.
 
@@ -257,13 +266,13 @@ semantically.
 
 Phase A was completed on 2026-08-19 without activating Phase B.
 
-- Lessons 2–7 introduce `print`, variables, cell addresses, lists, `append`,
-  `for`, strings, `show_ship_count`, and `wait_for_button` in prerequisite
-  order. Every coding task has a passing reference through its own lesson
-  checker.
+- Lessons 2–7 introduce `print`, variables, cell addresses, lists and indexed
+  element access, `append`, `for`, strings, `show_ship_count`, and
+  `show_message` in prerequisite order. Every coding task has a passing
+  reference through its own lesson checker.
 - The cumulative project grows through fleets of 1, 2, 3, 4, and finally 10
   fixed non-touching one-cell ships, then waits at **«Начать бой»**.
-- Real and fake `wait_for_button` implementations have matching signatures;
+- Real and fake `show_message` implementations have matching signatures;
   the real prompt returns on a click and the fake backend records a semantic
   event. Check and visual-play subprocesses pass for the Lesson 7 project.
 - The course home shows the complete 18-lesson roadmap while exposing only the
@@ -273,7 +282,7 @@ Phase A was completed on 2026-08-19 without activating Phase B.
 - Lessons 2–7 each contain three required exercises that rise from a small
   example through completion or debugging to the cumulative game milestone.
 - Shell checks, compilation, Lesson 1 regressions, all Phase A references, and
-  the complete suite pass: `128 passed`.
+  the complete suite pass: `141 passed`.
 
 Before changing this plan, rerun the reference solution and repeat this audit.
 Any new child-visible syntax, standard-library operation, API call, or game rule

@@ -38,12 +38,12 @@ while len(player_ships) < FLEET_SIZE:
         draw_deck(PLAYER, x, y, DECK_IDLE)
         show_ship_count(PLAYER, len(player_ships))
     else:
-        wait_for_button(
+        show_message(
             "Корабли не должны соприкасаться.",
             "Попробовать ещё",
         )
 
-wait_for_button("Флот готов!", "Начать бой")
+show_message("Флот готов!", "Начать бой")
 
 # Компьютер расставляет свои корабли.
 enemy_ships = []
@@ -67,7 +67,7 @@ while len(player_ships) > 0 and len(enemy_ships) > 0:
     x, y = wait_for_cell(ENEMY)
 
     while (x, y) in player_shots:
-        wait_for_button("Ты уже стрелял в эту клетку.", "Выбрать другую")
+        show_message("Ты уже стрелял в эту клетку.", "Выбрать другую")
         x, y = wait_for_cell(ENEMY)
 
     player_shots.append((x, y))
@@ -105,6 +105,6 @@ while len(player_ships) > 0 and len(enemy_ships) > 0:
         show_ship_count(PLAYER, len(player_ships))
 
 if len(enemy_ships) == 0:
-    wait_for_button("Ты победил!", "Готово")
+    show_message("Ты победил!", "Готово")
 else:
-    wait_for_button("Компьютер победил. Попробуй ещё!", "Готово")
+    show_message("Компьютер победил. Попробуй ещё!", "Готово")

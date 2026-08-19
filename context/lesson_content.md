@@ -12,7 +12,14 @@ programmer parent. This is the child's first experience with a textual
 programming language: do not assume familiarity with code vocabulary,
 punctuation, or line-based syntax.
 
-- Start with a concrete problem and introduce syntax as a tool for solving it.
+- For every new concept, begin with a concrete need in the evolving game, then
+  explain the general programming idea and its syntax, and finally apply it
+  back to the game. The game provides motivation and visible feedback; it must
+  not narrow the explanation to one Battleship recipe.
+- Teach each concept as a reusable tool for programming and algorithmic
+  thinking: make clear what kind of problem it solves, how information changes
+  step by step, and where the same idea could be useful beyond the current
+  coordinates or ships.
 - Introduce at most one major new concept per lesson.
 - Pace material by conceptual difficulty, not by a fixed lesson count. Difficult
   concepts may need a concrete motivation, several small examples, preliminary
@@ -101,6 +108,14 @@ or programming concept, child-facing text must explain it explicitly. A concept
 may be explained earlier on the same page; otherwise it must appear in an
 earlier lesson step. Never rely on a later explanation.
 
+Before finalizing each coding task, inventory every operation used by one
+passing solution and by its starter—not only the lesson's headline concept.
+Creation, reading or selecting a value, changing it, unpacking, iteration,
+comparison, calls, built-ins, and new punctuation are separate prerequisites.
+Each required operation must have an explanation and a complete earlier
+example. Teaching how to create a value does not implicitly teach how to read
+or change it.
+
 An API signature is part of introducing that API: it may name the command and
 its arguments. Explain every argument and fixed value before the first complete
 example or task uses them. If an API depends on a separate concept such as
@@ -113,6 +128,42 @@ that has been stated to the child after all of its prerequisites were taught.
 Treat comments as Python syntax: before a starter first contains a line
 beginning with `#`, explain that it is a comment for people and that Python does
 not execute it.
+
+### Terminology and recall
+
+A technical term counts as introduced only when child-facing text explains it
+in plain language, connects it to the code syntax or action it names, and gives
+a complete example. Merely mentioning or naming a term does not introduce it.
+
+Do not use a technical term as the only instruction in an exercise. When a term
+returns in a later lesson, restate the required action in plain language,
+especially when remembering the term is not the exercise's objective. The term
+may follow as a reminder in parentheses.
+
+When an exercise depends on an easily forgotten concept from an earlier
+lesson, add a short recap after its goal using this form:
+
+```markdown
+> [!RECAP]
+> На всякий случай: краткое напоминание простыми словами.
+```
+
+Never recap a concept introduced in the current lesson: its article and current
+practice must teach it clearly enough. Keep a recap to one or two short ideas,
+and use it only when an older prerequisite is needed but otherwise absent from
+the current lesson context. Do not add a recap when a nearby article or the task
+itself already gives an actionable reminder: it explains how to perform the
+operation, shows usable syntax, or names a clickable API command. A bare term,
+vague action, or prefilled line that the child is not asked to understand does
+not count as a reminder. Prefer a generic syntax form or different values, and
+do not reveal the solution. Do not use links: the child must be able to
+continue without leaving the task. The launcher renders the recap as a quiet
+framed card with its own background in both themes.
+
+During the prerequisite review, inventory every technical word in articles,
+tasks, notes, starters, and feedback. For each word, identify its definition
+and verify that the current instruction remains understandable without testing
+the child's memory of terminology.
 
 Beginner-facing API material must:
 
@@ -151,6 +202,10 @@ may rely on the already introduced visible output.
   include completing a line, changing a value and observing the result,
   correcting a deliberate mistake, combining two familiar operations, and
   producing a visible game result.
+- Give consecutive exercises different thinking jobs whenever the concept
+  allows it: construct, predict or select, diagnose, combine, and apply. Do not
+  repeat the same operation with only another value type or another set of
+  numbers.
 - Keep starter context out of the goal. After every coding-task description,
   add one separate note block in this form:
 
@@ -162,6 +217,13 @@ may rely on the already introduced visible output.
   Do not add an icon or caption to this strip. Do not describe starter
   implementation in child-facing text. Keep editor, save, and Run directions
   inside the strip; do not mix them into the task goal.
+- Copy the complete visible goal of every isolated exercise and star task into
+  its starter file as Russian comments, including the task title, required
+  result, success condition, and any **«На всякий случай:»** recap. Omit only
+  the editor workflow strip. Keep this copy synchronized with the lesson text
+  so the child can complete the task without switching back to the launcher.
+  Do not copy milestone instructions into cumulative `battleship.py`: that file
+  is shared by all project tasks and must contain only game code.
 - Make the child think rather than copy an example directly.
 - Every exercise must produce immediate observable feedback. Use `print` for
   values and calculations, the game window for boards and game state, and
@@ -178,6 +240,15 @@ may rely on the already introduced visible output.
   then point to relevant known ideas, and only in the final hint offer
   pseudocode when necessary. Do not reveal the complete Python solution. Every
   hint must use only concepts already introduced before the task.
+- A **«Задача со звёздочкой»** must be an interesting, substantial challenge,
+  not an ordinary exercise with more values or repeated calls. It should
+  combine already taught ideas, require the child to plan several steps, and
+  end with a distinctive visible result. It must introduce no hidden concept
+  and remain independently solvable from the course and task statement, while
+  demanding noticeably more thought and effort than required exercises. Good
+  forms include a coordinate puzzle, multi-error debugging, or transferring
+  familiar constructs to a new kind of data. If a proposed star task is
+  trivial, repetitive, or needs adult explanation, redesign or omit it.
 - Do not repeat behavior already completed and checked unless repetition is an
   explicit learning objective.
 - Treat every **«Пишем игру»** task as an incremental edit to the same

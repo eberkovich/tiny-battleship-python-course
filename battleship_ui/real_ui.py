@@ -70,8 +70,8 @@ def show_ship_count(board: str, count: int) -> None:
         _render()
 
 
-def wait_for_button(message: str, label: str) -> None:
-    _state.wait_for_button(message, label)
+def show_message(message: str, label: str) -> None:
+    _state.show_message(message, label)
     _ensure_display()
     _wait_for_prompt_click(message, label)
 
@@ -311,5 +311,5 @@ __all__ = [
     "draw_deck",
     "show_miss",
     "show_ship_count",
-    "wait_for_button",
+    "show_message",
 ]

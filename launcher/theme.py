@@ -18,6 +18,8 @@ class ThemePalette:
     card_active: Color
     content_card: Color
     note_background: Color
+    recap_background: Color
+    recap_border: Color
     code_background: Color
     code_text: Color
     text: Color
@@ -44,6 +46,8 @@ DARK_THEME = ThemePalette(
     card_active=(43, 74, 111),
     content_card=(40, 59, 88),
     note_background=(29, 43, 65),
+    recap_background=(31, 52, 72),
+    recap_border=(72, 151, 163),
     code_background=(17, 29, 49),
     code_text=(205, 231, 246),
     text=(239, 245, 255),
@@ -70,6 +74,8 @@ LIGHT_THEME = ThemePalette(
     card_active=(213, 237, 243),
     content_card=(250, 253, 254),
     note_background=(238, 245, 247),
+    recap_background=(230, 244, 247),
+    recap_border=(69, 145, 157),
     code_background=(24, 39, 58),
     code_text=(218, 239, 248),
     text=(27, 43, 58),

@@ -1,12 +1,29 @@
 import json
 import tomllib
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
-from launcher.course import load_course, load_lesson, load_sections
+from launcher.course import Course, load_course, load_lesson, load_sections
 from launcher.theme import DARK_THEME_NAME
 from launcher.workspace import StudentWorkspace
+
+
+def course_with_template(template: Path) -> Course:
+    course = load_course()
+    lesson = course.lessons[0]
+    task = lesson.task("exercise_01")
+    return replace(
+        course,
+        lessons=(
+            replace(
+                lesson,
+                tasks=(replace(task, template=template),),
+                completion_tasks=(task.id,),
+            ),
+        ),
+    )
 
 
 def test_curriculum_and_sections_are_consistent() -> None:
@@ -45,7 +62,7 @@ def test_curriculum_provides_clickable_api_recaps() -> None:
         "draw_deck",
         "show_miss",
         "show_ship_count",
-        "wait_for_button",
+        "show_message",
     }
     assert course.api_references["draw_deck"].introduced_in == "coordinates"
     assert course.api_references["show_miss"].introduced_in == "coordinates"
@@ -56,7 +73,7 @@ def test_curriculum_provides_clickable_api_recaps() -> None:
     assert course.api_references["show_ship_count"].introduced_in == (
         "lesson_02_counter"
     )
-    assert course.api_references["wait_for_button"].introduced_in == (
+    assert course.api_references["show_message"].introduced_in == (
         "lesson_07_button_api"
     )
 
@@ -222,6 +239,57 @@ def test_workspace_initialization_preserves_existing_source(tmp_path: Path) -> N
     assert project.read_text(encoding="utf-8") == "# моя работа\n"
     assert workspace.source_path("exercise_03").exists()
     assert workspace.source_path("star").exists()
+
+
+def test_workspace_refreshes_an_untouched_starter(tmp_path: Path) -> None:
+    template = tmp_path / "starter.py"
+    template.write_text("print('первая версия')\n", encoding="utf-8")
+    workspace = StudentWorkspace(
+        tmp_path / "student", course_with_template(template)
+    )
+    workspace.initialize()
+
+    template.write_text("print('новая версия')\n", encoding="utf-8")
+    workspace.initialize()
+
+    assert workspace.source_path("exercise_01").read_text(encoding="utf-8") == (
+        "print('новая версия')\n"
+    )
+
+
+def test_workspace_preserves_an_edited_starter_when_template_changes(
+    tmp_path: Path,
+) -> None:
+    template = tmp_path / "starter.py"
+    template.write_text("print('первая версия')\n", encoding="utf-8")
+    workspace = StudentWorkspace(
+        tmp_path / "student", course_with_template(template)
+    )
+    workspace.initialize()
+    source = workspace.source_path("exercise_01")
+    source.write_text("print('моя работа')\n", encoding="utf-8")
+
+    template.write_text("print('новая версия')\n", encoding="utf-8")
+    workspace.initialize()
+
+    assert source.read_text(encoding="utf-8") == "print('моя работа')\n"
+
+
+def test_workspace_preserves_an_untracked_legacy_file(tmp_path: Path) -> None:
+    template = tmp_path / "starter.py"
+    template.write_text("print('новая версия')\n", encoding="utf-8")
+    workspace = StudentWorkspace(
+        tmp_path / "student", course_with_template(template)
+    )
+    source = workspace.root / "exercises/lesson_01/exercise_01.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("print('неизвестная старая работа')\n", encoding="utf-8")
+
+    workspace.initialize()
+
+    assert source.read_text(encoding="utf-8") == (
+        "print('неизвестная старая работа')\n"
+    )
 
 
 def test_progress_is_separate_for_exercises_project_and_star(tmp_path: Path) -> None:

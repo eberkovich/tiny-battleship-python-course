@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -12,6 +13,7 @@ from launcher.theme import DEFAULT_THEME_NAME, THEMES
 
 
 PROGRESS_VERSION = 3
+TEMPLATE_STATE_VERSION = 1
 
 
 @dataclass
@@ -38,17 +40,32 @@ class StudentWorkspace:
         self.root = root.resolve()
         self.course = course
         self.progress_path = self.root / "progress.json"
+        self.template_state_path = self.root / ".course_templates.json"
 
     def initialize(self) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
+        template_state = self._load_template_state()
         for lesson in self.course.lessons:
             for task in lesson.tasks:
                 if task.student_file is None or task.template is None:
                     continue
                 destination = self.root / task.student_file
                 destination.parent.mkdir(parents=True, exist_ok=True)
+                key = task.student_file.as_posix()
+                template_digest = self._file_digest(task.template)
                 if not destination.exists():
                     shutil.copyfile(task.template, destination)
+                    template_state[key] = template_digest
+                    continue
+
+                destination_digest = self._file_digest(destination)
+                installed_digest = template_state.get(key)
+                if destination_digest == template_digest:
+                    template_state[key] = template_digest
+                elif installed_digest == destination_digest:
+                    shutil.copyfile(task.template, destination)
+                    template_state[key] = template_digest
+        self._save_template_state(template_state)
         if not self.progress_path.exists():
             first_lesson = self.course.lessons[0]
             self.save_progress(
@@ -60,6 +77,42 @@ class StudentWorkspace:
                     theme=DEFAULT_THEME_NAME,
                 )
             )
+
+    @staticmethod
+    def _file_digest(path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as stream:
+            for chunk in iter(lambda: stream.read(64 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    def _load_template_state(self) -> dict[str, str]:
+        if not self.template_state_path.exists():
+            return {}
+        try:
+            data = json.loads(self.template_state_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        if data.get("version") != TEMPLATE_STATE_VERSION:
+            return {}
+        templates = data.get("templates")
+        if not isinstance(templates, dict):
+            return {}
+        return {
+            key: value
+            for key, value in templates.items()
+            if isinstance(key, str) and isinstance(value, str)
+        }
+
+    def _save_template_state(self, templates: dict[str, str]) -> None:
+        self._write_json_atomically(
+            self.template_state_path,
+            {
+                "version": TEMPLATE_STATE_VERSION,
+                "templates": dict(sorted(templates.items())),
+            },
+            prefix=".course-templates-",
+        )
 
     def source_path(self, task_id: str) -> Path:
         _, task = self.course.task(task_id)
@@ -98,14 +151,23 @@ class StudentWorkspace:
 
     def save_progress(self, progress: Progress) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
+        self._write_json_atomically(
+            self.progress_path,
+            progress.to_dict(),
+            prefix=".progress-",
+        )
+
+    def _write_json_atomically(
+        self, path: Path, data: dict[str, object], *, prefix: str
+    ) -> None:
         file_descriptor, temporary_name = tempfile.mkstemp(
-            prefix=".progress-", suffix=".json", dir=self.root
+            prefix=prefix, suffix=".json", dir=self.root
         )
         try:
             with os.fdopen(file_descriptor, "w", encoding="utf-8") as stream:
-                json.dump(progress.to_dict(), stream, ensure_ascii=False, indent=2)
+                json.dump(data, stream, ensure_ascii=False, indent=2)
                 stream.write("\n")
-            os.replace(temporary_name, self.progress_path)
+            os.replace(temporary_name, path)
         except BaseException:
             try:
                 os.unlink(temporary_name)

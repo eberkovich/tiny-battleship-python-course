@@ -1,4 +1,4 @@
 from battleship_ui import *
 
-cells = [(2, 3), (5, 6), (8, 1)]
-print(len(cells))
+numbers = [4, 7, 9, 12]
+print(numbers[2])

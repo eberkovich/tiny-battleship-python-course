@@ -12,4 +12,4 @@ for x, y in ships:
     draw_deck(PLAYER, x, y, DECK_IDLE)
 
 show_ship_count(PLAYER, len(ships))
-wait_for_button("Флот готов!", "Начать бой")
+show_message("Флот готов!", "Начать бой")

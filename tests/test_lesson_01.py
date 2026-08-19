@@ -32,9 +32,8 @@ def test_all_lesson_checks_are_behavioral() -> None:
 def test_star_checks_only_introduced_operations() -> None:
     fake_ui.show_board(PLAYER)
     fake_ui.show_board(ENEMY)
-    for x in (3, 4, 5):
-        fake_ui.draw_deck(PLAYER, x, 5, DECK_IDLE)
-    fake_ui.show_miss(ENEMY, 7, 3)
+    for x, y in ((2, 2), (3, 5), (4, 8), (9, 2), (8, 5), (7, 8)):
+        fake_ui.draw_deck(PLAYER, x, y, DECK_IDLE)
 
     assert check("star", fake_ui._snapshot(), "").passed
 
@@ -46,7 +45,8 @@ def test_star_starter_contains_previously_completed_board_setup() -> None:
 
     assert "show_board(PLAYER)" in starter
     assert "show_board(ENEMY)" in starter
-    assert "используй только знакомые команды `draw_deck` и `show_miss`" in star_text
+    assert starter.count("draw_deck(PLAYER") == 3
+    assert "зеркальн" in star_text
 
 
 def test_public_api_is_not_used_before_its_introduction_step() -> None:
