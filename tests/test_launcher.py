@@ -277,6 +277,22 @@ def test_game_button_appears_after_first_project_and_only_plays_current_game(
     assert controller.workspace.load_progress().to_dict() == saved_progress
 
 
+def test_successful_game_close_leaves_no_home_message(tmp_path: Path) -> None:
+    def starter(source, **options):
+        return ImmediateJob(RunResult("passed", "played", "Игра закрыта."))
+
+    controller = LauncherController(
+        tmp_path / "student",
+        process_starter=starter,
+        debug=True,
+    )
+    controller.start_game()
+    controller.poll()
+
+    assert controller.game_message == ""
+    assert controller.game_message_level == "info"
+
+
 def test_launcher_renders_course_home_and_typed_lesson_navigation(
     tmp_path: Path,
 ) -> None:

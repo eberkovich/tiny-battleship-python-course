@@ -299,10 +299,12 @@ class LauncherController:
             return result
 
         if kind == "game":
-            self.game_message = result.message
-            self.game_message_level = (
-                "error" if result.status == "error" else "success"
-            )
+            if result.status == "error":
+                self.game_message = result.message
+                self.game_message_level = "error"
+            else:
+                self.game_message = ""
+                self.game_message_level = "info"
             return result
 
         check_result = self.pending_check
