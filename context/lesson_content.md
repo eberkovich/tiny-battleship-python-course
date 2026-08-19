@@ -110,6 +110,9 @@ they may share one article when this order remains clear.
 Starter setup may reuse material taught in earlier steps, but it must not
 silently contain new child-owned concepts. A checker must require only behavior
 that has been stated to the child after all of its prerequisites were taught.
+Treat comments as Python syntax: before a starter first contains a line
+beginning with `#`, explain that it is a comment for people and that Python does
+not execute it.
 
 Beginner-facing API material must:
 

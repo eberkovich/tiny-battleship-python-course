@@ -79,6 +79,7 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
         "первое знакомство",
         "вспомогательные команды",
         "как устроена команда",
+        "комментарии в коде",
         "координаты и корабли",
         "нарисуй однопалубный корабль",
         "пишем игру",
@@ -86,9 +87,10 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
         "итоги урока",
     ):
         assert required in content
-    assert [task.id for task in lesson.tasks[:4]] == [
+    assert [task.id for task in lesson.tasks[:5]] == [
         "intro",
         "api",
+        "comments",
         "exercise_01",
         "coordinates",
     ]
@@ -142,6 +144,16 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
     assert "вызовом функции" in sections["api"].lower()
     assert "аргументом" in sections["api"].lower()
     assert "синтаксисом вызова" in sections["api"].lower()
+    assert "начинаются со знака `#`" in sections["comments"].lower()
+    assert "python не выполняет комментарии" in sections["comments"].lower()
+    comments_index = next(
+        index for index, task in enumerate(lesson.tasks) if task.id == "comments"
+    )
+    assert all(
+        "#" not in task.template.read_text(encoding="utf-8")
+        for task in lesson.tasks[:comments_index]
+        if task.template is not None
+    )
     assert sections["coordinates"].index("разделяют запятыми") < sections[
         "coordinates"
     ].index("draw_deck(board")

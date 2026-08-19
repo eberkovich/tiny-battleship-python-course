@@ -13,7 +13,7 @@ from launcher.course import (
     load_course,
     load_sections,
 )
-from launcher.editor import open_in_idle
+from launcher.editor import close_editor, open_in_idle
 from launcher.theme import DARK_THEME_NAME, LIGHT_THEME_NAME
 from launcher.workspace import Progress, StudentWorkspace
 from runner.process import RunningStudentProcess, start_student_process
@@ -43,6 +43,7 @@ class LauncherController:
         self.sections = load_sections(self.lesson.content)
         self.process_starter = process_starter
         self.editor_opener = editor_opener
+        self.editor_process: object | None = None
         self.view = "home"
         self.job: RunningStudentProcess | None = None
         self.job_kind: str | None = None
@@ -205,7 +206,7 @@ class LauncherController:
             self.message_level = "error"
             return
         try:
-            self.editor_opener(source)
+            self.editor_process = self.editor_opener(source)
             self.message = "Редактор открыт. Сохрани изменения: Cmd+S"
             self.message_level = "info"
             self.technical_details = ""
@@ -224,6 +225,8 @@ class LauncherController:
             self.message = "В этом шаге нет кода."
             self.message_level = "error"
             return
+        close_editor(self.editor_process)
+        self.editor_process = None
         self.job = self.process_starter(
             source,
             mode="check",
@@ -345,6 +348,8 @@ class LauncherController:
         return self.workspace.set_current_task(lesson_id, task_id)
 
     def shutdown(self) -> None:
+        close_editor(self.editor_process)
+        self.editor_process = None
         if self.job is not None:
             process = getattr(self.job, "process", None)
             if process is not None and process.poll() is None:

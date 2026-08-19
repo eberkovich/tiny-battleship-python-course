@@ -323,6 +323,12 @@ Each coding task has two child-facing actions:
 - **«Запустить»** reads the saved file, checks it in a subprocess, and presents
   the result using the task's declared output surface.
 
+The launcher retains the process handle for the IDLE window it opens. Pressing
+**«Запустить»** closes that launcher-owned editor window before reading and
+checking the saved file, so completed attempts do not leave many IDLE windows
+open. Closing the launcher also closes its current editor window. Never search
+for or terminate unrelated IDLE processes.
+
 Game output is the default. Task metadata has an optional
 `run_mode: console`; omitted `run_mode` means
 `game`. Both kinds run once through the checker and may display captured

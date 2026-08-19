@@ -58,3 +58,25 @@ def open_in_idle(source: Path) -> subprocess.Popen[bytes]:
         stderr=subprocess.DEVNULL,
         start_new_session=True,
     )
+
+
+def close_editor(process: object | None) -> None:
+    if process is None:
+        return
+    poll = getattr(process, "poll", None)
+    terminate = getattr(process, "terminate", None)
+    wait = getattr(process, "wait", None)
+    if not callable(poll) or not callable(terminate) or poll() is not None:
+        return
+    try:
+        terminate()
+        if callable(wait):
+            wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        kill = getattr(process, "kill", None)
+        if callable(kill):
+            kill()
+        if callable(wait):
+            wait(timeout=2)
+    except OSError:
+        pass

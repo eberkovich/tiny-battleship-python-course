@@ -34,15 +34,15 @@ not use a two-dimensional array or expose zero-based grid indexing.
 
 #### 1. Helper commands and coordinates
 
-- **Learn:** calls, arguments, parentheses, commas, fixed API values, and
-  coordinates.
+- **Learn:** calls, arguments, parentheses, commas, comments, fixed API values,
+  and coordinates.
 - **Practice:** complete the existing Lesson 1 exercises.
 - **Game milestone:** show both 10×10 boards.
 
 #### 2. Variables
 
 - **Learn:** `print(value)` and the launcher output card, then assignment,
-  names, numbers, reuse of a value, comments, and `show_ship_count`.
+  names, numbers, reuse of a value, and `show_ship_count`.
 - **Practice:** print a literal, then change and print one named value.
 - **Game milestone:** store one ship's coordinates in variables, draw it, and
   show counter `1`.

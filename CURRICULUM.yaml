@@ -79,7 +79,7 @@ api_reference:
       - "label — текст на кнопке."
 lessons:
   - id: lesson_01
-    concept: "Готовые игровые команды и координаты"
+    concept: "Готовые игровые команды, комментарии и координаты"
     motivating_problem: "Как командами показать поле и указать точную клетку?"
     milestone: "Показать поле игрока и поле противника"
     prerequisites: []
@@ -98,6 +98,10 @@ lessons:
         kind: article
         title: "Как устроена команда"
         section: api
+      - id: comments
+        kind: article
+        title: "Комментарии в коде"
+        section: comments
       - id: exercise_01
         kind: exercise
         title: "Покажи своё поле"

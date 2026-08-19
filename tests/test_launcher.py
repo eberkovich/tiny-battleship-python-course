@@ -108,6 +108,38 @@ def test_child_facing_editor_message_hides_tool_and_filename(tmp_path: Path) -> 
     assert ".py" not in controller.message.lower()
 
 
+def test_run_closes_launcher_owned_editor_before_checking(tmp_path: Path) -> None:
+    events: list[str] = []
+
+    class EditorProcess:
+        def poll(self):
+            return None
+
+        def terminate(self):
+            events.append("editor_closed")
+
+        def wait(self, timeout):
+            events.append("editor_waited")
+            return 0
+
+    def starter(source, **options):
+        events.append("check_started")
+        return ImmediateJob(RunResult("passed", "passed", "Верно!"))
+
+    controller = LauncherController(
+        tmp_path / "student",
+        process_starter=starter,
+        editor_opener=lambda source: EditorProcess(),
+    )
+    controller.enter_lesson("lesson_01")
+    controller.select_task("exercise_01")
+    controller.open_code()
+    controller.start_run()
+
+    assert events == ["editor_closed", "editor_waited", "check_started"]
+    assert controller.editor_process is None
+
+
 def test_single_run_checks_then_opens_real_ui_and_updates_progress(
     tmp_path: Path,
 ) -> None:
