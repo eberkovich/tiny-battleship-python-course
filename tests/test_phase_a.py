@@ -59,6 +59,30 @@ def test_phase_a_curriculum_sections_and_task_contracts_are_complete() -> None:
         assert lesson.tasks[-1].kind == "summary"
 
 
+def test_every_lesson_example_is_an_explicit_single_callout() -> None:
+    for lesson in COURSE.lessons:
+        content = lesson.content.read_text(encoding="utf-8")
+        in_example = False
+        example_has_label = False
+        example_count = 0
+
+        for line in content.splitlines() + [""]:
+            if line == "> [!EXAMPLE]":
+                assert not in_example, lesson.id
+                in_example = True
+                example_has_label = False
+                example_count += 1
+                continue
+            if in_example and not line.startswith(">"):
+                assert example_has_label, lesson.id
+                in_example = False
+            if "**Пример:" in line or "**Например:" in line:
+                assert in_example and line.startswith("> "), lesson.id
+                example_has_label = True
+
+        assert example_count > 0, lesson.id
+
+
 def test_lesson_04_teaches_element_access_before_tasks_use_it() -> None:
     lesson = COURSE.lesson("lesson_04")
     task_order = [task.id for task in lesson.tasks]
@@ -87,6 +111,7 @@ def test_lesson_04_teaches_element_access_before_tasks_use_it() -> None:
 def _normalized_instruction(text: str) -> str:
     goal = re.split(r"> \[!(?:RECAP|NOTE)\]", text, maxsplit=1)[0]
     goal = re.sub(r"(?m)^#+\s*", "", goal)
+    goal = re.sub(r"(?m)^>\s?(?:\[!EXAMPLE\]\s*)?", "", goal)
     goal = goal.replace("`", "").replace("**", "")
     return " ".join(goal.split())
 

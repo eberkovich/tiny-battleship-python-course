@@ -5,13 +5,15 @@ decisions. `context/lesson_content.md` defines lesson-authoring rules,
 `AGENTS.md` defines how agents maintain the project, and stage plans define what
 is implemented now.
 
-## Product and teaching constraints
+## Product scope
+
+### Product and teaching constraints
 
 The course teaches procedural Python through one cumulative Battleship game;
 it is not a generic education platform. Follow `context/lesson_content.md` for
 the learner profile, teaching style, lesson structure, and content rules.
 
-## Main parts
+### Main parts
 
 The project has three product-level parts:
 
@@ -25,7 +27,9 @@ The project has three product-level parts:
 The subprocess runner/verifier supports the launcher; it is not a separate
 product area.
 
-## Verification strategy
+## Engineering foundations
+
+### Verification strategy
 
 Test count is not a goal. Use shared structural validators and parameterized
 reference runs across lessons. Every coding task still needs a passing reference
@@ -40,7 +44,7 @@ pixel-perfect, exact-source, and broad exact-prose assertions. Exact lesson text
 or ordering may be asserted only when it protects a prerequisite, required
 term, or another settled teaching contract.
 
-## Technology choices
+### Technology choices
 
 - Use `pygame-ce` for both the real game UI and the V1 launcher.
 - Use IDLE from the selected Python installation as the external V1 code
@@ -61,7 +65,7 @@ term, or another settled teaching contract.
 - Reconsider a desktop UI framework only if real requirements outgrow this
   small pygame launcher.
 
-## V1 non-goals
+### V1 non-goals
 
 V1 does not include accounts or authentication, cloud storage or progress
 synchronization, multiplayer, production publishing/deployment infrastructure,
@@ -70,7 +74,7 @@ generic game engine or education platform, a plugin system, complex telemetry
 or keystroke logging, or mobile/web versions. The local macOS installer and
 independent filesystem workspace for each student remain in scope.
 
-## Telemetry and privacy
+### Telemetry and privacy
 
 Stage 1 has no telemetry or persistent event log. `progress.json` stores only
 state required by the launcher. Fake-UI semantic traces exist temporarily for
@@ -78,7 +82,7 @@ verification and are not retained as telemetry. Never log keystrokes or student
 source code. Add local activity logging only after child testing demonstrates a
 concrete need, and revisit privacy explicitly before any cloud or web logging.
 
-## Future web boundary
+### Future web boundary
 
 Do not implement a web version in V1. Keep curriculum, progress, and
 verification results serializable, and keep game rules independent of the
@@ -87,7 +91,9 @@ student Python in the browser rather than sending it to a server. A future
 backend should be limited to content delivery and optional account/progress
 synchronization; do not create a server-side untrusted-code execution service.
 
-## Ownership boundary
+## Runtime ownership and local data
+
+### Ownership boundary
 
 Student code is ordinary procedural Python and owns:
 
@@ -110,7 +116,7 @@ The public API must not expose callbacks or require OOP. Internal engine code
 may use classes such as `BoardView`, but student code uses functions and simple
 constants such as `PLAYER` and `ENEMY`.
 
-## Student workspaces
+### Student workspaces
 
 The course installation is shared. Each child has an independent directory
 selected when launching the course:
@@ -143,7 +149,9 @@ existing source file, including `battleship.py` and exercises.
 Checkpoint creation and restoration are deferred beyond Stage 1. Add them only
 when the cumulative program is large enough to justify the recovery workflow.
 
-## Course and lesson navigation
+## Launcher
+
+### Course and lesson navigation
 
 The launcher has two navigation levels:
 
@@ -153,6 +161,8 @@ The launcher has two navigation levels:
   Lesson 0.
 - **Lesson screen** — **«Все уроки»**, the lesson title and steps, required-task
   progress, and navigation to the next unlocked lesson.
+
+#### Course home and roadmap
 
 The course home first states the concrete result: a complete Battleship game
 with 10 one-cell ships for the child and 10 for the computer. Its supporting
@@ -176,16 +186,12 @@ and steps are unlocked; debug mode does not turn roadmap-only entries into
 executable lessons. To avoid implying a progress restriction, debug mode marks
 roadmap-only stages and lessons as **«В ПЛАНЕ»** instead of showing lock icons.
 
-The debug badge, game launcher, command reference, and theme switch occupy a
-reserved fixed toolbar above ordinary content on every screen. Page headers
-and scrollable content begin below it, and scrolling is clipped at the relevant
-content boundary. Ordinary layout regions never overlap or render beneath
-fixed controls; only intentional modal overlays may cover the interface.
-
 Opening **«Показать все 18 уроков»** automatically scrolls down until the full
 lesson plan is visible while leaving the toggle accessible. Pressing
 **«Скрыть полный план»** collapses the plan and returns the course home to its
 top position.
+
+#### Lesson access and progression
 
 The lesson header shows its position as **«Урок N из 18 · Этап K»**. On
 **«Итоги урока»**, show only the next lesson's number and title when a next
@@ -202,6 +208,14 @@ saved current step, or its first step when no current step has been saved. The
 current step is always unlocked; a locked step cannot be selected or saved as
 current. When all required tasks pass, unlock the summary; the optional star
 task remains available.
+
+#### Debug mode, global controls, and window
+
+The debug badge, game launcher, command reference, and theme switch occupy a
+reserved fixed toolbar above ordinary content on every screen. Page headers
+and scrollable content begin below it, and scrolling is clipped at the relevant
+content boundary. Ordinary layout regions never overlap or render beneath
+fixed controls; only intentional modal overlays may cover the interface.
 
 For development and content review, the launcher accepts `--debug`. This mode
 unlocks every implemented lesson and every step, including summaries, and shows
@@ -224,7 +238,18 @@ the student's current `battleship.py` directly in visual play mode, without an
 exercise check and without changing progress. The launcher reports launch or
 runtime errors in Russian.
 
-## Lesson presentation
+The launcher opens at 1180×760, allows normal window resizing and can be
+maximized to fill the desktop. Treat 1180×760 as the minimum supported layout.
+At larger sizes, anchor fixed controls to the top-right edge, extend the lesson
+sidebar to the window bottom, keep lesson actions at the bottom, and expand
+home and lesson content within stable outer margins. Lesson cards, notes, and
+program output stay aligned and grow together. Calculate modal overlays from
+the live window size. Resizing changes layout only; it must not change course
+state or require separate theme logic.
+
+### Lesson presentation
+
+#### Step navigation and status
 
 Distinguish lesson-step types with a pygame-drawn icon, shape, and color; do not
 rely on emoji or color alone. A sidebar card contains one icon and the step
@@ -254,9 +279,13 @@ Child-facing titles, wording, explanation order, and authoring requirements are
 defined in `context/lesson_content.md`. A `summary` is informational, not
 material or a coding task.
 
-Render lesson text in a narrow column of lightly contrasted cards with generous
-padding, line spacing, and visible space between major sections. A standalone
-Markdown `---` separates major cards and is rendered as a compact group of
+#### Content cards and feedback
+
+Render lesson text in a responsive column of lightly contrasted cards with
+stable outer margins, generous padding, line spacing, and visible space between
+major sections. The column uses the available lesson width when the window
+grows. A standalone Markdown `---` separates major cards and is rendered as a
+compact group of
 three yellow submarines. Do not use decorative dividers between ordinary
 paragraphs.
 
@@ -277,6 +306,12 @@ framed card with a distinct background. Its text starts with
 linking away from the task or revealing its solution. Use the same content and
 layout in both themes; colors come only from shared theme palette constants.
 
+Render Markdown `> [!EXAMPLE]` inside scrollable lesson content as a compact
+example card containing its explanation, code, and visible result. Use a quiet
+background, one-pixel border, rounded corners, and normal lesson typography;
+do not add an icon or a redundant type caption. Dark and light themes use the
+same content and layout, with colors supplied only by theme palette constants.
+
 Before the first console exercise is activated, capture bounded student
 `stdout` for every coding run. When it is non-empty, show only the latest run's
 output in a distinct fixed card named
@@ -286,6 +321,8 @@ with lesson-content cards or the quiet workflow note. Hide it before the first
 output and never reserve an empty placeholder. Keep it visible after a failed
 check or runtime error when partial output exists. Do not show runner protocol
 lines in this card.
+
+#### API help
 
 On the page that first introduces a public game API command, show its complete
 description inline and render its name as ordinary text. Only later mentions of
@@ -302,6 +339,8 @@ starters, and clickable in-page references must still follow the prerequisite
 rules. The reference derives signatures, summaries, and argument details from
 the same curriculum metadata as in-page recaps.
 
+#### Themes
+
 The launcher offers dark and light schemes through one fixed top-right switch
 on every screen. Both schemes share the same layout, rendering and event logic,
 icon set, and raster assets; only named palette constants differ. In the
@@ -315,7 +354,9 @@ layout or behavior branches, and do not duplicate behavioral tests by palette;
 test shared logic once and visually inspect readability and contrast in both
 schemes.
 
-## Coding-task workflow
+### Coding-task workflow
+
+#### Task types and actions
 
 Lessons contain two distinct kinds of coding work:
 
@@ -338,6 +379,8 @@ checking the saved file, so completed attempts do not leave many IDLE windows
 open. Closing the launcher also closes its current editor window. Never search
 for or terminate unrelated IDLE processes.
 
+#### Execution and feedback
+
 Game output is the default. Task metadata has an optional
 `run_mode: console`; omitted `run_mode` means
 `game`. Both kinds run once through the checker and may display captured
@@ -356,6 +399,8 @@ Show feedback inside the selected task near its actions. Do not reserve an
 empty status panel or show placeholder messages such as **«Выбери шаг урока»**.
 Use the generic reminder **«Сохрани код в редакторе: Cmd+S»**.
 
+#### Progress and transient data
+
 Exercise, project, and star completion are recorded separately. Source code and
 verification traces are never stored in progress. Completed tasks may be
 reopened, but the launcher never restores or overwrites their files.
@@ -363,10 +408,14 @@ Captured output is transient: keep only the latest attempt in memory, clear it
 when changing tasks or starting another run, and never write it to progress or
 telemetry.
 
-## macOS installation
+## Installation and distribution
+
+### macOS installation
 
 Provide an idempotent `install.command` script that prepares the project on a
-supported Intel or Apple Silicon Mac. It must:
+supported Intel or Apple Silicon Mac.
+
+#### Interpreter selection and fallback
 
 Stage 1 supports Python 3.11 through 3.14. If a supported Homebrew Python is
 already installed without Tk, the script first installs the matching
@@ -386,6 +435,8 @@ Discover Homebrew's versioned executables under
 `python3` and `python` commands. A Homebrew upgrade may leave the versioned
 executable valid while removing an unversioned `python3` link; this must not
 trigger the Python.org fallback.
+
+#### Required installer behavior
 
 1. Look for both `python3` and `python` and execute a version check rather than
    assuming either command's meaning.
@@ -414,6 +465,8 @@ trigger the Python.org fallback.
 11. Finish by printing a Russian success message with exact commands for
     starting the launcher for a selected `--student-dir`.
 
+#### Launch wrapper and maintenance
+
 The normal `run.command` wrapper must use the virtual-environment interpreter
 directly, so later launches do not depend on whether the machine calls its
 global Python 3 executable `python` or `python3`.
@@ -421,7 +474,11 @@ global Python 3 executable `python` or `python3`.
 `install.command` and its tests must be updated in the same change whenever a
 project dependency, dependency version, or supported Python version changes.
 
-## Curriculum and lesson files
+## Curriculum storage and execution
+
+### Curriculum and lesson files
+
+#### Metadata, roadmap, and IDs
 
 For V1, one `CURRICULUM.yaml` is sufficient. It defines the child-facing
 18-lesson roadmap and its three stages, plus the implemented lesson order and
@@ -440,6 +497,8 @@ task ID with its lesson ID, for example `lesson_02_project` or
 existing student progress remains valid. IDs are internal and are never shown
 to the child.
 
+#### Optional hints
+
 A coding task may define an optional ordered list of short Russian hints
 directly in its metadata:
 
@@ -455,6 +514,8 @@ Revealed hints remain visible while the task is open and never change task
 status or progress. A task without `hints` shows no hint control. Implement
 this generic launcher behavior only when the first lesson that uses hints is
 implemented.
+
+#### Files, checks, and runner hooks
 
 Detailed material stays in its natural format:
 
@@ -476,7 +537,9 @@ is implemented.
 Do not add per-lesson manifests until one shared curriculum file causes actual
 friction.
 
-## Boards and visibility
+## Game model and public UI
+
+### Boards and visibility
 
 The game has two boards:
 
@@ -499,7 +562,7 @@ A fired cell remains revealed for the rest of the game.
 | Damaged deck | Visible | Visible |
 | Deck belonging to a sunk ship | Visible | Visible |
 
-## Cell rendering
+### Cell rendering
 
 Every ship is represented and rendered as individual decks; one board cell is
 one deck. A deck has three visual states:
@@ -550,7 +613,7 @@ ship = [(1, 2), (2, 2), (3, 2)]
 The public UI should expose deck-level drawing rather than a whole-ship drawing
 operation, so loops over ship decks remain visible in student code.
 
-## Fleet setup and gameplay
+### Fleet setup and gameplay
 
 The final game has two main phases:
 
@@ -585,7 +648,7 @@ function returns after the click, and student code continues into gameplay. No
 listener, callback, scene framework, or framework-controlled phase transition
 is exposed to the student.
 
-## Current public API direction
+### Current public API direction
 
 The currently implemented public API is:
 

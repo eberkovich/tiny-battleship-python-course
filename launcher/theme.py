@@ -20,6 +20,8 @@ class ThemePalette:
     note_background: Color
     recap_background: Color
     recap_border: Color
+    example_background: Color
+    example_border: Color
     code_background: Color
     code_text: Color
     text: Color
@@ -48,6 +50,8 @@ DARK_THEME = ThemePalette(
     note_background=(29, 43, 65),
     recap_background=(31, 52, 72),
     recap_border=(72, 151, 163),
+    example_background=(45, 58, 79),
+    example_border=(102, 132, 158),
     code_background=(17, 29, 49),
     code_text=(205, 231, 246),
     text=(239, 245, 255),
@@ -76,6 +80,8 @@ LIGHT_THEME = ThemePalette(
     note_background=(238, 245, 247),
     recap_background=(230, 244, 247),
     recap_border=(69, 145, 157),
+    example_background=(239, 246, 249),
+    example_border=(119, 151, 168),
     code_background=(24, 39, 58),
     code_text=(218, 239, 248),
     text=(27, 43, 58),

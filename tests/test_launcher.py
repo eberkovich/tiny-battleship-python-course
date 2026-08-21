@@ -14,6 +14,7 @@ from launcher.app import (
     GLOBAL_TOOLBAR_BOTTOM,
     HOME_SCROLL_VIEW_TOP,
     LauncherApp,
+    WINDOW_SIZE,
     _markdown_blocks,
 )
 from launcher.controller import LauncherController
@@ -79,6 +80,29 @@ def test_markdown_recap_is_a_distinct_content_block() -> None:
             "note",
             "Открой редактор → сохрани изменения → нажми **«Запустить»**.",
         ),
+    ]
+
+
+def test_markdown_example_keeps_its_explanation_code_and_result_together() -> None:
+    blocks = _markdown_blocks(
+        "> [!EXAMPLE]\n"
+        "> **Пример:** покажем число.\n"
+        ">\n"
+        "> ```python\n"
+        "> print(7)\n"
+        "> ```\n"
+        ">\n"
+        "> После запуска появится 7."
+    )
+
+    assert len(blocks) == 1
+    assert blocks[0][0] == "example"
+    assert _markdown_blocks(blocks[0][1]) == [
+        ("text", "**Пример:** покажем число."),
+        ("space", ""),
+        ("code", "print(7)"),
+        ("space", ""),
+        ("text", "После запуска появится 7."),
     ]
 
 
@@ -640,6 +664,52 @@ def test_theme_switch_is_shared_by_every_screen_and_persisted(
     app.render()
     assert any(button.action == "theme" for button in app.buttons)
     assert LauncherController(student).progress.theme == LIGHT_THEME_NAME
+
+
+def test_launcher_can_expand_to_full_desktop_and_keeps_controls_in_view(
+    tmp_path: Path,
+) -> None:
+    controller = LauncherController(tmp_path / "student", debug=True)
+    app = LauncherApp(controller)
+    app.render()
+
+    assert app.home_hero_rect is not None
+    default_home_width = app.home_hero_rect.width
+
+    controller.enter_lesson("lesson_01")
+    controller.select_task("exercise_01")
+    app.render()
+    assert app.note_card_rect is not None
+    default_lesson_width = app.note_card_rect.width
+
+    controller.show_home()
+
+    assert app.screen.get_flags() & pygame.RESIZABLE
+    app._resize_window((1600, 1000))
+    app.render()
+
+    assert app.screen.get_size() == (1600, 1000)
+    assert app.home_title_rect is not None
+    assert app.home_hero_rect is not None
+    assert app.home_hero_rect.width > default_home_width
+    assert all(
+        button.rect.right <= app.screen.get_width()
+        and button.rect.bottom <= app.screen.get_height()
+        for button in app.buttons
+    )
+
+    controller.enter_lesson("lesson_01")
+    controller.select_task("exercise_01")
+    app.render()
+
+    assert app.note_card_rect is not None
+    assert app.note_card_rect.width > default_lesson_width
+    assert app.note_card_rect.bottom < app.screen.get_height()
+    assert max(rect.bottom for rect, _ in app.task_rects) <= app.screen.get_height()
+    assert all(button.rect.bottom <= app.screen.get_height() for button in app.buttons)
+
+    app._resize_window((900, 600))
+    assert app.screen.get_size() == WINDOW_SIZE
 
 
 def test_opening_lesson_shows_saved_current_step(tmp_path: Path) -> None:

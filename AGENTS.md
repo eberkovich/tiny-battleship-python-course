@@ -2,10 +2,14 @@
 
 ## Purpose and sources of truth
 
+### Mission
+
 Build a small, systematic Python course around one cumulative Tiny Battleship
 game. Optimize for educational clarity, short feedback loops, algorithmic
 thinking, and a prototype usable by the user's children—not a generic
 education platform.
+
+### Sources of truth
 
 This file is the operating manual for agents. It defines how to work in the
 repository, not the detailed product design:
@@ -19,6 +23,8 @@ repository, not the detailed product design:
 - `COURSE_DESIGN.md` and `CURRICULUM.yaml`, when present, contain supporting
   course rationale and lesson metadata; they must conform to both context
   documents.
+
+### Change control and plans
 
 Read the relevant documents before architectural, curriculum, or implementation
 work. Do not silently change a settled decision or expand the active phase.
@@ -51,6 +57,8 @@ check each claim against the relevant state and domain invariants first.
 
 ## Implementation workflow
 
+### Before changing files
+
 Before changing files:
 
 1. Read the architecture and active plan phase.
@@ -58,6 +66,8 @@ Before changing files:
 3. Check the working tree when version-control metadata is available and
    preserve unrelated work.
 4. Run existing regressions and earlier-stage acceptance tests when applicable.
+
+### Repository hygiene and Git
 
 At every stage, update `.gitignore` in the same change whenever the stage
 creates or is expected to create new temporary, generated, machine-local, or
@@ -70,6 +80,8 @@ Every approved commit must use a concise, meaningful message that describes
 the actual change; do not use generic messages such as `update`, `changes`, or
 `work in progress`.
 
+### Implementation and verification
+
 For every implementation change:
 
 1. Add or update the smallest relevant test.
@@ -79,6 +91,8 @@ For every implementation change:
    completion or handoff, not after every small content or implementation edit.
 5. Update concise documentation when behavior, public APIs, file layout, or
    commands change.
+
+### Layout and public API changes
 
 For every layout change, verify that ordinary UI regions do not overlap each
 other or render beneath fixed controls at the supported window size. Intentional
@@ -95,12 +109,35 @@ exact prose only when wording or order encodes a prerequisite or another
 settled teaching contract. Run arbitrary student code only in a subprocess;
 never import it into the launcher process.
 
+### Dependencies and test integrity
+
 Do not weaken a test merely to make an implementation pass. If a test reflects
 an outdated decision, explain the mismatch before changing it. Whenever a
 dependency, dependency version, or supported Python version changes, update
 `install.command` and its tests in the same change.
 
+## Documentation maintenance
+
+Keep each source-of-truth document organized around its own responsibility:
+agent workflow in `AGENTS.md`, settled product and technical behavior in
+`context/architecture.md`, and teaching/content rules in
+`context/lesson_content.md`.
+
+After a substantial sequence of design changes and at every phase checkpoint,
+perform a lossless documentation cleanup:
+
+- move claims under clear, stable headings and keep related claims together;
+- merge only true duplicates, preserving the stricter or more complete wording;
+- do not silently delete, weaken, reinterpret, or introduce product decisions;
+- verify internal links, terminology, logical invariants, and agreement with
+  the current implementation and active plan.
+
+Documentation cleanup does not authorize a deviation. Discuss and approve any
+substantive change under the normal change-control rule before applying it.
+
 ## Lesson work
+
+### Lesson workflow
 
 When creating or changing a lesson:
 
@@ -112,6 +149,8 @@ When creating or changing a lesson:
    same behavioral checker used for student code.
 5. Run focused lesson checks and applicable regressions. Run the full suite at
    the phase checkpoint or before handoff.
+
+### Curriculum scope
 
 Do not independently reorder the curriculum or introduce extra major concepts
 for implementation convenience.

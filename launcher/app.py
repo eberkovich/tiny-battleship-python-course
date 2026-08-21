@@ -16,19 +16,21 @@ from launcher.theme import DARK_THEME_NAME, THEMES, ThemePalette
 
 
 WINDOW_SIZE = (1180, 760)
+WINDOW_FLAGS = pygame.RESIZABLE
 SIDEBAR_WIDTH = 350
 FENCE = chr(96) * 3
 SUBMARINE_DIVIDER_ASSET = Path(__file__).with_name("assets") / "submarine_divider.png"
-CONTENT_COLUMN_WIDTH = 700
+CONTENT_COLUMN_SIDE_MARGIN = 31
 CONTENT_PADDING_X = 32
 CONTENT_PADDING_Y = 26
-NOTE_COLUMN_WIDTH = CONTENT_COLUMN_WIDTH
 NOTE_PADDING_X = CONTENT_PADDING_X
 NOTE_PADDING_Y = 10
 NOTE_LINE_HEIGHT = 21
 NOTE_LINE_GAP = 2
 RECAP_PADDING_X = 20
 RECAP_PADDING_Y = 14
+EXAMPLE_PADDING_X = 20
+EXAMPLE_PADDING_Y = 18
 OUTPUT_PADDING_X = 18
 OUTPUT_PADDING_Y = 12
 OUTPUT_LINE_HEIGHT = 22
@@ -42,6 +44,8 @@ TASK_ICON_RENDER_SCALE = 4
 SIDEBAR_TASK_HEIGHT = 50
 SIDEBAR_TASK_GAP = 4
 DIALOG_OVERLAY_ALPHA = 135
+HOME_SIDE_MARGIN = 60
+HOME_STAGE_GAP = 17
 
 
 @dataclass(frozen=True)
@@ -72,6 +76,10 @@ def _wrap(font: pygame.font.Font, text: str, width: int) -> list[str]:
     return result
 
 
+def _content_column_width(available_width: int) -> int:
+    return max(1, available_width - CONTENT_COLUMN_SIDE_MARGIN * 2)
+
+
 def _markdown_blocks(text: str) -> list[tuple[str, str]]:
     blocks: list[tuple[str, str]] = []
     in_code = False
@@ -96,7 +104,7 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
         if callout_kind is not None:
             if stripped.startswith(">"):
                 callout_line = stripped[1:].strip()
-                if callout_line:
+                if callout_line or callout_kind == "example":
                     callout.append(callout_line)
                 continue
             flush_callout()
@@ -116,6 +124,11 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
             if blocks and blocks[-1][0] == "space":
                 blocks.pop()
             callout_kind = "recap"
+        elif stripped == "> [!EXAMPLE]":
+            flush_paragraph()
+            if blocks and blocks[-1][0] == "space":
+                blocks.pop()
+            callout_kind = "example"
         elif stripped == "---":
             flush_paragraph()
             if blocks and blocks[-1][0] == "space":
@@ -146,7 +159,7 @@ class LauncherApp:
         pygame.display.init()
         pygame.font.init()
         pygame.display.set_caption("Морской бой — курс Python")
-        self.screen = pygame.display.set_mode(WINDOW_SIZE)
+        self.screen = pygame.display.set_mode(WINDOW_SIZE, WINDOW_FLAGS)
         self.clock = pygame.time.Clock()
         self.controller = controller
         self.scroll = 0
@@ -165,9 +178,10 @@ class LauncherApp:
         self.output_card_rect: pygame.Rect | None = None
         self.debug_badge_rect: pygame.Rect | None = None
         self.home_title_rect: pygame.Rect | None = None
+        self.home_hero_rect: pygame.Rect | None = None
         self.lesson_title_rect: pygame.Rect | None = None
         self.home_plan_expanded = False
-        self.home_content_height = WINDOW_SIZE[1]
+        self.home_content_height = self.screen.get_height()
         self.home_plan_top = 0
         self.font = pygame.font.SysFont("Arial", 20)
         self.small_font = pygame.font.SysFont("Arial", 16)
@@ -218,6 +232,15 @@ class LauncherApp:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.VIDEORESIZE:
+                    self._resize_window(event.size)
+                elif event.type == pygame.WINDOWRESIZED:
+                    resized = (event.x, event.y)
+                    if (
+                        resized[0] < WINDOW_SIZE[0]
+                        or resized[1] < WINDOW_SIZE[1]
+                    ):
+                        self._resize_window(resized)
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self._click(event.pos)
                 elif (
@@ -233,6 +256,11 @@ class LauncherApp:
             self.clock.tick(60)
         self.controller.shutdown()
         pygame.quit()
+
+    def _resize_window(self, size: tuple[int, int]) -> None:
+        width = max(WINDOW_SIZE[0], size[0])
+        height = max(WINDOW_SIZE[1], size[1])
+        self.screen = pygame.display.set_mode((width, height), WINDOW_FLAGS)
 
     def _click(self, position: tuple[int, int]) -> None:
         if self.api_dialog is not None:
@@ -342,6 +370,7 @@ class LauncherApp:
         self.note_card_rect = None
         self.debug_badge_rect = None
         self.home_title_rect = None
+        self.home_hero_rect = None
         self.lesson_title_rect = None
         if self.controller.view == "home":
             self._render_home()
@@ -349,7 +378,7 @@ class LauncherApp:
                 self.scroll,
                 max(
                     0,
-                    self.home_content_height - WINDOW_SIZE[1],
+                    self.home_content_height - self.screen.get_height(),
                     self.home_plan_top - HOME_PLAN_REVEAL_TOP
                     if self.home_plan_expanded
                     else 0,
@@ -373,7 +402,7 @@ class LauncherApp:
     def _render_debug_badge(self) -> None:
         if not self.controller.debug:
             return
-        rect = pygame.Rect(WINDOW_SIZE[0] - 680, 16, 180, 38)
+        rect = pygame.Rect(self.screen.get_width() - 680, 16, 180, 38)
         pygame.draw.rect(self.screen, self.theme.panel, rect, border_radius=9)
         pygame.draw.rect(self.screen, self.theme.gold, rect, 2, border_radius=9)
         label = self.small_font.render(
@@ -385,7 +414,7 @@ class LauncherApp:
     def _render_game_button(self) -> None:
         if not self.controller.game_available:
             return
-        rect = pygame.Rect(WINDOW_SIZE[0] - 484, 16, 138, 38)
+        rect = pygame.Rect(self.screen.get_width() - 484, 16, 138, 38)
         hovered = rect.collidepoint(pygame.mouse.get_pos())
         color = (
             self.theme.button_disabled
@@ -424,7 +453,7 @@ class LauncherApp:
         self.screen.blit(surface, (20, 26))
 
     def _render_command_reference_button(self) -> None:
-        rect = pygame.Rect(WINDOW_SIZE[0] - 330, 16, 168, 38)
+        rect = pygame.Rect(self.screen.get_width() - 330, 16, 168, 38)
         hovered = rect.collidepoint(pygame.mouse.get_pos())
         color = (
             self.theme.button_disabled
@@ -467,7 +496,7 @@ class LauncherApp:
         self.buttons.append(Button("Справочник", rect, "command_reference"))
 
     def _render_theme_switch(self) -> None:
-        rect = pygame.Rect(WINDOW_SIZE[0] - 146, 16, 128, 38)
+        rect = pygame.Rect(self.screen.get_width() - 146, 16, 128, 38)
         hovered = rect.collidepoint(pygame.mouse.get_pos())
         color = (
             self.theme.button_disabled
@@ -519,12 +548,13 @@ class LauncherApp:
         self.buttons.append(Button(label, rect, "theme"))
 
     def _render_command_reference(self) -> None:
-        overlay = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+        viewport_size = self.screen.get_size()
+        overlay = pygame.Surface(viewport_size, pygame.SRCALPHA)
         overlay.fill((0, 0, 0, DIALOG_OVERLAY_ALPHA))
         self.screen.blit(overlay, (0, 0))
 
         dialog = pygame.Rect(0, 0, 860, 620)
-        dialog.center = (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2)
+        dialog.center = (viewport_size[0] // 2, viewport_size[1] // 2)
         pygame.draw.rect(
             self.screen, self.theme.content_card, dialog, border_radius=16
         )
@@ -623,14 +653,16 @@ class LauncherApp:
     def _render_home(self) -> None:
         offset = -self.scroll
         course = self.controller.course
+        home_left = HOME_SIDE_MARGIN
+        home_width = self.screen.get_width() - HOME_SIDE_MARGIN * 2
         draw_ship_icon(
             self.screen,
-            (75, 101),
+            (home_left + 15, 101),
             self.theme.project,
             scale=1.25,
         )
         title = self.hero_font.render(course.title, True, self.theme.text)
-        self.home_title_rect = title.get_rect(topleft=(108, 77))
+        self.home_title_rect = title.get_rect(topleft=(home_left + 48, 77))
         self.screen.blit(title, self.home_title_rect)
 
         previous_clip = self.screen.get_clip()
@@ -638,25 +670,27 @@ class LauncherApp:
             pygame.Rect(
                 0,
                 HOME_SCROLL_VIEW_TOP,
-                WINDOW_SIZE[0],
-                WINDOW_SIZE[1] - HOME_SCROLL_VIEW_TOP,
+                self.screen.get_width(),
+                self.screen.get_height() - HOME_SCROLL_VIEW_TOP,
             )
         )
 
-        hero = pygame.Rect(60, 144 + offset, 1060, 212)
+        hero = pygame.Rect(home_left, 144 + offset, home_width, 212)
+        self.home_hero_rect = hero
         pygame.draw.rect(self.screen, self.theme.card, hero, border_radius=18)
         self.screen.blit(
             self.small_font.render("ТВОЯ ЦЕЛЬ", True, self.theme.accent),
             (hero.x + 28, hero.y + 22),
         )
-        goal_lines = _wrap(self.home_goal_font, course.goal, 675)[:3]
+        hero_text_width = hero.width - 385
+        goal_lines = _wrap(self.home_goal_font, course.goal, hero_text_width)[:3]
         for index, line in enumerate(goal_lines):
             self.screen.blit(
                 self.home_goal_font.render(line, True, self.theme.text),
                 (hero.x + 28, hero.y + 49 + index * 31),
             )
         promise_y = hero.y + 55 + len(goal_lines) * 31
-        promise_lines = _wrap(self.small_font, course.promise, 675)[:2]
+        promise_lines = _wrap(self.small_font, course.promise, hero_text_width)[:2]
         for index, line in enumerate(promise_lines):
             self.screen.blit(
                 self.small_font.render(line, True, self.theme.muted),
@@ -670,19 +704,24 @@ class LauncherApp:
         section_y = 386 + offset
         self.screen.blit(
             self.title_font.render("Путь к готовой игре", True, self.theme.text),
-            (60, section_y),
+            (home_left, section_y),
         )
         subtitle = self.small_font.render(
             "Три этапа — каждый заканчивается видимым результатом.",
             True,
             self.theme.muted,
         )
-        self.screen.blit(subtitle, (60, section_y + 39))
+        self.screen.blit(subtitle, (home_left, section_y + 39))
 
         card_y = section_y + 76
-        card_width = 342
+        card_width = (home_width - HOME_STAGE_GAP * 2) // 3
         for index, stage in enumerate(course.roadmap, start=1):
-            rect = pygame.Rect(60 + (index - 1) * 359, card_y, card_width, 154)
+            rect = pygame.Rect(
+                home_left + (index - 1) * (card_width + HOME_STAGE_GAP),
+                card_y,
+                card_width,
+                154,
+            )
             self._render_home_stage(stage, index, rect)
 
         actions_y = card_y + 177
@@ -697,19 +736,33 @@ class LauncherApp:
             if has_progress
             else "Начать первый урок"
         )
-        self._add_button(action, 60, actions_y, 250, "continue", height=48)
+        self._add_button(
+            action,
+            home_left,
+            actions_y,
+            250,
+            "continue",
+            height=48,
+        )
         toggle = (
             "Скрыть полный план"
             if self.home_plan_expanded
             else "Показать все 18 уроков"
         )
-        self._add_button(toggle, 326, actions_y, 245, "toggle_plan", height=48)
+        self._add_button(
+            toggle,
+            home_left + 266,
+            actions_y,
+            245,
+            "toggle_plan",
+            height=48,
+        )
         pace = self.small_font.render(
             f"{self.controller.total_lesson_count} коротких уроков · Иди в своём темпе",
             True,
             self.theme.muted,
         )
-        self.screen.blit(pace, (596, actions_y + 15))
+        self.screen.blit(pace, (home_left + 536, actions_y + 15))
 
         self.home_plan_top = actions_y - offset + 76
 
@@ -720,7 +773,7 @@ class LauncherApp:
                 + 34
             )
         else:
-            self.home_content_height = WINDOW_SIZE[1]
+            self.home_content_height = self.screen.get_height()
         self.screen.set_clip(previous_clip)
 
     def _render_home_route(
@@ -850,15 +903,22 @@ class LauncherApp:
         course = self.controller.course
         offset_top = top
         height = 342
-        panel = pygame.Rect(60, offset_top, 1060, height)
+        panel_width = self.screen.get_width() - HOME_SIDE_MARGIN * 2
+        panel = pygame.Rect(
+            HOME_SIDE_MARGIN,
+            offset_top,
+            panel_width,
+            height,
+        )
         pygame.draw.rect(self.screen, self.theme.card, panel, border_radius=16)
         self.screen.blit(
             self.title_font.render("Все уроки", True, self.theme.text),
             (panel.x + 24, panel.y + 20),
         )
-        column_width = 328
+        column_gap = 16
+        column_width = (panel.width - 48 - column_gap * 2) // 3
         for stage_index, stage in enumerate(course.roadmap):
-            x = panel.x + 24 + stage_index * 344
+            x = panel.x + 24 + stage_index * (column_width + column_gap)
             self.screen.blit(
                 self.task_font.render(
                     f"Этап {stage_index + 1} · {stage.title}",
@@ -912,7 +972,7 @@ class LauncherApp:
         pygame.draw.rect(
             self.screen,
             self.theme.panel,
-            (0, 0, SIDEBAR_WIDTH, WINDOW_SIZE[1]),
+            (0, 0, SIDEBAR_WIDTH, self.screen.get_height()),
         )
         self._add_button("Все уроки", 18, 76, 125, "home", height=38)
         lesson_label = self.small_font.render(
@@ -981,8 +1041,8 @@ class LauncherApp:
 
     def _render_lesson_content(self) -> None:
         left = SIDEBAR_WIDTH + 34
-        width = WINDOW_SIZE[0] - left - 34
-        button_y = 700
+        width = self.screen.get_width() - left - 34
+        button_y = self.screen.get_height() - 60
         task = self.controller.current_task
         self.output_card_rect = None
         self._draw_task_icon(task, (left + 17, 98), self._task_color(task))
@@ -1011,7 +1071,7 @@ class LauncherApp:
                 "error": self.theme.error,
                 "info": self.theme.muted,
             }.get(self.controller.message_level, self.theme.muted)
-            message_width = min(CONTENT_COLUMN_WIDTH, width) - CONTENT_PADDING_X * 2
+            message_width = _content_column_width(width) - CONTENT_PADDING_X * 2
             message_lines = _wrap(
                 self.small_font, self.controller.message, message_width
             )[:2]
@@ -1049,14 +1109,14 @@ class LauncherApp:
                     width,
                 )
             if message_y is not None:
-                card_x = left + (width - min(CONTENT_COLUMN_WIDTH, width)) // 2
+                card_x = left + (width - _content_column_width(width)) // 2
                 for index, line in enumerate(message_lines):
                     self.screen.blit(
                         self.small_font.render(line, True, message_color),
                         (card_x + CONTENT_PADDING_X, message_y + index * 20),
                     )
         else:
-            content_bottom = 665
+            content_bottom = button_y - 14
             output_top = None
             if task.is_coding and self.controller.latest_output:
                 output_height = self._output_card_height(
@@ -1126,7 +1186,7 @@ class LauncherApp:
         rect: pygame.Rect,
     ) -> None:
         self.screen.set_clip(rect)
-        card_width = min(CONTENT_COLUMN_WIDTH, rect.width)
+        card_width = _content_column_width(rect.width)
         card_x = rect.centerx - card_width // 2
         inner_width = card_width - CONTENT_PADDING_X * 2
         items: list[tuple[str, list[tuple[str, str]]]] = []
@@ -1141,9 +1201,14 @@ class LauncherApp:
             if block[0] == "divider":
                 flush_group()
                 items.append(("divider", []))
-            elif block[0] in {"note", "recap"}:
+            elif block[0] in {"note", "recap", "example"}:
                 flush_group()
-                items.append((block[0], [block]))
+                example_group = (
+                    _markdown_blocks(block[1])
+                    if block[0] == "example"
+                    else [block]
+                )
+                items.append((block[0], example_group))
             else:
                 group.append(block)
         flush_group()
@@ -1167,6 +1232,8 @@ class LauncherApp:
                 if item_kind == "note"
                 else card_width - RECAP_PADDING_X * 2
                 if item_kind == "recap"
+                else card_width - EXAMPLE_PADDING_X * 2
+                if item_kind == "example"
                 else inner_width
             )
             item_padding_y = (
@@ -1174,6 +1241,8 @@ class LauncherApp:
             )
             if item_kind == "recap":
                 item_padding_y = RECAP_PADDING_Y
+            elif item_kind == "example":
+                item_padding_y = EXAMPLE_PADDING_Y
             content_height = self._markdown_group_height(group, item_inner_width)
             card = pygame.Rect(
                 card_x,
@@ -1184,6 +1253,7 @@ class LauncherApp:
             background = {
                 "note": self.theme.note_background,
                 "recap": self.theme.recap_background,
+                "example": self.theme.example_background,
             }.get(item_kind, self.theme.content_card)
             pygame.draw.rect(self.screen, background, card, border_radius=14)
             if item_kind == "recap":
@@ -1194,6 +1264,14 @@ class LauncherApp:
                     width=2,
                     border_radius=14,
                 )
+            elif item_kind == "example":
+                pygame.draw.rect(
+                    self.screen,
+                    self.theme.example_border,
+                    card,
+                    width=1,
+                    border_radius=12,
+                )
             self._draw_markdown_group(
                 group,
                 card.x
@@ -1202,6 +1280,8 @@ class LauncherApp:
                     if item_kind == "note"
                     else RECAP_PADDING_X
                     if item_kind == "recap"
+                    else EXAMPLE_PADDING_X
+                    if item_kind == "example"
                     else CONTENT_PADDING_X
                 ),
                 card.y + item_padding_y,
@@ -1212,7 +1292,7 @@ class LauncherApp:
         self.screen.set_clip(None)
 
     def _note_card_height(self, value: str, available_width: int) -> int:
-        card_width = min(NOTE_COLUMN_WIDTH, available_width)
+        card_width = _content_column_width(available_width)
         inner_width = card_width - NOTE_PADDING_X * 2
         return (
             self._markdown_group_height([("note", value)], inner_width)
@@ -1220,7 +1300,7 @@ class LauncherApp:
         )
 
     def _output_lines(self, value: str, available_width: int) -> list[str]:
-        card_width = min(CONTENT_COLUMN_WIDTH, available_width)
+        card_width = _content_column_width(available_width)
         inner_width = card_width - OUTPUT_PADDING_X * 2
         lines: list[str] = []
         for raw_line in value.splitlines() or [""]:
@@ -1240,7 +1320,7 @@ class LauncherApp:
         top: int,
         available_width: int,
     ) -> None:
-        card_width = min(CONTENT_COLUMN_WIDTH, available_width)
+        card_width = _content_column_width(available_width)
         card_x = left + (available_width - card_width) // 2
         card = pygame.Rect(
             card_x,
@@ -1281,7 +1361,7 @@ class LauncherApp:
         top: int,
         available_width: int,
     ) -> None:
-        card_width = min(NOTE_COLUMN_WIDTH, available_width)
+        card_width = _content_column_width(available_width)
         card_x = left + (available_width - card_width) // 2
         card_height = self._note_card_height(value, available_width)
         card = pygame.Rect(card_x, top, card_width, card_height)
@@ -1428,12 +1508,13 @@ class LauncherApp:
             self.api_dialog = None
             return
 
-        overlay = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+        viewport_size = self.screen.get_size()
+        overlay = pygame.Surface(viewport_size, pygame.SRCALPHA)
         overlay.fill((0, 0, 0, DIALOG_OVERLAY_ALPHA))
         self.screen.blit(overlay, (0, 0))
 
         dialog = pygame.Rect(0, 0, 700, 390)
-        dialog.center = (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2)
+        dialog.center = (viewport_size[0] // 2, viewport_size[1] // 2)
         pygame.draw.rect(
             self.screen, self.theme.content_card, dialog, border_radius=16
         )

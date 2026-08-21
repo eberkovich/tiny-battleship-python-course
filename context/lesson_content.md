@@ -6,11 +6,15 @@ stage plan defines which lesson is currently in scope.
 
 ## Learner and teaching style
 
+### Learner profile
+
 The course is for an active child of about eight who already knows basic
 turtle-, maze-, or block-style programming and is supported by an experienced
 programmer parent. This is the child's first experience with a textual
 programming language: do not assume familiarity with code vocabulary,
 punctuation, or line-based syntax.
+
+### Concept progression and pace
 
 - For every new concept, begin with a concrete need in the evolving game, then
   explain the general programming idea and its syntax, and finally apply it
@@ -27,6 +31,9 @@ punctuation, or line-based syntax.
 - Prefer representations that match what the child already sees and require the
   fewest new concepts. Introduce compound data gradually: first one meaningful
   value, then a collection of such values, and only later its formal terminology.
+
+### Feedback and language
+
 - Use standard Python `print` output for preliminary exercises about abstract
   values such as variables, lists, booleans, and function results. Use the game
   UI when the concept naturally changes a board, ship counter, prompt, or shot;
@@ -36,9 +43,22 @@ punctuation, or line-based syntax.
 - Write all child-facing lesson text, launcher labels, hints, and check feedback
   in Russian. Keep code identifiers and developer documentation in English.
 - Avoid baby-talk and passive activities that do not produce feedback.
+
+### Syntax and helper API explanations
+
 - Before the child must read or write new syntax, explain its terms and visible
   marks in concrete language: what each name means, what parentheses and commas
   do, and what Python will do with the whole line.
+- When a function is introduced, explicitly distinguish the argument name in
+  the command description from the concrete value supplied in a call. Show the
+  description and a complete call, map the value to its name, and state which
+  part stays the same and which part the child chooses. Do not rely on a compact
+  form such as **«board — PLAYER или ENEMY»** to teach this distinction.
+- Before the child reads or edits the first multi-line program, explain the
+  default execution order with a concrete trace: Python starts at the top and
+  handles executable lines one after another, while blank lines and comments
+  do not perform actions. When later concepts such as loops or conditions alter
+  this simple order, explain the change explicitly.
 - For each new Python construction, explain the concrete problem it solves,
   how to read it aloud, what Python does in order, what value or state changes,
   the meaning of new punctuation, and one likely mistake. Give a complete
@@ -50,6 +70,8 @@ punctuation, or line-based syntax.
   will write; then explain exactly what the helper commands provide.
 
 ## Lesson shape
+
+### Standard sequence
 
 A lesson normally contains:
 
@@ -66,11 +88,29 @@ isolated exercises to practise one idea and a project milestone to advance the
 game. Keep the star task optional. File ownership and execution behavior are
 defined in `context/architecture.md`.
 
+### Step purpose, opening, and roles
+
 Each article or exercise must have one clear purpose. Every paragraph must
 directly support that purpose. After drafting a step, describe its purpose in
 one sentence and verify that its title, opening, content, and ending all match
 that sentence. Move content that serves a different purpose to a separate
 step.
+
+Make the role of every statement unmistakable. Explicitly separate what is
+already true, the rule being explained, an illustrative example, the action the
+child must perform, and the observable success condition. Introduce every
+illustrative example with **«Пример:»** or **«Например:»** and state what
+it demonstrates. Never embed an unlabeled example inside an instruction or
+make the child infer whether a shown value is sample data, existing setup, an
+input, or the required result. Unless a value is itself part of the stated
+goal, use different values in examples and tasks.
+
+Every lesson step must be understandable from its first sentence without
+assuming that the child remembers an unstated preceding situation. Open with a
+concrete orientation: what is happening now, what problem must be solved, or
+what result the child is about to create. Only then introduce a definition,
+rule, syntax form, or example. Never begin an article or task in the middle of
+an explanation with a bare definition or rule.
 
 ## Lesson page presentation
 
@@ -80,6 +120,21 @@ step.
 - Render prose in a narrow column of lightly contrasted cards. Prefer short
   paragraphs, generous padding and line spacing, and visible space between
   major sections.
+- Put every illustrative example in one Markdown block containing its label,
+  explanation, code when present, and visible result:
+
+  ````markdown
+  > [!EXAMPLE]
+  > **Пример:** что показывает этот пример.
+  >
+  > ```python
+  > print(7)
+  > ```
+  >
+  > После запуска появится `7`.
+  ````
+
+  Do not split one example across ordinary prose and several unrelated cards.
 - Use a standalone Markdown `---` only between major article sections. It
   becomes a divider of three yellow submarines; do not use it between ordinary
   paragraphs.
@@ -101,6 +156,8 @@ step.
   above the strip. Keep the task description independently scrollable.
 
 ## Prerequisites and explanation order
+
+### First-use audit
 
 Apply prerequisites to every first use in reading order. Before lesson prose,
 an example, task, starter, or checker uses an API call, constant, state, syntax,
@@ -165,6 +222,8 @@ tasks, notes, starters, and feedback. For each word, identify its definition
 and verify that the current instruction remains understandable without testing
 the child's memory of terminology.
 
+### API introductions and references
+
 Beginner-facing API material must:
 
 - show the exact call form in a monospace block;
@@ -181,6 +240,8 @@ form, short purpose, and argument summary. Recap metadata must contain only
 concepts already introduced at that point in the course. Follow the
 introduction/reference presentation rule above.
 
+### Console output
+
 Before the first exercise uses `print`, introduce it as a Python function in
 general terms: it shows a person the value passed to it. Show the exact
 `print(value)` form, explain its argument, give an example and its visible
@@ -190,6 +251,8 @@ launcher's output card or contrast it with the game UI. Later console exercises
 may rely on the already introduced visible output.
 
 ## Exercises and project tasks
+
+### Exercise progression
 
 - State an unambiguous visible goal and name the relevant API commands without
   showing the final solution.
@@ -206,6 +269,9 @@ may rely on the already introduced visible output.
   allows it: construct, predict or select, diagnose, combine, and apply. Do not
   repeat the same operation with only another value type or another set of
   numbers.
+
+### Task instructions and starter files
+
 - Keep starter context out of the goal. After every coding-task description,
   add one separate note block in this form:
 
@@ -224,6 +290,9 @@ may rely on the already introduced visible output.
   so the child can complete the task without switching back to the launcher.
   Do not copy milestone instructions into cumulative `battleship.py`: that file
   is shared by all project tasks and must contain only game code.
+
+### Feedback and solution boundaries
+
 - Make the child think rather than copy an example directly.
 - Every exercise must produce immediate observable feedback. Use `print` for
   values and calculations, the game window for boards and game state, and
@@ -233,6 +302,9 @@ may rely on the already introduced visible output.
   enough to read in the launcher's result card. Do not require a pygame window
   when printed output is the complete observable result.
 - Do not show reference solutions in child-facing text.
+
+### Hints and star challenges
+
 - Add hints only when a task is demonstrably difficult without them; discussion
   of a difficult concept alone is not a reason to add hints to other tasks.
   Store short ordered hint strings in the task's optional `hints` list in
@@ -249,6 +321,9 @@ may rely on the already introduced visible output.
   forms include a coordinate puzzle, multi-error debugging, or transferring
   familiar constructs to a new kind of data. If a proposed star task is
   trivial, repetitive, or needs adult explanation, redesign or omit it.
+
+### Cumulative project milestones
+
 - Do not repeat behavior already completed and checked unless repetition is an
   explicit learning objective.
 - Treat every **«Пишем игру»** task as an incremental edit to the same
@@ -263,6 +338,9 @@ may rely on the already introduced visible output.
 - When an isolated task depends on earlier behavior, put the previously taught
   setup in its starter and ask only for the new result; do not explain that
   prefilled setup in the child-facing task or workflow strip.
+
+### Child-facing tooling and question steps
+
 - Use **«редактор»** in child-facing text; do not name IDLE or student files.
   Tool names and filenames may appear in parent/developer documentation.
 
@@ -273,6 +351,8 @@ from a non-interactive prompt into the preceding article or remove it.
 
 ## Authoring verification
 
+### Course-part inventory
+
 Before finalizing a multi-lesson course part, maintain a complete reference
 program for its final milestone. Inventory every child-visible syntax form,
 standard-library operation, public API call, and game rule used by that program,
@@ -280,6 +360,8 @@ and assign each item to the lesson that introduces it. Repeat the inventory
 whenever the reference changes. Separately inventory teaching-only constructs
 used in articles, examples, starters, and preliminary exercises, such as
 `print`, even when they do not remain in the final reference program.
+
+### Per-task verification
 
 For every exercise, project milestone, and star task:
 
@@ -297,6 +379,8 @@ wording into tests; assert exact text or reading order only when it carries an
 essential explanation, required term, or task contract. Complete end-to-end
 win/loss and cumulative-game scenarios belong at phase checkpoints rather than
 in every intermediate lesson.
+
+### Editorial review
 
 Before accepting a lesson, review it for age appropriateness, excessive text,
 long gaps between interactions, accidental answer disclosure, and any API or

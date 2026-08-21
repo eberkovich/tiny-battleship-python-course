@@ -79,7 +79,7 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
         "первое знакомство",
         "вспомогательные команды",
         "как устроена команда",
-        "комментарии в коде",
+        "как python читает код",
         "координаты и корабли",
         "нарисуй однопалубный корабль",
         "пишем игру",
@@ -95,26 +95,32 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
         "coordinates",
     ]
     assert lesson.task("intro").title == "Первое знакомство"
+    assert lesson.task("comments").title == "Как Python читает код"
     assert lesson.task("recap").kind == "summary"
     assert "show_board" in sections["api"]
     assert "draw_deck" not in sections["api"]
     assert "show_miss" not in sections["api"]
     assert "draw_deck" in sections["coordinates"]
     assert "deck_idle" in sections["coordinates"].lower()
-    assert "Система координат — это способ дать каждой клетке точный адрес" in sections[
+    assert "Способ задавать такие адреса называется системой координат" in sections[
         "coordinates"
     ]
-    assert sections["coordinates"].index("Система координат") < sections[
+    assert sections["coordinates"].index("системой координат") < sections[
         "coordinates"
     ].index("draw_deck")
-    assert sections["coordinates"].index("Система координат") < sections[
+    assert sections["coordinates"].index("системой координат") < sections[
         "coordinates"
     ].index("show_miss")
-    assert "`board` —" in sections["api"]
     for argument in ("`board` —", "`x` —", "`y` —", "`state` —"):
         assert argument in sections["coordinates"]
     assert sections["coordinates"].count("`board` —") == 2
-    assert "Возможные значения:" in sections["api"]
+    assert "имя аргумента" in sections["api"].lower()
+    assert "значение аргумента" in sections["api"].lower()
+    assert sections["api"].index("show_board(board)") < sections["api"].index(
+        "show_board(ENEMY)"
+    )
+    assert "`board` — имя аргумента" in sections["api"]
+    assert "`ENEMY` — значение аргумента" in sections["api"]
     assert "enum" not in content
     assert "перечислен" not in content
     assert "draw_water" not in content
@@ -144,8 +150,13 @@ def test_child_content_stays_in_russian_structure_and_lesson_scope() -> None:
     assert "вызовом функции" in sections["api"].lower()
     assert "аргументом" in sections["api"].lower()
     assert "синтаксисом вызова" in sections["api"].lower()
-    assert "начинаются со знака `#`" in sections["comments"].lower()
+    assert "начинается со знака `#`" in sections["comments"].lower()
     assert "python не выполняет комментарии" in sections["comments"].lower()
+    assert "сверху вниз" in sections["comments"].lower()
+    assert "обрабатывая строки по одной" in sections["comments"].lower()
+    assert sections["comments"].index("from battleship_ui import *") < sections[
+        "comments"
+    ].index("show_board(ENEMY)")
     comments_index = next(
         index for index, task in enumerate(lesson.tasks) if task.id == "comments"
     )

@@ -6,6 +6,11 @@ each Python concept in short exercises, and gradually grows a cumulative
 `battleship.py` into a fixed fleet of 10 one-cell ships with a battle-start
 button. Roadmap-only future lessons are visible but cannot be opened yet.
 
+## Current platform and language support
+
+At this time, the course has been tested only on macOS. The launcher and lesson
+content are currently available only in Russian.
+
 ## Install and run
 
 From Terminal, run:
