@@ -394,9 +394,19 @@ def test_launcher_renders_course_home_and_typed_lesson_navigation(
     controller.enter_lesson("lesson_01")
     app.render()
     clickable_task_ids = {task_id for _, task_id in app.task_rects}
-    assert clickable_task_ids == {
+    assert controller.current_task.id in clickable_task_ids
+    assert clickable_task_ids <= {
         task.id for task in controller.lesson.tasks if task.kind != "summary"
     }
+    for task in controller.lesson.tasks[1:]:
+        if task.kind == "summary" or not controller.task_unlocked(task):
+            continue
+        controller.select_task(task.id)
+        app.render()
+        assert task.id in {task_id for _, task_id in app.task_rects}
+    controller.select_task("intro")
+    app.render()
+    assert "intro" in {task_id for _, task_id in app.task_rects}
     assert any(button.action == "next" for button in app.buttons)
     controller.select_task("exercise_01")
     app.render()
@@ -490,7 +500,7 @@ def test_roadmap_progress_uses_planned_lesson_count_and_blocks_future_lessons(
     controller = LauncherController(tmp_path / "student")
 
     assert controller.current_lesson_number == 1
-    assert controller.total_lesson_count == 18
+    assert controller.total_lesson_count == 19
     assert controller.current_stage_number == 1
     assert controller.completed_lesson_count == 0
     assert controller.roadmap_lesson_status(
@@ -530,9 +540,9 @@ def test_launcher_cli_exposes_debug_flag() -> None:
 
 
 def test_coding_note_stays_fixed_while_description_scrolls(tmp_path: Path) -> None:
-    controller = LauncherController(tmp_path / "student")
-    controller.enter_lesson("lesson_01")
-    controller.select_task("exercise_03")
+    controller = LauncherController(tmp_path / "student", debug=True)
+    controller.enter_lesson("lesson_01_coordinates")
+    controller.select_task("lesson_01_coordinates_exercise_03")
     app = LauncherApp(controller)
 
     app.render()
@@ -546,15 +556,15 @@ def test_coding_note_stays_fixed_while_description_scrolls(tmp_path: Path) -> No
 
 
 def test_api_mention_opens_and_closes_signature_recap(tmp_path: Path) -> None:
-    controller = LauncherController(tmp_path / "student")
-    controller.enter_lesson("lesson_01")
-    controller.select_task("exercise_03")
+    controller = LauncherController(tmp_path / "student", debug=True)
+    controller.enter_lesson("lesson_01_coordinates")
+    controller.select_task("lesson_01_coordinates_exercise_01")
     app = LauncherApp(controller)
     app.render()
 
-    link = next(link for link in app.api_links if link[1] == "show_miss")
+    link = next(link for link in app.api_links if link[1] == "draw_deck")
     app._click(link[0].center)
-    assert app.api_dialog == "show_miss"
+    assert app.api_dialog == "draw_deck"
 
     app.render()
     close = next(button for button in app.buttons if button.action == "close_api")
@@ -624,27 +634,27 @@ def test_global_command_reference_lists_and_copies_every_api(
 def test_api_introduction_page_uses_inline_description_not_recap_links(
     tmp_path: Path,
 ) -> None:
-    controller = LauncherController(tmp_path / "student")
+    controller = LauncherController(tmp_path / "student", debug=True)
     controller.enter_lesson("lesson_01")
     app = LauncherApp(controller)
 
-    for task_id, introduced_api in (
-        ("api", "show_board"),
-        ("coordinates", "draw_deck"),
-        ("coordinates", "show_miss"),
-    ):
-        controller.select_task(task_id)
-        app.render()
-        assert introduced_api not in {name for _, name in app.api_links}
+    controller.select_task("api")
+    app.render()
+    assert "show_board" not in {name for _, name in app.api_links}
 
-    for task_id, referenced_api in (
-        ("exercise_01", "show_board"),
-        ("exercise_02", "draw_deck"),
-        ("exercise_03", "show_miss"),
-    ):
-        controller.select_task(task_id)
-        app.render()
-        assert referenced_api in {name for _, name in app.api_links}
+    controller.select_task("exercise_01")
+    app.render()
+    assert "show_board" in {name for _, name in app.api_links}
+
+    controller.enter_lesson("lesson_01_coordinates")
+    controller.select_task("lesson_01_coordinates_deck_api")
+    app.render()
+    assert "draw_deck" not in {name for _, name in app.api_links}
+
+    controller.select_task("lesson_01_coordinates_exercise_01")
+    app.render()
+    assert "draw_deck" in {name for _, name in app.api_links}
+    assert "show_miss" not in {name for _, name in app.api_links}
 
 
 def test_theme_switch_is_shared_by_every_screen_and_persisted(
@@ -715,26 +725,28 @@ def test_launcher_can_expand_to_full_desktop_and_keeps_controls_in_view(
 def test_opening_lesson_shows_saved_current_step(tmp_path: Path) -> None:
     student = tmp_path / "student"
     controller = LauncherController(student)
-    controller.enter_lesson("lesson_01")
-    assert controller.current_task.id == "intro"
+    for task_id in controller.lesson.completion_tasks:
+        controller.progress = controller.workspace.mark_passed(task_id)
+    controller.enter_lesson("lesson_01_coordinates")
+    assert controller.current_task.id == "lesson_01_coordinates_coordinates"
 
-    controller.select_task("coordinates")
+    controller.select_task("lesson_01_coordinates_exercise_01")
     reopened = LauncherController(student)
-    reopened.enter_lesson("lesson_01")
+    reopened.enter_lesson("lesson_01_coordinates")
 
-    assert reopened.current_task.id == "coordinates"
+    assert reopened.current_task.id == "lesson_01_coordinates_exercise_01"
 
 
 def test_coding_task_icons_show_completion_and_latest_failure(
     tmp_path: Path,
 ) -> None:
-    controller = LauncherController(tmp_path / "student")
-    controller.enter_lesson("lesson_01")
+    controller = LauncherController(tmp_path / "student", debug=True)
+    controller.enter_lesson("lesson_01_coordinates")
     app = LauncherApp(controller)
-    exercise = controller.lesson.task("exercise_01")
-    project = controller.lesson.task("project")
-    star = controller.lesson.task("star")
-    article = controller.lesson.task("intro")
+    exercise = controller.lesson.task("lesson_01_coordinates_exercise_01")
+    project = controller.lesson.task("lesson_01_coordinates_project")
+    star = controller.lesson.task("lesson_01_coordinates_star")
+    article = controller.lesson.task("lesson_01_coordinates_coordinates")
 
     assert not app._task_has_completion_badge(exercise)
     assert not app._task_has_completion_badge(article)
@@ -747,13 +759,13 @@ def test_coding_task_icons_show_completion_and_latest_failure(
     assert not app._task_has_failure_badge(exercise)
 
     controller.progress = controller.workspace.mark_passed(project.id)
-    assert app._task_has_completion_badge(controller.lesson.task("project"))
-    assert not app._task_has_completion_badge(controller.lesson.task("star"))
+    assert app._task_has_completion_badge(project)
+    assert not app._task_has_completion_badge(star)
 
     controller.progress = controller.workspace.mark_passed(star.id)
-    assert app._task_has_completion_badge(controller.lesson.task("star"))
+    assert app._task_has_completion_badge(star)
 
-    failed = controller.lesson.task("exercise_02")
+    failed = controller.lesson.task("lesson_01_coordinates_exercise_02")
     controller.failed_tasks.add(failed.id)
     app.render()
     task_cards = {task_id: rect for rect, task_id in app.task_rects}
@@ -838,8 +850,8 @@ def test_completed_summary_opens_the_next_lesson(tmp_path: Path) -> None:
     )
     app._click(button.rect.center)
 
-    assert controller.lesson.id == "lesson_02"
-    assert controller.current_task.id == "lesson_02_output"
+    assert controller.lesson.id == "lesson_01_coordinates"
+    assert controller.current_task.id == "lesson_01_coordinates_coordinates"
 
 
 def test_run_passes_selected_lesson_to_checker(tmp_path: Path) -> None:
@@ -907,7 +919,8 @@ def test_run_command_initializes_cyrillic_student_workspace_end_to_end(
 
     assert result.returncode == 0, result.stderr
     assert (student / "battleship.py").exists()
-    assert (student / "exercises/lesson_01/exercise_03.py").exists()
+    assert (student / "exercises/lesson_01/exercise_enemy.py").exists()
+    assert (student / "exercises/lesson_01_coordinates/exercise_03.py").exists()
     assert (student / "progress.json").exists()
 
 

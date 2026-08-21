@@ -104,7 +104,11 @@ def test_wrong_board_is_a_behavior_failure(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    result = run_check(source, "exercise_02", lesson_id="lesson_01")
+    result = run_check(
+        source,
+        "lesson_01_coordinates_exercise_01",
+        lesson_id="lesson_01_coordinates",
+    )
 
     assert result.status == "failed"
     assert "твоём поле" in result.message

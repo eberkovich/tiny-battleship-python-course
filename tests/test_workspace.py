@@ -32,9 +32,9 @@ def test_curriculum_and_sections_are_consistent() -> None:
 
     assert lesson.id == "lesson_01"
     assert [task.id for task in lesson.tasks if task.kind == "exercise"] == [
+        "exercise_comments",
         "exercise_01",
-        "exercise_02",
-        "exercise_03",
+        "exercise_enemy",
     ]
     assert {task.section for task in lesson.tasks} <= sections.keys()
 
@@ -43,7 +43,7 @@ def test_curriculum_defines_complete_three_stage_roadmap() -> None:
     course = load_course()
 
     assert len(course.roadmap) == 3
-    assert len(course.roadmap_lessons) == 18
+    assert len(course.roadmap_lessons) == 19
     assert [stage.title for stage in course.roadmap] == [
         "Собираем флот",
         "Расставляем корабли",
@@ -64,12 +64,15 @@ def test_curriculum_provides_clickable_api_recaps() -> None:
         "show_ship_count",
         "show_message",
     }
-    assert course.api_references["draw_deck"].introduced_in == "coordinates"
-    assert course.api_references["show_miss"].introduced_in == "coordinates"
+    assert course.api_references["draw_deck"].introduced_in == (
+        "lesson_01_coordinates_deck_api"
+    )
+    assert course.api_references["show_miss"].introduced_in == (
+        "lesson_14_first_shot"
+    )
     assert course.api_references["show_miss"].signature == "show_miss(board, x, y)"
     assert course.api_references["show_miss"].details
-    assert not course.api_reference_available("show_miss", "coordinates")
-    assert course.api_reference_available("show_miss", "exercise_03")
+    assert not course.api_reference_available("show_miss", "lesson_07_recap")
     assert course.api_references["show_ship_count"].introduced_in == (
         "lesson_02_counter"
     )
@@ -237,8 +240,8 @@ def test_workspace_initialization_preserves_existing_source(tmp_path: Path) -> N
     workspace.initialize()
 
     assert project.read_text(encoding="utf-8") == "# моя работа\n"
-    assert workspace.source_path("exercise_03").exists()
-    assert workspace.source_path("star").exists()
+    assert workspace.source_path("exercise_enemy").exists()
+    assert workspace.source_path("lesson_01_coordinates_star").exists()
 
 
 def test_workspace_refreshes_an_untouched_starter(tmp_path: Path) -> None:
@@ -294,16 +297,16 @@ def test_workspace_preserves_an_untracked_legacy_file(tmp_path: Path) -> None:
 
 def test_progress_is_separate_for_exercises_project_and_star(tmp_path: Path) -> None:
     course = load_course()
-    lesson = course.lessons[0]
+    lesson = course.lesson("lesson_01_coordinates")
     workspace = StudentWorkspace(tmp_path / "student", course)
     workspace.initialize()
 
-    workspace.mark_passed("exercise_01")
-    workspace.mark_passed("star")
+    workspace.mark_passed("lesson_01_coordinates_exercise_01")
+    workspace.mark_passed("lesson_01_coordinates_star")
     progress = workspace.load_progress()
 
-    assert progress.completed_tasks == {"exercise_01"}
-    assert progress.earned_stars == {"star"}
+    assert progress.completed_tasks == {"lesson_01_coordinates_exercise_01"}
+    assert progress.earned_stars == {"lesson_01_coordinates_star"}
     assert not workspace.lesson_complete(lesson, progress)
 
 
@@ -341,8 +344,8 @@ def test_version_one_progress_is_migrated_without_losing_passed_tasks(
 
     progress = workspace.load_progress()
 
-    assert progress.current_lesson == "lesson_01"
-    assert progress.current_task == "exercise_02"
+    assert progress.current_lesson == "lesson_01_coordinates"
+    assert progress.current_task == "lesson_01_coordinates_exercise_01"
     assert progress.completed_tasks == {"exercise_01"}
     assert progress.theme == DARK_THEME_NAME
 
@@ -366,5 +369,35 @@ def test_version_two_progress_defaults_to_dark_theme(tmp_path: Path) -> None:
 
     progress = workspace.load_progress()
 
-    assert progress.current_task == "coordinates"
+    assert progress.current_lesson == "lesson_01_coordinates"
+    assert progress.current_task == "lesson_01_coordinates_coordinates"
     assert progress.theme == DARK_THEME_NAME
+
+
+def test_existing_later_progress_stops_at_the_new_prerequisite_lesson(
+    tmp_path: Path,
+) -> None:
+    course = load_course()
+    workspace = StudentWorkspace(tmp_path / "student", course)
+    workspace.root.mkdir()
+    workspace.progress_path.write_text(
+        json.dumps(
+            {
+                "version": 3,
+                "current_lesson": "lesson_04",
+                "current_task": "lesson_04_lists",
+                "completed_tasks": ["exercise_01", "project", "exercise_02"],
+                "earned_stars": ["star"],
+                "theme": DARK_THEME_NAME,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    progress = workspace.load_progress()
+
+    assert progress.current_lesson == "lesson_01_coordinates"
+    assert progress.current_task == "lesson_01_coordinates_coordinates"
+    assert "project" in progress.completed_tasks
+    assert "lesson_01_coordinates_exercise_01" in progress.completed_tasks
+    assert progress.earned_stars == {"lesson_01_coordinates_star"}

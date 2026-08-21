@@ -10,7 +10,9 @@ from lessons.phase_a_checks import (
 
 def check(task_id: str, snapshot: dict[str, object], output: str):
     if task_id == "lesson_04_exercise_01":
-        return expect_output(output, "[4, 7, 9, 12]\n4")
+        return expect_output(output, "[4, 7, 9, 12]")
+    if task_id == "lesson_04_exercise_length":
+        return expect_output(output, "4")
     if task_id == "lesson_04_exercise_02":
         return expect_output(output, "9")
     if task_id == "lesson_04_exercise_03":

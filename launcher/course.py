@@ -189,13 +189,6 @@ def load_course(curriculum_path: Path | None = None) -> Course:
     roadmap_lessons = tuple(
         lesson for stage in roadmap for lesson in stage.lessons
     )
-    roadmap_ids = [lesson.id for lesson in roadmap_lessons]
-    expected_roadmap_ids = [
-        f"lesson_{number:02d}"
-        for number in range(1, len(roadmap_lessons) + 1)
-    ]
-    if roadmap_ids != expected_roadmap_ids:
-        raise ValueError("Roadmap lessons must use continuous lesson_NN IDs")
     roadmap_by_id = {lesson.id: lesson for lesson in roadmap_lessons}
 
     lessons = []
@@ -262,10 +255,14 @@ def load_course(curriculum_path: Path | None = None) -> Course:
             summary=_required_text(reference_data, "summary"),
             details=tuple(details),
         )
-        if api_references[name].introduced_in not in task_ids:
+        introduction = api_references[name].introduced_in
+        planned_prefixes = tuple(f"{lesson.id}_" for lesson in roadmap_lessons)
+        if introduction not in task_ids and not introduction.startswith(
+            planned_prefixes
+        ):
             raise ValueError(
                 f"API reference {name} has unknown introduction task: "
-                f"{api_references[name].introduced_in}"
+                f"{introduction}"
             )
     return Course(
         title=_required_text(course_data, "title"),

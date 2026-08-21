@@ -64,6 +64,19 @@ punctuation, or line-based syntax.
   the meaning of new punctuation, and one likely mistake. Give a complete
   example whose values differ from the following task. Difficult concepts may
   need several small examples rather than one dense article.
+- Teach in short explanation–example cycles. Put the first complete example
+  immediately after the minimum explanation needed to understand it; do not
+  postpone it until after terminology, secondary uses, generalizations, and
+  common mistakes. When a concept has several difficult operations or
+  distinctions, place another small example next to the specific part it
+  clarifies instead of collecting all examples at the end of the article.
+- Make every code fragment unambiguous at first sight. Prefer complete
+  statements with meaningful names over isolated operators, unexplained
+  placeholders, or incomplete constructions. When explaining how code changes,
+  show a complete before-and-after example and explicitly say what changed. An
+  individual punctuation mark may appear on its own only when that mark is the
+  explicit subject of the explanation and a complete nearby example shows it
+  in context.
 - When explaining the course's support layer to the child, call its public API
   **«вспомогательные команды»**, not a framework, library, or engine. First
   state the concrete game the child will finish and which game rules the child
@@ -95,6 +108,31 @@ directly support that purpose. After drafting a step, describe its purpose in
 one sentence and verify that its title, opening, content, and ending all match
 that sentence. Move content that serves a different purpose to a separate
 step.
+
+Teach one new programming concept per article. If a draft introduces another
+independent mental model, operation, or syntax form, move it to its own article.
+Keep the essential parts of one construction together when they cannot be used
+separately; punctuation and argument details required to read one function call
+are not separate concepts. Do not re-teach an older concept inside an unrelated
+article: use a short recap only when it is genuinely needed.
+
+Follow every new programming concept with at least one focused exercise before
+asking the child to combine it with another new concept. An API command may be
+the visible tool used by that exercise; it does not require a separate exercise
+when the task already focuses on the programming concept being practised.
+
+Keep every lesson coherent from motivation to result. Each newly introduced
+programming concept or game API command must follow one complete path: concrete
+need, explanation, focused practice, use in that lesson's cumulative project,
+and a truthful recap. If the current project milestone does not need it,
+postpone its introduction. If all new concepts cannot be used naturally in one
+small milestone, split the lesson.
+
+A summary may mention achievements from isolated exercises, but must identify
+them as practice. Claims such as **«твоя игра теперь…»** or **«твоя
+программа теперь…»** may describe only behavior verified by the
+completed cumulative project task. Never present an isolated exercise result as
+already integrated into the game.
 
 Make the role of every statement unmistakable. Explicitly separate what is
 already true, the rule being explained, an illustrative example, the action the

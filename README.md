@@ -1,7 +1,7 @@
 # Tiny Battleship Python Course
 
-The current local macOS course contains Lessons 1–7 in Russian. A child starts
-from a course home that shows the complete 18-lesson Part 1 roadmap, practises
+The current local macOS course contains Lessons 1–8 in Russian. A child starts
+from a course home that shows the complete 19-lesson Part 1 roadmap, practises
 each Python concept in short exercises, and gradually grows a cumulative
 `battleship.py` into a fixed fleet of 10 one-cell ships with a battle-start
 button. Roadmap-only future lessons are visible but cannot be opened yet.

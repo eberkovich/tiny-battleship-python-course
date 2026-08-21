@@ -12,8 +12,14 @@ from launcher.course import Course, Lesson
 from launcher.theme import DEFAULT_THEME_NAME, THEMES
 
 
-PROGRESS_VERSION = 3
+PROGRESS_VERSION = 4
 TEMPLATE_STATE_VERSION = 1
+LEGACY_TASK_MOVES = {
+    "coordinates": "lesson_01_coordinates_coordinates",
+    "deck_api": "lesson_01_coordinates_deck_api",
+    "exercise_02": "lesson_01_coordinates_exercise_01",
+    "star": "lesson_01_coordinates_star",
+}
 
 
 @dataclass
@@ -123,14 +129,42 @@ class StudentWorkspace:
     def load_progress(self) -> Progress:
         data = json.loads(self.progress_path.read_text(encoding="utf-8"))
         version = data.get("version")
-        if version not in {1, 2, PROGRESS_VERSION}:
+        if version not in {1, 2, 3, PROGRESS_VERSION}:
             raise ValueError("Unsupported progress version")
+        completed_tasks = {
+            LEGACY_TASK_MOVES.get(task_id, task_id)
+            for task_id in data.get("completed_tasks", [])
+        }
+        earned_stars = {
+            LEGACY_TASK_MOVES.get(task_id, task_id)
+            for task_id in data.get("earned_stars", [])
+        }
+        current_task = LEGACY_TASK_MOVES.get(
+            str(data.get("current_task")), data.get("current_task")
+        )
         valid_lessons = {lesson.id for lesson in self.course.lessons}
         current_lesson = data.get("current_lesson")
         if version == 1 or current_lesson not in valid_lessons:
             current_lesson = self.course.lessons[0].id
+        moved_lesson = next(
+            (
+                lesson
+                for lesson in self.course.lessons
+                if lesson.id == "lesson_01_coordinates"
+            ),
+            None,
+        )
+        if moved_lesson is not None:
+            if current_task in {task.id for task in moved_lesson.tasks}:
+                current_lesson = moved_lesson.id
+            elif (
+                version < PROGRESS_VERSION
+                and current_lesson != "lesson_01"
+                and not set(moved_lesson.completion_tasks) <= completed_tasks
+            ):
+                current_lesson = moved_lesson.id
+                current_task = moved_lesson.tasks[0].id
         lesson = self.course.lesson(str(current_lesson))
-        current_task = data.get("current_task")
         lesson_task_ids = {task.id for task in lesson.tasks}
         valid_ids = {
             task.id for course_lesson in self.course.lessons for task in course_lesson.tasks
@@ -140,8 +174,8 @@ class StudentWorkspace:
         return Progress(
             current_lesson=lesson.id,
             current_task=str(current_task),
-            completed_tasks=set(data.get("completed_tasks", [])) & valid_ids,
-            earned_stars=set(data.get("earned_stars", [])) & valid_ids,
+            completed_tasks=completed_tasks & valid_ids,
+            earned_stars=earned_stars & valid_ids,
             theme=(
                 str(data.get("theme"))
                 if data.get("theme") in THEMES

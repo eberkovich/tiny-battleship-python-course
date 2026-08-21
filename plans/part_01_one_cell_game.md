@@ -1,6 +1,6 @@
 # Part 1 Curriculum Plan: One-Cell Battleship
 
-Completed phase: Phase A — Lessons 2–7
+Completed phase: Phase A — implemented Lessons 1–8
 
 ## Outcome
 
@@ -17,7 +17,7 @@ child-facing content.
 
 ## Pacing contract
 
-The sequence below is a minimum of 18 short lessons, not a target to compress.
+The sequence below is a minimum of 19 short lessons, not a target to compress.
 Child testing may split a difficult lesson further. Do not merge lessons merely
 to preserve a smaller count.
 
@@ -32,16 +32,25 @@ not use a two-dimensional array or expose zero-based grid indexing.
 
 ### Phase A: «Собираем флот» — Python foundations and a fixed fleet
 
-#### 1. Helper commands and coordinates
+#### 1. Helper commands and boards
 
-- **Learn:** calls, arguments, parentheses, commas, comments, fixed API values,
-  and coordinates.
-- **Practice:** complete the existing Lesson 1 exercises.
+- **Learn:** calls, argument names and values, parentheses, commas, comments,
+  line-by-line execution, and the `show_board` command.
+- **Practice:** call a familiar command with different argument values and
+  distinguish active code from comments.
 - **Game milestone:** show both 10×10 boards.
+
+#### 2. Coordinates and the first ship
+
+- **Learn:** the board coordinate system and `draw_deck` with its ordered
+  arguments and fixed API values.
+- **Practice:** find cells, draw ships at stated addresses, and correct swapped
+  coordinates.
+- **Game milestone:** keep both boards visible and add the first ship.
 - **Optional challenge:** mirror three prepared ships across the board by
   reasoning about coordinate pairs.
 
-#### 2. Variables
+#### 3. Variables
 
 - **Learn:** `print(value)` and the launcher output card, then assignment,
   names, numbers, reuse of a value, and `show_ship_count`.
@@ -49,14 +58,14 @@ not use a two-dimensional array or expose zero-based grid indexing.
 - **Game milestone:** store one ship's coordinates in variables, draw it, and
   show counter `1`.
 
-#### 3. One cell address
+#### 4. One cell address
 
 - **Learn:** treat `(x, y)` as one meaningful value, then assign and unpack it.
 - **Practice:** create and unpack several unrelated addresses.
 - **Game milestone:** store ships as addresses and draw a second fixed ship.
   Do not introduce lists yet.
 
-#### 4. A list of addresses
+#### 5. A list of addresses
 
 - **Learn:** why programs group related values, a list literal, `len`, and
   zero-based element access by index.
@@ -65,14 +74,14 @@ not use a two-dimensional array or expose zero-based grid indexing.
 - **Game milestone:** store three fixed ship addresses, retrieve and draw them
   by index with repeated calls, and derive the counter with `len`.
 
-#### 5. Changing a list
+#### 6. Changing a list
 
 - **Learn:** an empty list and `append`.
 - **Practice:** add a familiar value and observe `len`, retrieve and draw a
   newly added address, then diagnose commands that build the wrong order.
 - **Game milestone:** build the fixed fleet step by step and add a fourth ship.
 
-#### 6. `for` loop
+#### 7. `for` loop
 
 - **Learn:** repetition, indentation, iteration, and address unpacking.
 - **Practice:** repeat one visible action, then iterate over a short address
@@ -82,7 +91,7 @@ not use a two-dimensional array or expose zero-based grid indexing.
 - **Optional challenge:** diagnose several interacting coordinate, board, and
   counter errors in a prepared fleet program.
 
-#### 7. Text and a button
+#### 8. Text and a button
 
 - **Learn:** string values and `show_message(message, label)`.
 - **Practice:** create and print a string, show a button, then diagnose swapped
@@ -94,21 +103,21 @@ not use a two-dimensional array or expose zero-based grid indexing.
 
 ### Phase B: «Расставляем корабли» — valid interactive fleet setup
 
-#### 8. A simple decision
+#### 9. A simple decision
 
 - **Learn:** comparisons, `True`/`False`, and `if`/`else`.
 - **Practice:** choose between two visible results using one comparison.
 - **Game milestone:** reject a candidate placed in the same cell as one
   existing ship.
 
-#### 9. Neighbouring cells
+#### 10. Neighbouring cells
 
 - **Learn:** subtraction, `abs`, `<=`, and boolean `and`.
 - **Practice:** check horizontal, vertical, and diagonal neighbours separately.
 - **Game milestone:** reject a candidate that touches one existing ship,
   including diagonally.
 
-#### 10. Placement function
+#### 11. Placement function
 
 - **Learn:** `def`, parameters, and `return`; reuse known `for` and `if`.
 - **Practice:** write small functions with one result before the fleet
@@ -116,21 +125,21 @@ not use a two-dimensional array or expose zero-based grid indexing.
 - **Game milestone:** implement `can_place_ship(x, y, ships)` and validate a
   candidate against the whole fleet.
 
-#### 11. Selecting a cell
+#### 12. Selecting a cell
 
 - **Learn:** returned values and `wait_for_cell(board)`; reuse address
   unpacking.
 - **Practice:** capture and display cells selected on each board.
 - **Game milestone:** let the player select and place one valid ship.
 
-#### 12. Complete player setup
+#### 13. Complete player setup
 
 - **Learn:** `while`, nested flow, and uppercase `FLEET_SIZE`; reuse `append`.
 - **Practice:** repeat a small action until a visible target is reached.
 - **Game milestone:** accept cells until 10 valid player ships exist, update
   the counter, and then start battle.
 
-#### 13. Enemy fleet
+#### 14. Enemy fleet
 
 - **Learn:** write an import, use `randint`, and introduce uppercase
   `BOARD_SIZE`.
@@ -140,22 +149,22 @@ not use a two-dimensional array or expose zero-based grid indexing.
 
 ### Phase C: «Ход игры» — shooting and the complete battle
 
-#### 14. One player shot
+#### 15. One player shot
 
-- **Learn:** membership with `in`, list `remove`, and `DECK_SUNK`; reuse
+- **Learn:** membership with `in`, list `remove`, `DECK_SUNK`, and
   `show_miss`.
 - **Practice:** find and remove familiar values from small lists.
 - **Game milestone:** resolve one selected enemy cell as a hit or miss and
   update its counter.
 
-#### 15. Shot history
+#### 16. Shot history
 
 - **Learn:** a history list, `append`, membership, and retry with known `while`.
 - **Practice:** detect repeated familiar values before repeated cell input.
 - **Game milestone:** let the player keep shooting until the enemy fleet is
   empty, rejecting repeated cells.
 
-#### 16. One random computer shot
+#### 17. One random computer shot
 
 - **Learn:** reuse randomness, membership, and removal for the other board.
 - **Practice:** resolve one prepared random cell as a hit or miss.
@@ -163,7 +172,7 @@ not use a two-dimensional array or expose zero-based grid indexing.
   random cell, resolve the shot, and update the player board and counter. This
   first version does not yet filter repeated or useless cells.
 
-#### 17. A careful computer shot
+#### 18. A careful computer shot
 
 - **Learn:** use `not`, a shot-history list, a sunk-ship list, and a small
   validation function; reuse the known no-touch neighbour calculation.
@@ -180,7 +189,7 @@ not use a two-dimensional array or expose zero-based grid indexing.
   4. «Функция может сначала отклонить повторный выстрел, затем клетку рядом с
      потопленным кораблём, а во всех остальных случаях разрешить выстрел.»
 
-#### 18. Complete battle
+#### 19. Complete battle
 
 - **Learn:** combine both turns with `while`, `and`, `>`, and the final `==`
   result.
@@ -194,8 +203,9 @@ shape and authoring checks in `context/lesson_content.md`.
 
 ## Required Part 1 UI API
 
-Lesson 1 keeps its original taught surface. `show_ship_count` is introduced in
-Lesson 2 and `show_message` in Lesson 7; both are implemented in Phase A.
+Lesson 1 introduces only `show_board`. Lesson 2 introduces `draw_deck`, Lesson
+3 introduces `show_ship_count`, Lesson 8 introduces `show_message`, and Lesson
+15 introduces `show_miss`. The first four are implemented in Phase A.
 Add `DECK_SUNK` and `wait_for_cell` only when their later introduction lessons
 are implemented:
 
@@ -239,20 +249,20 @@ target program:
   alternating turns, and win/loss.
 
 Preliminary exercises additionally use the teaching-only `print` function,
-introduced in Lesson 2 together with the launcher output card. It is tracked
+introduced in Lesson 3 together with the launcher output card. It is tracked
 even though it does not remain in the final reference game.
 
 ## Verification checkpoints
 
 Use three checkpoints rather than treating every lesson as a full release:
 
-1. **Phase A, Lessons 2–7:** run all new reference cases, affected Lesson 1
+1. **Phase A, implemented Lessons 1–8:** run all new reference cases, affected Lesson 1
    regressions, the full suite, and one dark/light inspection of each new
    launcher or game capability.
-2. **Phase B, Lessons 8–13:** additionally run deterministic player-placement
+2. **Phase B, Lessons 9–14:** additionally run deterministic player-placement
    scenarios covering acceptance and rejection, then all earlier regressions
    and the full suite.
-3. **Phase C, Lessons 14–18:** run complete victory and defeat scenarios,
+3. **Phase C, Lessons 15–19:** run complete victory and defeat scenarios,
    repeated- and invalid-shot cases, every lesson reference, the full suite,
    and final dark/light visual inspection.
 
@@ -266,7 +276,8 @@ semantically.
 
 Phase A was completed on 2026-08-19 without activating Phase B.
 
-- Lessons 2–7 introduce `print`, variables, cell addresses, lists and indexed
+- Lesson 2 introduces coordinates and `draw_deck`, then adds the first ship to
+  the cumulative game. Lessons 3–8 introduce `print`, variables, cell addresses, lists and indexed
   element access, `append`, `for`, strings, `show_ship_count`, and
   `show_message` in prerequisite order. Every coding task has a passing
   reference through its own lesson checker.
@@ -274,15 +285,15 @@ Phase A was completed on 2026-08-19 without activating Phase B.
   fixed non-touching one-cell ships, then waits at **«Начать бой»**.
 - Real and fake `show_message` implementations have matching signatures;
   the real prompt returns on a click and the fake backend records a semantic
-  event. Check and visual-play subprocesses pass for the Lesson 7 project.
-- The course home shows the complete 18-lesson roadmap while exposing only the
-  seven implemented lessons. Lesson 2 console flow, Lesson 6 project, Lesson 7
+  event. Check and visual-play subprocesses pass for the Lesson 8 project.
+- The course home shows the complete 19-lesson roadmap while exposing all eight
+  implemented lessons. Lesson 3 console flow, Lesson 7 project, Lesson 8
   summary, and game button prompt were inspected. Shared layouts and assets
   remain readable in both dark and light launcher themes.
-- Lessons 2–7 each contain three required exercises that rise from a small
+- Lessons 2–8 each contain at least three required exercises that rise from a small
   example through completion or debugging to the cumulative game milestone.
 - Shell checks, compilation, Lesson 1 regressions, all Phase A references, and
-  the complete suite pass: `141 passed`.
+  the complete suite pass: `165 passed`.
 
 Before changing this plan, rerun the reference solution and repeat this audit.
 Any new child-visible syntax, standard-library operation, API call, or game rule

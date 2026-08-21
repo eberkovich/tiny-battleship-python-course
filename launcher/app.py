@@ -163,6 +163,8 @@ class LauncherApp:
         self.clock = pygame.time.Clock()
         self.controller = controller
         self.scroll = 0
+        self.sidebar_scroll = 0
+        self.sidebar_focus_key: tuple[str, str, int] | None = None
         self.buttons: list[Button] = []
         self.task_rects: list[tuple[pygame.Rect, str]] = []
         self.task_status_rects: dict[str, pygame.Rect] = {}
@@ -248,7 +250,15 @@ class LauncherApp:
                     and self.api_dialog is None
                     and not self.command_reference_open
                 ):
-                    self.scroll = max(0, self.scroll - event.y * 32)
+                    if (
+                        self.controller.view != "home"
+                        and pygame.mouse.get_pos()[0] < SIDEBAR_WIDTH
+                    ):
+                        self.sidebar_scroll = max(
+                            0, self.sidebar_scroll - event.y * 32
+                        )
+                    else:
+                        self.scroll = max(0, self.scroll - event.y * 32)
             self.controller.poll()
             self.render()
             if autoclose_ms and (time.monotonic() - started) * 1000 >= autoclose_ms:
@@ -747,7 +757,7 @@ class LauncherApp:
         toggle = (
             "Скрыть полный план"
             if self.home_plan_expanded
-            else "Показать все 18 уроков"
+            else f"Показать все {self.controller.total_lesson_count} уроков"
         )
         self._add_button(
             toggle,
@@ -994,7 +1004,35 @@ class LauncherApp:
                 (20, 149 + index * 20),
             )
 
-        y = 195
+        task_area = pygame.Rect(
+            0,
+            195,
+            SIDEBAR_WIDTH,
+            self.screen.get_height() - 195,
+        )
+        task_step = SIDEBAR_TASK_HEIGHT + SIDEBAR_TASK_GAP
+        task_count = len(self.controller.lesson.tasks)
+        content_height = max(0, task_count * task_step - SIDEBAR_TASK_GAP)
+        max_scroll = max(0, content_height - task_area.height)
+        focus_key = (
+            self.controller.lesson.id,
+            self.controller.current_task.id,
+            self.screen.get_height(),
+        )
+        if focus_key != self.sidebar_focus_key:
+            active_index = self.controller.current_index
+            active_top = active_index * task_step
+            active_bottom = active_top + SIDEBAR_TASK_HEIGHT
+            if active_top < self.sidebar_scroll:
+                self.sidebar_scroll = active_top
+            elif active_bottom > self.sidebar_scroll + task_area.height:
+                self.sidebar_scroll = active_bottom - task_area.height
+            self.sidebar_focus_key = focus_key
+        self.sidebar_scroll = min(max_scroll, max(0, self.sidebar_scroll))
+
+        previous_clip = self.screen.get_clip()
+        self.screen.set_clip(task_area)
+        y = task_area.y - self.sidebar_scroll
         for task in self.controller.lesson.tasks:
             rect = pygame.Rect(14, y, SIDEBAR_WIDTH - 28, SIDEBAR_TASK_HEIGHT)
             unlocked = self.controller.task_unlocked(task)
@@ -1031,13 +1069,41 @@ class LauncherApp:
                     ),
                     (rect.x + 52, title_y + index * 18),
                 )
-            if unlocked:
-                self.task_rects.append((rect, task.id))
+            visible_rect = rect.clip(task_area)
+            if unlocked and visible_rect.width and visible_rect.height:
+                self.task_rects.append((visible_rect, task.id))
             else:
                 self._draw_lock(
                     (rect.right - 22, rect.centery), self.theme.muted
                 )
             y += SIDEBAR_TASK_HEIGHT + SIDEBAR_TASK_GAP
+        self.screen.set_clip(previous_clip)
+        if max_scroll:
+            track = pygame.Rect(
+                SIDEBAR_WIDTH - 7,
+                task_area.y + 4,
+                3,
+                task_area.height - 8,
+            )
+            pygame.draw.rect(
+                self.screen,
+                self.theme.progress_idle,
+                track,
+                border_radius=2,
+            )
+            thumb_height = max(
+                28,
+                round(track.height * task_area.height / content_height),
+            )
+            thumb_y = track.y + round(
+                (track.height - thumb_height) * self.sidebar_scroll / max_scroll
+            )
+            pygame.draw.rect(
+                self.screen,
+                self.theme.accent,
+                (track.x, thumb_y, track.width, thumb_height),
+                border_radius=2,
+            )
 
     def _render_lesson_content(self) -> None:
         left = SIDEBAR_WIDTH + 34

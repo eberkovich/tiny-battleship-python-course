@@ -156,7 +156,7 @@ when the cumulative program is large enough to justify the recovery workflow.
 The launcher has two navigation levels:
 
 - **Course home** — the final game goal, current progress, the three course
-  stages, an expandable roadmap of all 18 Part 1 lessons, and
+  stages, an expandable roadmap of all 19 Part 1 lessons, and
   **«Начать первый урок»** or **«Продолжить урок N»**. This introduction is not
   Lesson 0.
 - **Lesson screen** — **«Все уроки»**, the lesson title and steps, required-task
@@ -172,13 +172,13 @@ promise is: **«Ты сам напишешь игру: расставишь фл
 
 Use **«Этап»**, never **«Глава»**, for the three child-facing roadmap groups:
 
-1. **«Собираем флот»** — Lessons 1–7;
-2. **«Расставляем корабли»** — Lessons 8–13;
-3. **«Ход игры»** — Lessons 14–18.
+1. **«Собираем флот»** — Lessons 1–8;
+2. **«Расставляем корабли»** — Lessons 9–14;
+3. **«Ход игры»** — Lessons 15–19.
 
 The compact roadmap view shows the current stage, current lesson number,
-completed lessons out of 18, and one stage card for each group. The complete
-18-lesson list is initially hidden under **«Показать все 18 уроков»** and may be
+completed lessons out of 19, and one stage card for each group. The complete
+19-lesson list is initially hidden under **«Показать все 19 уроков»** and may be
 expanded without changing persisted progress. Implemented lessons follow the
 normal access rules. Planned but not yet implemented lessons remain visible as
 future work and are never selectable. In debug mode, all implemented lessons
@@ -186,14 +186,14 @@ and steps are unlocked; debug mode does not turn roadmap-only entries into
 executable lessons. To avoid implying a progress restriction, debug mode marks
 roadmap-only stages and lessons as **«В ПЛАНЕ»** instead of showing lock icons.
 
-Opening **«Показать все 18 уроков»** automatically scrolls down until the full
+Opening **«Показать все 19 уроков»** automatically scrolls down until the full
 lesson plan is visible while leaving the toggle accessible. Pressing
 **«Скрыть полный план»** collapses the plan and returns the course home to its
 top position.
 
 #### Lesson access and progression
 
-The lesson header shows its position as **«Урок N из 18 · Этап K»**. On
+The lesson header shows its position as **«Урок N из 19 · Этап K»**. On
 **«Итоги урока»**, show only the next lesson's number and title when a next
 lesson exists; do not repeat its outcome as a second sentence. Derive the
 total, numbering, stage membership, titles, and next-lesson preview from
@@ -246,6 +246,10 @@ home and lesson content within stable outer margins. Lesson cards, notes, and
 program output stay aligned and grow together. Calculate modal overlays from
 the live window size. Resizing changes layout only; it must not change course
 state or require separate theme logic.
+
+When a lesson has more steps than fit in the sidebar, scroll the step list
+independently from the lesson text and automatically keep the selected step in
+view. Sidebar scrolling must not move the lesson content or fixed controls.
 
 ### Lesson presentation
 
@@ -481,7 +485,7 @@ project dependency, dependency version, or supported Python version changes.
 #### Metadata, roadmap, and IDs
 
 For V1, one `CURRICULUM.yaml` is sufficient. It defines the child-facing
-18-lesson roadmap and its three stages, plus the implemented lesson order and
+19-lesson roadmap and its three stages, plus the implemented lesson order and
 each lesson's compact pedagogical contract: the new concept, motivating
 problem, game milestone, prerequisites, required behavior, paths, and star
 challenge. Roadmap entries may describe future lessons without making them
@@ -496,6 +500,11 @@ task ID with its lesson ID, for example `lesson_02_project` or
 `lesson_02_exercise_01`. Keep Lesson 1's existing unprefixed IDs unchanged so
 existing student progress remains valid. IDs are internal and are never shown
 to the child.
+
+Lesson IDs are also stable internal identifiers, not displayed ordinals. The
+launcher derives **«Урок N»** from roadmap position. A lesson inserted into an
+existing roadmap therefore receives a new unique ID without renaming later
+lessons or invalidating their saved progress.
 
 #### Optional hints
 

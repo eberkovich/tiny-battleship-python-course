@@ -14,6 +14,7 @@ course:
       summary: "Поля, адреса клеток и готовый флот из 10 кораблей."
       lessons:
         - {id: lesson_01, title: "Знакомство с игровым полем", outcome: "Показать поле игрока и поле противника."}
+        - {id: lesson_01_coordinates, title: "Координаты и корабль", outcome: "Нарисовать первый корабль в заданной клетке."}
         - {id: lesson_02, title: "Переменные и счётчик кораблей", outcome: "Нарисовать первый корабль и показать счётчик со значением 1."}
         - {id: lesson_03, title: "Адрес клетки", outcome: "Хранить и рисовать два корабля по адресам."}
         - {id: lesson_04, title: "Список кораблей", outcome: "Хранить три корабля в списке и считать их с len."}
@@ -47,7 +48,7 @@ api_reference:
     details:
       - "board — PLAYER для твоего поля или ENEMY для поля противника."
   draw_deck:
-    introduced_in: coordinates
+    introduced_in: lesson_01_coordinates_deck_api
     signature: "draw_deck(board, x, y, state)"
     summary: "Рисует одну палубу корабля в выбранной клетке."
     details:
@@ -56,7 +57,7 @@ api_reference:
       - "y — номер строки от 1 до 10."
       - "state — состояние палубы; сейчас доступно DECK_IDLE."
   show_miss:
-    introduced_in: coordinates
+    introduced_in: lesson_14_first_shot
     signature: "show_miss(board, x, y)"
     summary: "Показывает промах в выбранной клетке."
     details:
@@ -79,73 +80,117 @@ api_reference:
       - "label — текст на кнопке."
 lessons:
   - id: lesson_01
-    concept: "Вызовы функций, аргументы, порядок строк, комментарии и координаты"
-    motivating_problem: "Как командами показать поле и указать точную клетку?"
+    concept: "Вызов функции, аргумент, порядок строк и комментарий"
+    motivating_problem: "Как вызвать команду и показать оба игровых поля?"
     milestone: "Показать поле игрока и поле противника"
     prerequisites: []
     content: lessons/lesson_01/lesson.md
     completion_tasks:
+      - exercise_comments
       - exercise_01
-      - exercise_02
-      - exercise_03
+      - exercise_enemy
       - project
     tasks:
       - id: intro
         kind: article
         title: "Первое знакомство"
         section: intro
+      - id: support
+        kind: article
+        title: "Вспомогательные команды"
+        section: support
       - id: api
         kind: article
         title: "Как устроена команда"
         section: api
+      - id: execution
+        kind: article
+        title: "Строка за строкой"
+        section: execution
       - id: comments
         kind: article
-        title: "Как Python читает код"
+        title: "Комментарии в коде"
         section: comments
+      - id: exercise_comments
+        kind: exercise
+        title: "Верни команду в работу"
+        section: exercise_comments
+        student_file: exercises/lesson_01/exercise_comments.py
+        template: lessons/lesson_01/exercises/exercise_comments.py
       - id: exercise_01
         kind: exercise
         title: "Покажи своё поле"
         section: exercise_01
         student_file: exercises/lesson_01/exercise_01.py
         template: lessons/lesson_01/exercises/exercise_01.py
-      - id: coordinates
-        kind: article
-        title: "Координаты клетки"
-        section: coordinates
-      - id: exercise_02
+      - id: exercise_enemy
         kind: exercise
-        title: "Нарисуй однопалубный корабль"
-        section: exercise_02
-        student_file: exercises/lesson_01/exercise_02.py
-        template: lessons/lesson_01/exercises/exercise_02.py
-      - id: exercise_03
-        kind: exercise
-        title: "Покажи промах"
-        section: exercise_03
-        student_file: exercises/lesson_01/exercise_03.py
-        template: lessons/lesson_01/exercises/exercise_03.py
+        title: "Покажи поле противника"
+        section: exercise_enemy
+        student_file: exercises/lesson_01/exercise_enemy.py
+        template: lessons/lesson_01/exercises/exercise_enemy.py
       - id: project
         kind: project
         title: "Пишем игру"
         section: project
         student_file: battleship.py
         template: templates/battleship.py
-      - id: star
-        kind: star
-        title: "Задача со звёздочкой"
-        section: star
-        student_file: exercises/lesson_01/star.py
-        template: lessons/lesson_01/exercises/star.py
       - id: recap
         kind: summary
         title: "Итоги урока"
         section: recap
 
+  - id: lesson_01_coordinates
+    concept: "Координаты задают точный адрес клетки"
+    motivating_problem: "Как указать программе клетку для корабля?"
+    milestone: "Нарисовать первый корабль в клетке (2, 2)"
+    prerequisites: [lesson_01]
+    content: lessons/lesson_01_coordinates/lesson.md
+    completion_tasks:
+      - lesson_01_coordinates_exercise_01
+      - lesson_01_coordinates_exercise_02
+      - lesson_01_coordinates_exercise_03
+      - lesson_01_coordinates_project
+    tasks:
+      - {id: lesson_01_coordinates_coordinates, kind: article, title: "Координаты клетки", section: coordinates}
+      - {id: lesson_01_coordinates_deck_api, kind: article, title: "Рисуем корабль в клетке", section: deck_api}
+      - id: lesson_01_coordinates_exercise_01
+        kind: exercise
+        title: "Нарисуй корабль"
+        section: exercise_01
+        student_file: exercises/lesson_01_coordinates/exercise_01.py
+        template: lessons/lesson_01_coordinates/exercises/exercise_01.py
+      - id: lesson_01_coordinates_exercise_02
+        kind: exercise
+        title: "Исправь адрес"
+        section: exercise_02
+        student_file: exercises/lesson_01_coordinates/exercise_02.py
+        template: lessons/lesson_01_coordinates/exercises/exercise_02.py
+      - id: lesson_01_coordinates_exercise_03
+        kind: exercise
+        title: "Два корабля в строке"
+        section: exercise_03
+        student_file: exercises/lesson_01_coordinates/exercise_03.py
+        template: lessons/lesson_01_coordinates/exercises/exercise_03.py
+      - id: lesson_01_coordinates_project
+        kind: project
+        title: "Пишем игру"
+        section: project
+        student_file: battleship.py
+        template: templates/battleship.py
+      - id: lesson_01_coordinates_star
+        kind: star
+        title: "Задача со звёздочкой"
+        section: star
+        student_file: exercises/lesson_01_coordinates/star.py
+        template: lessons/lesson_01_coordinates/exercises/star.py
+      - {id: lesson_01_coordinates_recap, kind: summary, title: "Итоги урока", section: recap}
+
   - id: lesson_02
     concept: "Переменные сохраняют значения под понятными именами"
     motivating_problem: "Как запомнить число и использовать его несколько раз?"
     milestone: "Нарисовать первый корабль и показать счётчик со значением 1"
-    prerequisites: [lesson_01]
+    prerequisites: [lesson_01_coordinates]
     content: lessons/lesson_02/lesson.md
     completion_tasks:
       - lesson_02_exercise_01
@@ -236,6 +281,7 @@ lessons:
     content: lessons/lesson_04/lesson.md
     completion_tasks:
       - lesson_04_exercise_01
+      - lesson_04_exercise_length
       - lesson_04_exercise_02
       - lesson_04_exercise_03
       - lesson_04_project
@@ -247,6 +293,14 @@ lessons:
         section: exercise_01
         student_file: exercises/lesson_04/exercise_01.py
         template: lessons/lesson_04/exercises/exercise_01.py
+        run_mode: console
+      - {id: lesson_04_length, kind: article, title: "Сколько значений в списке", section: length}
+      - id: lesson_04_exercise_length
+        kind: exercise
+        title: "Посчитай значения"
+        section: exercise_length
+        student_file: exercises/lesson_04/exercise_length.py
+        template: lessons/lesson_04/exercises/exercise_length.py
         run_mode: console
       - {id: lesson_04_access, kind: article, title: "Как взять значение", section: access}
       - id: lesson_04_exercise_02
@@ -277,11 +331,20 @@ lessons:
     prerequisites: [lesson_04]
     content: lessons/lesson_05/lesson.md
     completion_tasks:
+      - lesson_05_exercise_empty
       - lesson_05_exercise_01
       - lesson_05_exercise_02
       - lesson_05_exercise_03
       - lesson_05_project
     tasks:
+      - {id: lesson_05_empty, kind: article, title: "Начинаем с пустого списка", section: empty}
+      - id: lesson_05_exercise_empty
+        kind: exercise
+        title: "Создай пустой список"
+        section: exercise_empty
+        student_file: exercises/lesson_05/exercise_empty.py
+        template: lessons/lesson_05/exercises/exercise_empty.py
+        run_mode: console
       - {id: lesson_05_append, kind: article, title: "Добавляем в список", section: append}
       - id: lesson_05_exercise_01
         kind: exercise
@@ -331,6 +394,7 @@ lessons:
         student_file: exercises/lesson_06/exercise_01.py
         template: lessons/lesson_06/exercises/exercise_01.py
         run_mode: console
+      - {id: lesson_06_indentation, kind: article, title: "Какие команды повторяет цикл", section: indentation}
       - id: lesson_06_exercise_03
         kind: exercise
         title: "Исправь отступ"

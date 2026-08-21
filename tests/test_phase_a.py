@@ -13,7 +13,7 @@ from runner.process import run_check
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 COURSE = load_course()
-PHASE_A_LESSONS = COURSE.lessons[1:7]
+PHASE_A_LESSONS = COURSE.lessons[1:]
 REFERENCE_CASES = [
     (
         lesson.id,
@@ -41,7 +41,8 @@ def test_phase_a_reference_programs_pass(
 
 def test_phase_a_curriculum_sections_and_task_contracts_are_complete() -> None:
     assert [lesson.id for lesson in PHASE_A_LESSONS] == [
-        f"lesson_{number:02d}" for number in range(2, 8)
+        "lesson_01_coordinates",
+        *[f"lesson_{number:02d}" for number in range(2, 8)],
     ]
     for lesson in PHASE_A_LESSONS:
         sections = load_sections(lesson.content)
@@ -53,10 +54,98 @@ def test_phase_a_curriculum_sections_and_task_contracts_are_complete() -> None:
             if task.kind == "exercise" and task.id in lesson.completion_tasks
         ]
         content = lesson.content.read_text(encoding="utf-8")
-        assert len(required_exercises) == 3
+        assert 3 <= len(required_exercises) <= 4
         assert content.count("> [!NOTE]") == len(coding)
         assert set(lesson.completion_tasks) <= {task.id for task in coding}
         assert lesson.tasks[-1].kind == "summary"
+
+
+@pytest.mark.parametrize(
+    "lesson_id,focused_sequence",
+    [
+        (
+            "lesson_01",
+            (
+                "comments",
+                "exercise_comments",
+                "exercise_01",
+            ),
+        ),
+        (
+            "lesson_01_coordinates",
+            (
+                "lesson_01_coordinates_coordinates",
+                "lesson_01_coordinates_deck_api",
+                "lesson_01_coordinates_exercise_01",
+            ),
+        ),
+        (
+            "lesson_02",
+            (
+                "lesson_02_output",
+                "lesson_02_exercise_01",
+                "lesson_02_variables",
+                "lesson_02_exercise_02",
+            ),
+        ),
+        (
+            "lesson_03",
+            (
+                "lesson_03_address",
+                "lesson_03_exercise_01",
+                "lesson_03_unpacking",
+                "lesson_03_exercise_02",
+            ),
+        ),
+        (
+            "lesson_04",
+            (
+                "lesson_04_lists",
+                "lesson_04_exercise_01",
+                "lesson_04_length",
+                "lesson_04_exercise_length",
+                "lesson_04_access",
+                "lesson_04_exercise_02",
+            ),
+        ),
+        (
+            "lesson_05",
+            (
+                "lesson_05_empty",
+                "lesson_05_exercise_empty",
+                "lesson_05_append",
+                "lesson_05_exercise_01",
+            ),
+        ),
+        (
+            "lesson_06",
+            (
+                "lesson_06_loop",
+                "lesson_06_exercise_01",
+                "lesson_06_indentation",
+                "lesson_06_exercise_03",
+                "lesson_06_addresses",
+                "lesson_06_exercise_02",
+            ),
+        ),
+        (
+            "lesson_07",
+            (
+                "lesson_07_strings",
+                "lesson_07_exercise_01",
+                "lesson_07_button_api",
+                "lesson_07_exercise_02",
+            ),
+        ),
+    ],
+)
+def test_new_concepts_receive_focused_practice_before_the_next_one(
+    lesson_id: str, focused_sequence: tuple[str, ...]
+) -> None:
+    task_ids = [task.id for task in COURSE.lesson(lesson_id).tasks]
+    positions = [task_ids.index(task_id) for task_id in focused_sequence]
+
+    assert positions == sorted(positions)
 
 
 def test_every_lesson_example_is_an_explicit_single_callout() -> None:
@@ -174,7 +263,7 @@ def test_debugging_exercise_starters_do_not_already_pass(
 @pytest.mark.parametrize(
     "lesson_id,task_id",
     [
-        ("lesson_01", "star"),
+        ("lesson_01_coordinates", "lesson_01_coordinates_star"),
         ("lesson_06", "lesson_06_star"),
         ("lesson_07", "lesson_07_star"),
     ],
@@ -195,6 +284,12 @@ def test_public_api_introductions_exist_before_later_references() -> None:
     ]
     task_order = [task.id for _, task in ordered_tasks]
     for api_name, reference in COURSE.api_references.items():
+        if reference.introduced_in not in task_order:
+            assert not any(
+                api_name in load_sections(lesson.content)[task.section]
+                for lesson, task in ordered_tasks
+            )
+            continue
         introduction = task_order.index(reference.introduced_in)
         introduction_lesson, introduction_task = COURSE.task(
             reference.introduced_in
@@ -206,6 +301,29 @@ def test_public_api_introductions_exist_before_later_references() -> None:
             assert api_name not in load_sections(lesson.content)[task.section]
             if task.template is not None:
                 assert api_name not in task.template.read_text(encoding="utf-8")
+
+
+def test_each_introduced_api_advances_the_same_lessons_project() -> None:
+    task_ids = {
+        task.id for lesson in COURSE.lessons for task in lesson.tasks
+    }
+    for api_name, reference in COURSE.api_references.items():
+        if reference.introduced_in not in task_ids:
+            continue
+        lesson, _ = COURSE.task(reference.introduced_in)
+        project = next(task for task in lesson.tasks if task.kind == "project")
+        sections = load_sections(lesson.content)
+        assert api_name in sections[project.section], (
+            f"{api_name} is introduced in {lesson.id} but is not used in its project"
+        )
+
+
+def test_summaries_separate_practice_from_the_cumulative_game() -> None:
+    for lesson in COURSE.lessons:
+        summary = next(task for task in lesson.tasks if task.kind == "summary")
+        content = load_sections(lesson.content)[summary.section].lower()
+        assert "в упражнениях" in content, lesson.id
+        assert "в твоей игре" in content, lesson.id
 
 
 def test_workspace_adds_phase_a_exercises_without_overwriting_project(
