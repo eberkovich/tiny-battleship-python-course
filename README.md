@@ -1,15 +1,15 @@
-# Tiny Battleship Python Course
+# Battleship: Python for Kids
 
-The current local macOS course contains Lessons 1–8 in Russian. A child starts
-from a course home that shows the complete 19-lesson Part 1 roadmap, practises
-each Python concept in short exercises, and gradually grows a cumulative
-`battleship.py` into a fixed fleet of 10 one-cell ships with a battle-start
-button. Roadmap-only future lessons are visible but cannot be opened yet.
+An interactive tutorial where children learn Python by
+building their own Battleship game. The launcher provides the graphics and
+short exercises; the child writes the game logic in `battleship.py`.
+
+About one third of the planned lessons is implemented so far.
 
 ## Current platform and language support
 
 At this time, the course has been tested only on macOS. The launcher and lesson
-content are currently available only in Russian.
+content currently support one language.
 
 ## Install and run
 
