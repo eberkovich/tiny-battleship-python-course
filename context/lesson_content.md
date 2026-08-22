@@ -152,6 +152,10 @@ an explanation with a bare definition or rule.
 
 ## Lesson page presentation
 
+The architecture and authoring documents are maintained in English. Russian
+is reserved for child-facing lesson text and exact UI or code literals that
+the documentation must preserve.
+
 - Show each step's icon and title in the sidebar and repeat the same icon and
   title as the page heading. Do not add type captions such as **«Материал»**,
   **«Упражнение»**, or **«Со звёздочкой»**.

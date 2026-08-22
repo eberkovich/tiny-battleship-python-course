@@ -912,7 +912,11 @@ class LauncherApp:
     def _render_full_roadmap(self, top: int) -> int:
         course = self.controller.course
         offset_top = top
-        height = 342
+        row_height = 36
+        first_row_offset = 94
+        bottom_padding = 14
+        lesson_count = max((len(stage.lessons) for stage in course.roadmap), default=0)
+        height = first_row_offset + lesson_count * row_height + bottom_padding
         panel_width = self.screen.get_width() - HOME_SIDE_MARGIN * 2
         panel = pygame.Rect(
             HOME_SIDE_MARGIN,
@@ -975,7 +979,7 @@ class LauncherApp:
                     self._draw_lock((row.right - 17, row.centery), self.theme.muted)
                 if unlocked:
                     self.lesson_rects.append((row, planned.id))
-                y += 36
+                y += row_height
         return panel.bottom
 
     def _render_sidebar(self) -> None:

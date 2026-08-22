@@ -24,6 +24,10 @@ repository, not the detailed product design:
   course rationale and lesson metadata; they must conform to both context
   documents.
 
+Architecture and lesson-authoring documents are written in English. Keep
+Russian only when an exact child-facing label, lesson phrase, or code literal
+must be recorded as an implementation requirement.
+
 ### Change control and plans
 
 Read the relevant documents before architectural, curriculum, or implementation

@@ -191,6 +191,10 @@ lesson plan is visible while leaving the toggle accessible. Pressing
 **«Скрыть полный план»** collapses the plan and returns the course home to its
 top position.
 
+Every lesson in the expanded lesson list must be drawn inside the single
+lessons card. The card height must be derived from the longest stage column;
+no lesson row may overflow below, outside, or behind the card.
+
 #### Lesson access and progression
 
 The lesson header shows its position as **«Урок N из 19 · Этап K»**. On
