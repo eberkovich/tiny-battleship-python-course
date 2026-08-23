@@ -312,6 +312,14 @@ may rely on the already introduced visible output.
   include completing a line, changing a value and observing the result,
   correcting a deliberate mistake, combining two familiar operations, and
   producing a visible game result.
+- An isolated exercise may rehearse one component needed by the project task,
+  but must not ask for substantially the same program, combination of actions,
+  or visible result. Review the child-owned new lines in both tasks; ignore
+  imports, prefilled code, and game state already completed in earlier lessons.
+  A different number of calls, values, coordinates, or surrounding setup is
+  not a meaningful difference by itself. Give the exercise a narrower,
+  diagnostic, or abstract goal, and reserve a distinct composition or durable
+  integration into the cumulative game for **«Пишем игру»**.
 - Give consecutive exercises different thinking jobs whenever the concept
   allows it: construct, predict or select, diagnose, combine, and apply. Do not
   repeat the same operation with only another value type or another set of

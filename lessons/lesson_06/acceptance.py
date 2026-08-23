@@ -1,8 +1,6 @@
 from lessons.phase_a_checks import (
     ENEMY,
-    PLAYER,
     cell,
-    expect_decks,
     expect_output,
     expect_project_fleet,
     failed,
@@ -23,8 +21,7 @@ def check(task_id: str, snapshot: dict[str, object], output: str):
     if task_id == "lesson_06_exercise_03":
         return expect_output(output, "1\n3\n5")
     if task_id == "lesson_06_exercise_02":
-        failure = expect_decks(snapshot, PLAYER, ((2, 4), (5, 4), (8, 4)))
-        return failure or passed("Верно! Цикл нарисовал три корабля.")
+        return expect_output(output, "2\n4\n5\n4\n8\n4")
     if task_id == "lesson_06_project":
         return expect_project_fleet(snapshot, FLEET, 10)
     if task_id == "lesson_06_star":

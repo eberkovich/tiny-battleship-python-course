@@ -1,10 +1,7 @@
 from lessons.phase_a_checks import (
-    PLAYER,
-    expect_decks,
     expect_output,
     expect_project_fleet,
     failed,
-    passed,
 )
 
 
@@ -14,8 +11,7 @@ def check(task_id: str, snapshot: dict[str, object], output: str):
     if task_id == "lesson_05_exercise_01":
         return expect_output(output, "[2, 5]\n2")
     if task_id == "lesson_05_exercise_02":
-        failure = expect_decks(snapshot, PLAYER, ((7, 4),))
-        return failure or passed("Верно! Добавленный корабль появился на поле.")
+        return expect_output(output, "7\n4")
     if task_id == "lesson_05_exercise_03":
         return expect_output(output, "[(1, 1), (4, 1), (7, 1)]")
     if task_id == "lesson_05_project":

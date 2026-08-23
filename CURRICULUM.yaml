@@ -168,7 +168,7 @@ lessons:
         template: lessons/lesson_01_coordinates/exercises/exercise_02.py
       - id: lesson_01_coordinates_exercise_03
         kind: exercise
-        title: "Два корабля в строке"
+        title: "Исправь строй"
         section: exercise_03
         student_file: exercises/lesson_01_coordinates/exercise_03.py
         template: lessons/lesson_01_coordinates/exercises/exercise_03.py
@@ -312,10 +312,11 @@ lessons:
         run_mode: console
       - id: lesson_04_exercise_03
         kind: exercise
-        title: "Найди последний корабль"
+        title: "Найди последний адрес"
         section: exercise_03
         student_file: exercises/lesson_04/exercise_03.py
         template: lessons/lesson_04/exercises/exercise_03.py
+        run_mode: console
       - id: lesson_04_project
         kind: project
         title: "Пишем игру"
@@ -355,10 +356,11 @@ lessons:
         run_mode: console
       - id: lesson_05_exercise_02
         kind: exercise
-        title: "Добавь и покажи корабль"
+        title: "Проверь добавленный адрес"
         section: exercise_02
         student_file: exercises/lesson_05/exercise_02.py
         template: lessons/lesson_05/exercises/exercise_02.py
+        run_mode: console
       - id: lesson_05_exercise_03
         kind: exercise
         title: "Расставь по порядку"
@@ -405,10 +407,11 @@ lessons:
       - {id: lesson_06_addresses, kind: article, title: "Цикл по адресам", section: addresses}
       - id: lesson_06_exercise_02
         kind: exercise
-        title: "Нарисуй корабли циклом"
+        title: "Проверь адреса циклом"
         section: exercise_02
         student_file: exercises/lesson_06/exercise_02.py
         template: lessons/lesson_06/exercises/exercise_02.py
+        run_mode: console
       - id: lesson_06_project
         kind: project
         title: "Пишем игру"
