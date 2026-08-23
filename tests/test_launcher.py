@@ -106,6 +106,28 @@ def test_markdown_example_keeps_its_explanation_code_and_result_together() -> No
     ]
 
 
+def test_markdown_example_does_not_render_empty_code_rows() -> None:
+    blocks = _markdown_blocks(
+        "> [!EXAMPLE]\n"
+        "> **Пример:** цикл повторяет команду.\n"
+        ">\n"
+        "> ```python\n"
+        "> values = [1, 2]\n"
+        ">\n"
+        "> for value in values:\n"
+        ">     print(value)\n"
+        "> ```"
+    )
+
+    assert _markdown_blocks(blocks[0][1]) == [
+        ("text", "**Пример:** цикл повторяет команду."),
+        ("space", ""),
+        ("code", "values = [1, 2]"),
+        ("code", "for value in values:"),
+        ("code", "    print(value)"),
+    ]
+
+
 def test_editor_command_passes_exact_cyrillic_path_without_shell(tmp_path: Path) -> None:
     source = tmp_path / "Ученик 1" / "мой код.py"
     command = editor_command(source)

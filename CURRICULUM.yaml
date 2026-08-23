@@ -19,7 +19,7 @@ course:
         - {id: lesson_03, title: "Адрес клетки", outcome: "Хранить и рисовать два корабля по адресам."}
         - {id: lesson_04, title: "Список кораблей", outcome: "Хранить три корабля в списке и считать их с len."}
         - {id: lesson_05, title: "Изменяем список", outcome: "Построить список из четырёх кораблей с append."}
-        - {id: lesson_06, title: "Повторяем команды", outcome: "Нарисовать циклом фиксированный флот из 10 кораблей."}
+        - {id: lesson_06, title: "Циклы", outcome: "Нарисовать циклом фиксированный флот из 10 кораблей."}
         - {id: lesson_07, title: "Флот готов", outcome: "Показать диалог о готовом флоте и дождаться нажатия кнопки."}
     - id: stage_02
       title: "Расставляем корабли"
@@ -386,7 +386,7 @@ lessons:
       - lesson_06_exercise_03
       - lesson_06_project
     tasks:
-      - {id: lesson_06_loop, kind: article, title: "Команды по кругу", section: loop}
+      - {id: lesson_06_loop, kind: article, title: "Одно действие много раз", section: loop}
       - id: lesson_06_exercise_01
         kind: exercise
         title: "Выведи все числа"

@@ -103,7 +103,13 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
         stripped = raw_line.strip()
         if callout_kind is not None:
             if stripped.startswith(">"):
-                callout_line = stripped[1:].strip()
+                # Remove only the Markdown quote marker and its optional
+                # separator. Preserve the remaining leading spaces: they are
+                # meaningful Python indentation inside quoted code examples.
+                callout_line = raw_line[1:]
+                if callout_line.startswith(" "):
+                    callout_line = callout_line[1:]
+                callout_line = callout_line.rstrip()
                 if callout_line or callout_kind == "example":
                     callout.append(callout_line)
                 continue
@@ -113,7 +119,11 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
             in_code = not in_code
             continue
         if in_code:
-            blocks.append(("code", raw_line))
+            # Empty quoted lines are Markdown spacing around a code block, not
+            # executable code. Rendering them as rows creates a misleading
+            # blank code card between adjacent statements.
+            if stripped:
+                blocks.append(("code", raw_line))
         elif stripped == "> [!NOTE]":
             flush_paragraph()
             if blocks and blocks[-1][0] == "space":

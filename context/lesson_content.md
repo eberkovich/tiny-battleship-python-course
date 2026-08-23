@@ -176,6 +176,11 @@ the documentation must preserve.
   > После запуска появится `7`.
   ````
 
+  Keep code lines contiguous inside fenced examples. Preserve every leading
+  space that represents Python indentation, and use blank quoted lines only to
+  separate code from its explanation; an empty line must never become a
+  separate code row or card in the lesson renderer.
+
   Do not split one example across ordinary prose and several unrelated cards.
 - Use a standalone Markdown `---` only between major article sections. It
   becomes a divider of three yellow submarines; do not use it between ordinary

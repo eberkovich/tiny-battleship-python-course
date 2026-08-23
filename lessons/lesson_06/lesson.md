@@ -1,5 +1,5 @@
 <!-- section: loop -->
-# Команды по кругу
+# Одно действие много раз
 
 Во флоте уже несколько кораблей. Если для каждого адреса писать отдельный
 `draw_deck`, программа станет длинной, хотя действие всё время одинаковое.
@@ -12,7 +12,6 @@
 >
 > ```python
 > numbers = [3, 6, 9]
->
 > for number in numbers:
 >     print(number)
 > ```
@@ -55,7 +54,6 @@
 >
 > ```python
 > values = [4, 7]
->
 > for value in values:
 >     print(value)
 > ```
@@ -90,7 +88,6 @@ Python либо сообщит об ошибке, либо выполнит ст
 >
 > ```python
 > cells = [(3, 6), (7, 2)]
->
 > for x, y in cells:
 >     draw_deck(PLAYER, x, y, DECK_IDLE)
 > ```
