@@ -6,6 +6,16 @@ stage plan defines which lesson is currently in scope.
 
 ## Learner and teaching style
 
+### Content quality is the priority
+
+Lesson content is the primary product of this project. Give its structure,
+clarity, progression, and exercises more attention than implementation speed,
+framework convenience, or the number of lessons. Every lesson must be
+publication-quality for a child: purposeful from beginning to end, engaging to
+complete, precise enough to work without guessing, and valuable enough to teach
+a reusable programming or algorithmic idea. Do not ship content that is merely
+technically valid, repetitive, or a thin pretext for a game action.
+
 ### Learner profile
 
 The course is for an active child of about eight who already knows basic
@@ -43,6 +53,57 @@ punctuation, or line-based syntax.
 - Write all child-facing lesson text, launcher labels, hints, and check feedback
   in Russian. Keep code identifiers and developer documentation in English.
 - Avoid baby-talk and passive activities that do not produce feedback.
+
+### Reusable exercise inputs
+
+When an isolated exercise practises a reusable rule or transformation rather
+than a concrete UI interaction, require the child to implement a named function
+with clearly documented parameters and result. The behavioral checker must call
+that function with several representative values, including values not shown in
+the task. Do not make success depend only on a hardcoded input and its known
+answer: that checks one calculation, not the general rule. Keep fixed values in
+examples for explanation, while tasks state the function's contract and let the
+checker supply the test data. Use direct UI exercises only when the learning
+goal is genuinely a visual or input interaction.
+
+When an upcoming run of lessons relies on child-written reusable rules, teach
+function foundations in the opening lesson of that run, before comparisons,
+loops, or domain-specific validation begin using such functions. That opening
+lesson may cover `def`, parameters, and `return` as one closely related
+foundation, but each element still needs its own explanation, complete example,
+and focused practice. Its examples must use only programming ideas already
+taught; do not smuggle in the later stage's logic merely to make the function
+look game-related.
+
+### Exercise originality and algorithmic practice
+
+An isolated exercise must make the child apply the current concept to a
+purposefully different small problem from its preceding examples and from that
+lesson's project milestone. Do not copy an example's function name, control
+flow, domain rule, or intended result and merely replace values, coordinates,
+or labels. A project task may reuse the real game rule after focused practice;
+the focused practice must first build transferable reasoning.
+
+Prefer varied, age-appropriate algorithmic puzzles with a visible result:
+choosing an order, swapping or selecting values, comparing scores, checking a
+simple rule, counting, repeating a message, or making a random choice. The
+child should have a small decision or transformation to work out, rather than
+only transcribe a pattern. `print`, lists, earlier loops, and already taught
+dialogs are valid feedback tools. Use a game-framework command only when the
+exercise genuinely practises a visual game action or player input; it is never
+required merely because the course is about Battleship.
+
+### Self-contained exercise specifications
+
+Every coding exercise must be understandable without opening an earlier article
+or guessing from a variable name. Before the requested implementation, define
+the meaning and shape of every input in plain language, state the exact result
+or visible action, and give one labelled concrete example with data different
+from the checker cases. Say explicitly whether a collection contains numbers,
+addresses, words, or another kind of value; a name such as `passwords` or
+`ships` is not an explanation. The example must show the expected result, both
+for the ordinary case and for an important opposite case when the task has one.
+Copy this complete specification into the starter-file comments.
 
 ### Syntax and helper API explanations
 
@@ -107,7 +168,8 @@ Each article or exercise must have one clear purpose. Every paragraph must
 directly support that purpose. After drafting a step, describe its purpose in
 one sentence and verify that its title, opening, content, and ending all match
 that sentence. Move content that serves a different purpose to a separate
-step.
+step. The title stored in course metadata, the sidebar, and the step heading
+must be identical; validate this whenever a lesson step is renamed.
 
 Teach one new programming concept per article. If a draft introduces another
 independent mental model, operation, or syntax form, move it to its own article.

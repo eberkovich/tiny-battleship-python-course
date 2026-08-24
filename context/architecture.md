@@ -670,25 +670,30 @@ PLAYER
 ENEMY
 
 DECK_IDLE
+BOARD_SIZE
 
 show_board(board)
 draw_deck(board, x, y, state=DECK_IDLE)
 show_miss(board, x, y)
 show_ship_count(board, count)
 show_message(message, label)
+wait_for_cell(board)
 ```
 
 `show_board` reveals a board, `draw_deck` places or updates a deck, and
 `show_miss` displays an unsuccessful shot. `show_ship_count` shows or updates
 the selected board's remaining-ship counter. `show_message` shows a dialog with
-a message and labeled button and blocks until the button is pressed. Untouched water
-already exists and does not need a public drawing operation. The counter is
-introduced in Lesson 2 and the dialog command in Lesson 7; neither is introduced or
-required in Lesson 1.
+a message and labeled button and blocks until the button is pressed.
+`wait_for_cell` blocks until the player clicks the requested board, then returns
+the selected one-based `(x, y)` address. `BOARD_SIZE` is the shared side length
+of the board, currently `10`. Untouched water already exists and does not need a
+public drawing operation. The counter is introduced in Lesson 2, the dialog
+command in Lesson 7, and cell input in Stage 2; none is introduced or required
+in Lesson 1.
 
 The real and fake implementations must provide the same student-facing API.
-Later lessons may add deck damage and sunk states, blocking cell input, and
-placement feedback only when those capabilities are first taught and needed.
+Later lessons may add deck damage and sunk states only when those capabilities
+are first taught and needed.
 Before adding or renaming anything, review the complete API
 for consistent verbs, argument order, defaults, terminology, and abstraction
 level. During Lesson 1 Run, the runner keeps the finished pygame window open
