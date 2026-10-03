@@ -1,0 +1,282 @@
+# Technical fixture only; not an executable child-facing curriculum.
+{
+  "version": 1,
+  "course": {
+    "title": "Технический тест курса",
+    "goal": "Проверить интерфейс",
+    "promise": "Проверка без учебного содержания.",
+    "route": [
+      "Начало",
+      "Конец"
+    ],
+    "roadmap": [
+      {
+        "id": "sample_stage_1",
+        "title": "Тестовый этап 1",
+        "summary": "Техническая проверка навигации.",
+        "lessons": [
+          {
+            "id": "lesson_01",
+            "title": "Тестовый урок lesson_01",
+            "outcome": "Результат теста lesson_01"
+          },
+          {
+            "id": "lesson_01_coordinates",
+            "title": "Тестовый урок lesson_01_coordinates",
+            "outcome": "Результат теста lesson_01_coordinates"
+          },
+          {
+            "id": "lesson_02",
+            "title": "Тестовый урок lesson_02",
+            "outcome": "Результат теста lesson_02"
+          }
+        ]
+      },
+      {
+        "id": "sample_stage_2",
+        "title": "Тестовый этап 2",
+        "summary": "Техническая проверка навигации.",
+        "lessons": [
+          {
+            "id": "future_01",
+            "title": "Тестовый урок future_01",
+            "outcome": "Результат теста future_01"
+          }
+        ]
+      },
+      {
+        "id": "sample_stage_3",
+        "title": "Тестовый этап 3",
+        "summary": "Техническая проверка навигации.",
+        "lessons": [
+          {
+            "id": "future_02",
+            "title": "Тестовый урок future_02",
+            "outcome": "Результат теста future_02"
+          }
+        ]
+      }
+    ]
+  },
+  "api_reference": {
+    "show_board": {
+      "introduced_in": "api",
+      "signature": "show_board(board)",
+      "summary": "Тест справочника: show_board.",
+      "details": [
+        "Тестовая строка описания аргумента."
+      ]
+    },
+    "draw_deck": {
+      "introduced_in": "lesson_01_coordinates_deck_api",
+      "signature": "draw_deck(board, x, y, state)",
+      "summary": "Тест справочника: draw_deck.",
+      "details": [
+        "Тестовая строка описания аргумента."
+      ]
+    },
+    "show_miss": {
+      "introduced_in": "future_01_api",
+      "signature": "show_miss(board, x, y)",
+      "summary": "Тест справочника: show_miss.",
+      "details": [
+        "Тестовая строка описания аргумента."
+      ]
+    },
+    "show_ship_count": {
+      "introduced_in": "lesson_02_counter",
+      "signature": "show_ship_count(board, count)",
+      "summary": "Тест справочника: show_ship_count.",
+      "details": [
+        "Тестовая строка описания аргумента."
+      ]
+    },
+    "show_message": {
+      "introduced_in": "future_02_api",
+      "signature": "show_message(message, label)",
+      "summary": "Тест справочника: show_message.",
+      "details": [
+        "Тестовая строка описания аргумента."
+      ]
+    }
+  },
+  "lessons": [
+    {
+      "id": "lesson_01",
+      "content": "content.md",
+      "completion_tasks": [
+        "exercise_comments",
+        "exercise_01",
+        "exercise_enemy",
+        "project"
+      ],
+      "tasks": [
+        {
+          "id": "intro",
+          "kind": "article",
+          "title": "Тест: intro",
+          "section": "intro"
+        },
+        {
+          "id": "api",
+          "kind": "article",
+          "title": "Тест: api",
+          "section": "api"
+        },
+        {
+          "id": "exercise_comments",
+          "kind": "exercise",
+          "title": "Тест: exercise_comments",
+          "section": "exercise_comments",
+          "student_file": "exercises/lesson_01/exercise_comments.py",
+          "template": "player.py"
+        },
+        {
+          "id": "exercise_01",
+          "kind": "exercise",
+          "title": "Тест: exercise_01",
+          "section": "exercise_01",
+          "student_file": "exercises/lesson_01/exercise_01.py",
+          "template": "player.py"
+        },
+        {
+          "id": "exercise_enemy",
+          "kind": "exercise",
+          "title": "Тест: exercise_enemy",
+          "section": "exercise_enemy",
+          "student_file": "exercises/lesson_01/exercise_enemy.py",
+          "template": "player.py"
+        },
+        {
+          "id": "project",
+          "kind": "project",
+          "title": "Тест: project",
+          "section": "project",
+          "student_file": "battleship.py",
+          "template": "boards.py"
+        },
+        {
+          "id": "recap",
+          "kind": "summary",
+          "title": "Тест: recap",
+          "section": "recap"
+        }
+      ]
+    },
+    {
+      "id": "lesson_01_coordinates",
+      "content": "content.md",
+      "completion_tasks": [
+        "lesson_01_coordinates_exercise_01",
+        "lesson_01_coordinates_exercise_02",
+        "lesson_01_coordinates_exercise_03",
+        "lesson_01_coordinates_project"
+      ],
+      "tasks": [
+        {
+          "id": "lesson_01_coordinates_coordinates",
+          "kind": "article",
+          "title": "Тест: coordinates",
+          "section": "coordinates"
+        },
+        {
+          "id": "lesson_01_coordinates_deck_api",
+          "kind": "article",
+          "title": "Тест: deck_api",
+          "section": "deck_api"
+        },
+        {
+          "id": "lesson_01_coordinates_exercise_01",
+          "kind": "exercise",
+          "title": "Тест: exercise_01",
+          "section": "exercise_01",
+          "student_file": "exercises/lesson_01_coordinates/exercise_01.py",
+          "template": "player.py"
+        },
+        {
+          "id": "lesson_01_coordinates_exercise_02",
+          "kind": "exercise",
+          "title": "Тест: exercise_02",
+          "section": "exercise_02",
+          "student_file": "exercises/lesson_01_coordinates/exercise_02.py",
+          "template": "player.py"
+        },
+        {
+          "id": "lesson_01_coordinates_exercise_03",
+          "kind": "exercise",
+          "title": "Тест: exercise_03",
+          "section": "exercise_03",
+          "student_file": "exercises/lesson_01_coordinates/exercise_03.py",
+          "template": "player.py"
+        },
+        {
+          "id": "lesson_01_coordinates_project",
+          "kind": "project",
+          "title": "Тест: project",
+          "section": "project",
+          "student_file": "battleship.py",
+          "template": "boards.py"
+        },
+        {
+          "id": "lesson_01_coordinates_star",
+          "kind": "star",
+          "title": "Тест: star",
+          "section": "star",
+          "student_file": "exercises/lesson_01_coordinates/star.py",
+          "template": "player.py"
+        },
+        {
+          "id": "lesson_01_coordinates_recap",
+          "kind": "summary",
+          "title": "Тест: recap",
+          "section": "recap"
+        }
+      ]
+    },
+    {
+      "id": "lesson_02",
+      "content": "content.md",
+      "completion_tasks": [
+        "lesson_02_exercise_01",
+        "lesson_02_project"
+      ],
+      "tasks": [
+        {
+          "id": "lesson_02_intro",
+          "kind": "article",
+          "title": "Тест: intro",
+          "section": "intro"
+        },
+        {
+          "id": "lesson_02_counter",
+          "kind": "article",
+          "title": "Тест: counter",
+          "section": "counter"
+        },
+        {
+          "id": "lesson_02_exercise_01",
+          "kind": "exercise",
+          "title": "Тест: exercise_01",
+          "section": "exercise_01",
+          "student_file": "exercises/lesson_02/exercise_01.py",
+          "template": "player.py",
+          "run_mode": "console"
+        },
+        {
+          "id": "lesson_02_project",
+          "kind": "project",
+          "title": "Тест: project",
+          "section": "project",
+          "student_file": "battleship.py",
+          "template": "boards.py"
+        },
+        {
+          "id": "lesson_02_recap",
+          "kind": "summary",
+          "title": "Тест: recap",
+          "section": "recap"
+        }
+      ]
+    }
+  ]
+}

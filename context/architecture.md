@@ -1,17 +1,38 @@
 # Tiny Battleship: V1 Architecture
 
 This document is the source of truth for settled product and technical
-decisions. `context/lesson_content.md` defines lesson-authoring rules,
-`AGENTS.md` defines how agents maintain the project, and stage plans define what
-is implemented now.
+decisions. `context/lesson_content.md` defines teaching principles and the
+learning path, `AGENTS.md` defines how agents maintain the project, and
+implementation plans define active work and verification.
 
 ## Product scope
 
 ### Product and teaching constraints
 
-The course teaches procedural Python through one cumulative Battleship game;
-it is not a generic education platform. Follow `context/lesson_content.md` for
-the learner profile, teaching style, lesson structure, and content rules.
+The course teaches procedural Python and algorithmic thinking in two learning
+sections: independent programming foundations, then a cumulative Battleship
+game. Foundations use small everyday problems and puzzles, not artificial game
+upgrades. The game section applies established skills to genuine playable
+features. These sections are distinct from game Part 1 (one-cell ships) and
+Part 2 (later multi-deck support). This is not a generic education platform.
+Follow `context/lesson_content.md` for teaching rules and the ordered learning
+path. Do not duplicate the curriculum in implementation plans.
+
+### Curriculum reset
+
+The former lessons and executable metadata are retired. No replacement lessons
+are implemented yet. During this reset, starting the launcher reports that
+lessons are being redesigned and exits before opening a window or initializing
+a student workspace. The game/UI library, launcher capabilities, installer,
+assets, and `reference/part_01_game.py` remain available. The reference defines
+the final game behavior, not a mandatory teaching sequence; it uses some
+planned UI states that are not exported yet.
+
+New lessons and tasks receive fresh IDs so old completions cannot count toward
+new work. Existing student directories, source files, and progress are never
+deleted or reset. Use fresh student directories for the first replacement
+pilots. Resume a runnable course when the first reviewed foundation lessons
+and their metadata are ready; do not keep a second active legacy curriculum.
 
 ### Main parts
 
@@ -125,14 +146,16 @@ selected when launching the course:
 ./run.command --student-dir students/child_1
 ```
 
-Each student directory contains only that child's mutable state:
+Each student directory contains only that child's mutable state. Foundation
+exercises use independent files; the cumulative game begins in the game
+section, not as a requirement of every foundation lesson:
 
 ```text
 child_1/
 ├── .course_templates.json
 ├── battleship.py
 ├── exercises/
-│   └── lesson_01/
+│   └── <lesson_id>/
 │       ├── exercise_01.py
 │       ├── exercise_02.py
 │       ├── exercise_03.py
@@ -153,10 +176,10 @@ when the cumulative program is large enough to justify the recovery workflow.
 
 ### Course and lesson navigation
 
-The launcher has two navigation levels:
+When executable lessons are available, the launcher has two navigation levels:
 
-- **Course home** — the final game goal, current progress, the three course
-  stages, an expandable roadmap of all 19 Part 1 lessons, and
+- **Course home** — the final game goal, current progress, the learning
+  sections and stages, an expandable curriculum roadmap, and
   **«Начать первый урок»** or **«Продолжить урок N»**. This introduction is not
   Lesson 0.
 - **Lesson screen** — **«Все уроки»**, the lesson title and steps, required-task
@@ -170,23 +193,23 @@ promise is: **«Ты сам напишешь игру: расставишь фл
 определение победителя.»** A short visual route shows the major outcomes:
 **«Расставить флот → Начать бой → Стрелять по очереди → Победа!»**
 
-Use **«Этап»**, never **«Глава»**, for the three child-facing roadmap groups:
-
-1. **«Собираем флот»** — Lessons 1–8;
-2. **«Расставляем корабли»** — Lessons 9–14;
-3. **«Ход игры»** — Lessons 15–19.
+The introduction makes the route explicit: learn programming with independent
+problems first, then build the game. Use **«Этап»**, never **«Глава»**, for
+child-facing roadmap groups. Lesson count and grouping follow the curriculum;
+the retired 19-lesson, three-stage roadmap is not a product constraint.
 
 The compact roadmap view shows the current stage, current lesson number,
-completed lessons out of 19, and one stage card for each group. The complete
-19-lesson list is initially hidden under **«Показать все 19 уроков»** and may be
-expanded without changing persisted progress. Implemented lessons follow the
-normal access rules. Planned but not yet implemented lessons remain visible as
+completed lessons out of the curriculum total, and a stage card for each group.
+The complete lesson list is initially hidden under a show-all-lessons button
+whose count comes from metadata, and may be expanded without changing persisted
+progress. Implemented lessons follow the normal access rules. Planned but not
+yet implemented lessons remain visible as
 future work and are never selectable. In debug mode, all implemented lessons
 and steps are unlocked; debug mode does not turn roadmap-only entries into
 executable lessons. To avoid implying a progress restriction, debug mode marks
 roadmap-only stages and lessons as **«В ПЛАНЕ»** instead of showing lock icons.
 
-Opening **«Показать все 19 уроков»** automatically scrolls down until the full
+Opening the show-all-lessons button automatically scrolls down until the full
 lesson plan is visible while leaving the toggle accessible. Pressing
 **«Скрыть полный план»** collapses the plan and returns the course home to its
 top position.
@@ -197,7 +220,7 @@ no lesson row may overflow below, outside, or behind the card.
 
 #### Lesson access and progression
 
-The lesson header shows its position as **«Урок N из 19 · Этап K»**. On
+The lesson header shows its number, total, and stage from metadata. On
 **«Итоги урока»**, show only the next lesson's number and title when a next
 lesson exists; do not repeat its outcome as a second sentence. Derive the
 total, numbering, stage membership, titles, and next-lesson preview from
@@ -206,7 +229,8 @@ curriculum metadata rather than hard-coding them in the launcher.
 Completed lessons remain available. The current lesson is available; later
 lessons are visible but locked until all required coding tasks in the current
 lesson pass. The **«Итоги урока»** step is also visible but locked until every
-required exercise and the cumulative project task in that lesson pass. Optional
+required coding task in that lesson passes, including a project task when
+present. Foundation lessons do not need a project task. Optional
 star tasks never block the summary or progression. Opening a lesson shows its
 saved current step, or its first step when no current step has been saved. The
 current step is always unlocked; a locked step cannot be selected or saved as
@@ -389,9 +413,11 @@ for or terminate unrelated IDLE processes.
 
 #### Execution and feedback
 
-Game output is the default. Task metadata has an optional
-`run_mode: console`; omitted `run_mode` means
-`game`. Both kinds run once through the checker and may display captured
+Task metadata declares the appropriate output surface. Currently, it has an
+optional `run_mode: console`; omitted `run_mode` means
+`game`. Foundation exercises normally explicitly select `console`; no game
+window or graphics command is required merely to practise Python. Both kinds
+run once through the checker and may display captured
 `stdout`. A `console` task stops after that run and never opens pygame. A `game`
 task keeps the existing check-then-real-UI flow; it may also display printed
 output. This distinction belongs to lesson metadata so the launcher remains
@@ -489,10 +515,11 @@ project dependency, dependency version, or supported Python version changes.
 #### Metadata, roadmap, and IDs
 
 For V1, one `CURRICULUM.yaml` is sufficient. It defines the child-facing
-19-lesson roadmap and its three stages, plus the implemented lesson order and
-each lesson's compact pedagogical contract: the new concept, motivating
-problem, game milestone, prerequisites, required behavior, paths, and star
-challenge. Roadmap entries may describe future lessons without making them
+curriculum roadmap and learning groups, plus the implemented lesson order and
+each lesson's compact contract: learning outcome, motivating problem,
+prerequisites, required behavior, paths, optional star challenge, and game
+milestone only when applicable. Foundation lessons have no required game
+milestone. Roadmap entries may describe future lessons without making them
 executable; implemented lessons must match their roadmap IDs, titles, order,
 and stage membership. The file also stores each public API command's
 introduction step and the signature recap used by later clickable mentions.
@@ -500,10 +527,9 @@ Its lesson content must follow `context/lesson_content.md`.
 
 Task IDs are globally unique across the course because progress, checker
 routing, and API introduction references store them directly. Prefix every new
-task ID with its lesson ID, for example `lesson_02_project` or
-`lesson_02_exercise_01`. Keep Lesson 1's existing unprefixed IDs unchanged so
-existing student progress remains valid. IDs are internal and are never shown
-to the child.
+task ID with its lesson ID. Replacement content must not reuse retired IDs;
+legacy migration support does not make an old task equivalent to a new one.
+IDs are internal and are never shown to the child.
 
 Lesson IDs are also stable internal identifiers, not displayed ordinals. The
 launcher derives **«Урок N»** from roadmap position. A lesson inserted into an
@@ -543,9 +569,13 @@ An acceptance module exposes
 as `output`. An interactive task may additionally expose
 `prepare(task_id, fake_ui)`; the runner calls it before student code so the
 checker can configure deterministic private fake-UI input queues. Student code
-never sees or configures those queues. Add multi-scenario execution only when
-the first task whose behavior cannot be verified by one deterministic scenario
-is implemented.
+never sees or configures those queues. This is the existing checker interface,
+not a restriction on the new teaching path. When the first function exercise
+needs varied inputs, extend checking within the child subprocess to invoke the
+student's function with representative arguments; never import student code
+into the launcher. Implement that extension with its first real task, not in
+the curriculum reset. Tasks before function definitions are taught may remain
+ordinary scripts.
 
 Do not add per-lesson manifests until one shared curriculum file causes actual
 friction.
@@ -687,14 +717,14 @@ a message and labeled button and blocks until the button is pressed.
 `wait_for_cell` blocks until the player clicks the requested board, then returns
 the selected one-based `(x, y)` address. `BOARD_SIZE` is the shared side length
 of the board, currently `10`. Untouched water already exists and does not need a
-public drawing operation. The counter is introduced in Lesson 2, the dialog
-command in Lesson 7, and cell input in Stage 2; none is introduced or required
-in Lesson 1.
+public drawing operation. Introduction steps belong to the replacement
+curriculum, not fixed lesson numbers in this document. Foundations do not need
+these helpers until a task naturally uses them.
 
 The real and fake implementations must provide the same student-facing API.
 Later lessons may add deck damage and sunk states only when those capabilities
 are first taught and needed.
 Before adding or renaming anything, review the complete API
 for consistent verbs, argument order, defaults, terminology, and abstraction
-level. During Lesson 1 Run, the runner keeps the finished pygame window open
+level. During visual play, the runner keeps the finished pygame window open
 internally until it is closed.

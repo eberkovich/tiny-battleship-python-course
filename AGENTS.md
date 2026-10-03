@@ -4,10 +4,10 @@
 
 ### Mission
 
-Build a small, systematic Python course around one cumulative Tiny Battleship
-game. Optimize for educational clarity, short feedback loops, algorithmic
-thinking, and a prototype usable by the user's children—not a generic
-education platform.
+Build a small, systematic Python course: first programming foundations through
+independent problems, then one cumulative Tiny Battleship game. Optimize for
+understanding, educational clarity, short feedback loops, algorithmic thinking,
+and a prototype usable by the user's children—not a generic education platform.
 
 ### Sources of truth
 
@@ -16,13 +16,13 @@ repository, not the detailed product design:
 
 - `context/architecture.md` is the source of truth for settled product and
   technical decisions;
-- `context/lesson_content.md` is the source of truth for lesson-authoring rules;
-- a plan with an explicit `Current phase:` marker defines the active scope and
-  completion criteria; completed `plans/stage_NN_*.md` files are historical
-  stage records;
-- `COURSE_DESIGN.md` and `CURRICULUM.yaml`, when present, contain supporting
-  course rationale and lesson metadata; they must conform to both context
-  documents.
+- `context/lesson_content.md` is the source of truth for teaching principles
+  and the ordered learning path;
+- implementation plans describe concrete work and verification, not a second
+  curriculum; a plan with an explicit `Current phase:` marker defines the active
+  scope and completion criteria;
+- `CURRICULUM.yaml`, when present, contains executable lesson metadata; it must
+  conform to both context documents, including the learning path.
 
 Architecture and lesson-authoring documents are written in English. Keep
 Russian only when an exact child-facing label, lesson phrase, or code literal
@@ -32,11 +32,10 @@ must be recorded as an implementation requirement.
 
 Read the relevant documents before architectural, curriculum, or implementation
 work. Do not silently change a settled decision or expand the active phase.
-Only one plan may contain an active `Current phase:` marker. Keep completed
-stage files frozen as historical records. Clear or advance the marker only
-after the current phase's definition of done and verification evidence are
-recorded. Do not create a separate stage file when an existing plan already
-defines the requested phase precisely.
+Only one plan may contain an active `Current phase:` marker. Clear or advance
+the marker only after the current phase's definition of done and verification
+evidence are recorded. Do not create a separate stage file when an existing
+plan already defines the requested phase precisely.
 
 Any proposed deviation from this file, `context/architecture.md`,
 `context/lesson_content.md`, or the active plan phase must be explicitly
@@ -65,7 +64,7 @@ check each claim against the relevant state and domain invariants first.
 
 Before changing files:
 
-1. Read the architecture and active plan phase.
+1. Read the architecture and active plan phase, if present.
 2. Inspect existing related code, lessons, and tests.
 3. Check the working tree when version-control metadata is available and
    preserve unrelated work.
@@ -124,7 +123,7 @@ dependency, dependency version, or supported Python version changes, update
 
 Keep each source-of-truth document organized around its own responsibility:
 agent workflow in `AGENTS.md`, settled product and technical behavior in
-`context/architecture.md`, and teaching/content rules in
+`context/architecture.md`, and teaching principles and the learning path in
 `context/lesson_content.md`.
 
 After a substantial sequence of design changes and at every phase checkpoint,
@@ -145,10 +144,12 @@ substantive change under the normal change-control rule before applying it.
 
 When creating or changing a lesson:
 
-1. Read `context/lesson_content.md`, the architecture, and the active plan.
+1. Read `context/lesson_content.md`, the architecture, and the active plan,
+   if present.
 2. Inspect previous lessons and preserve their established structure and tone.
-3. Keep the curriculum order and ensure the cumulative milestone needs the
-   lesson's new concept.
+3. Keep the curriculum order. Foundation lessons build independent
+   understanding; a game milestone must have a genuine purpose and use only
+   established prerequisites. Do not force every lesson into the game.
 4. Validate every coding task with a passing reference solution through the
    same behavioral checker used for student code.
 5. Run focused lesson checks and applicable regressions. Run the full suite at
@@ -171,5 +172,6 @@ Before finishing, check that the change:
 - adds no out-of-scope infrastructure;
 - passes all relevant tests.
 
-Keep the active plan phase status accurate. Mark it complete only after its
-definition of done has been verified and completion evidence recorded.
+When an active plan exists, keep its phase status accurate. Mark it complete
+only after its definition of done has been verified and completion evidence
+recorded.

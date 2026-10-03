@@ -4,16 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from launcher.course import load_lesson
 from runner.process import run_check, start_student_process
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-REFERENCE_ROOT = PROJECT_ROOT / "lessons/lesson_01/reference"
+REFERENCE_ROOT = PROJECT_ROOT / "tests/fixtures"
 REFERENCE_CASES = [
-    (task.id, f"{task.id}.py")
-    for task in load_lesson().tasks
-    if task.is_coding
+    ("exercise_01", "player.py"),
+    ("project", "boards.py"),
 ]
 
 
@@ -99,19 +97,18 @@ def test_wrong_board_is_a_behavior_failure(tmp_path: Path) -> None:
     source = tmp_path / "wrong_board.py"
     source.write_text(
         "from battleship_ui import *\n"
-        "show_board(PLAYER)\n"
-        "draw_deck(ENEMY, 2, 4, DECK_IDLE)\n",
+        "show_board(ENEMY)\n",
         encoding="utf-8",
     )
 
     result = run_check(
         source,
-        "lesson_01_coordinates_exercise_01",
-        lesson_id="lesson_01_coordinates",
+        "exercise_01",
+        lesson_id="lesson_01",
     )
 
     assert result.status == "failed"
-    assert "твоём поле" in result.message
+    assert "show_board(PLAYER)" in result.message
 
 
 def test_checker_routes_to_requested_lesson_acceptance(tmp_path: Path) -> None:
@@ -188,7 +185,7 @@ def test_student_output_is_bounded(tmp_path: Path) -> None:
 
 def test_play_does_not_capture_pygame_banner_as_student_output() -> None:
     job = start_student_process(
-        REFERENCE_ROOT / "project.py",
+        REFERENCE_ROOT / "boards.py",
         mode="play",
         timeout=5.0,
         extra_environment={

@@ -465,23 +465,23 @@ def test_debug_mode_unlocks_every_lesson_and_step_without_saving_progress(
         for lesson in controller.course.lessons
     )
 
-    controller.enter_lesson("lesson_07")
-    controller.select_task("lesson_07_recap")
-    assert controller.current_task.kind == "summary"
-
     controller.enter_lesson("lesson_02")
     controller.select_task("lesson_02_recap")
+    assert controller.current_task.kind == "summary"
+
+    controller.enter_lesson("lesson_01_coordinates")
+    controller.select_task("lesson_01_coordinates_recap")
     app.render()
     assert any(button.action == "next_lesson" for button in app.buttons)
 
-    controller.enter_lesson("lesson_07")
-    controller.select_task("lesson_07_exercise_01")
+    controller.enter_lesson("lesson_02")
+    controller.select_task("lesson_02_exercise_01")
     controller.toggle_theme()
     controller.start_run()
     controller.poll()
 
     assert controller.message == "Верно!"
-    assert "lesson_07_exercise_01" not in controller.progress.completed_tasks
+    assert "lesson_02_exercise_01" not in controller.progress.completed_tasks
     assert controller.workspace.load_progress().to_dict() == saved_progress
 
 
@@ -522,11 +522,11 @@ def test_roadmap_progress_uses_planned_lesson_count_and_blocks_future_lessons(
     controller = LauncherController(tmp_path / "student")
 
     assert controller.current_lesson_number == 1
-    assert controller.total_lesson_count == 19
+    assert controller.total_lesson_count == len(controller.course.roadmap_lessons)
     assert controller.current_stage_number == 1
     assert controller.completed_lesson_count == 0
     assert controller.roadmap_lesson_status(
-        controller.course.roadmap_lesson("lesson_08")
+        controller.course.roadmap_lesson("future_01")
     ) == "future"
 
     for task_id in controller.lesson.completion_tasks:
@@ -917,10 +917,18 @@ def test_run_passes_selected_lesson_to_checker(tmp_path: Path) -> None:
     assert calls[0][1]["task_id"] == "lesson_02_exercise_01"
 
 
-def test_run_command_initializes_cyrillic_student_workspace_end_to_end(
+def test_run_command_reports_curriculum_reset_without_touching_student_files(
     tmp_path: Path,
 ) -> None:
     student = tmp_path / "Два ребёнка" / "Маша"
+    student.mkdir(parents=True)
+    source = student / "battleship.py"
+    source.write_text("# existing student work\n", encoding="utf-8")
+    progress = student / "progress.json"
+    progress.write_text(
+        '{"version": 4, "current_lesson": "lesson_01"}', encoding="utf-8"
+    )
+    before = {path.name: path.read_bytes() for path in student.iterdir()}
     environment = os.environ.copy()
     environment.update(
         {
@@ -939,11 +947,10 @@ def test_run_command_initializes_cyrillic_student_workspace_end_to_end(
         timeout=10,
     )
 
-    assert result.returncode == 0, result.stderr
-    assert (student / "battleship.py").exists()
-    assert (student / "exercises/lesson_01/exercise_enemy.py").exists()
-    assert (student / "exercises/lesson_01_coordinates/exercise_03.py").exists()
-    assert (student / "progress.json").exists()
+    assert result.returncode == 1
+    assert "Уроки сейчас перерабатываются" in result.stderr
+    assert "Traceback" not in result.stderr
+    assert {path.name: path.read_bytes() for path in student.iterdir()} == before
 
 
 def test_combined_run_uses_real_subprocesses_end_to_end(
@@ -954,7 +961,7 @@ def test_combined_run_uses_real_subprocesses_end_to_end(
     controller.enter_lesson("lesson_01")
     controller.select_task("exercise_01")
     shutil.copyfile(
-        PROJECT_ROOT / "lessons/lesson_01/reference/exercise_01.py",
+        PROJECT_ROOT / "tests/fixtures/player.py",
         controller.source_path(),
     )
 

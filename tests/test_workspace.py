@@ -39,15 +39,15 @@ def test_curriculum_and_sections_are_consistent() -> None:
     assert {task.section for task in lesson.tasks} <= sections.keys()
 
 
-def test_curriculum_defines_complete_three_stage_roadmap() -> None:
+def test_curriculum_loads_stage_membership_and_implemented_prefix() -> None:
     course = load_course()
 
     assert len(course.roadmap) == 3
-    assert len(course.roadmap_lessons) == 19
+    assert len(course.roadmap_lessons) == 5
     assert [stage.title for stage in course.roadmap] == [
-        "Собираем флот",
-        "Расставляем корабли",
-        "Ход игры",
+        "Тестовый этап 1",
+        "Тестовый этап 2",
+        "Тестовый этап 3",
     ]
     assert [lesson.id for lesson in course.lessons] == [
         lesson.id for lesson in course.roadmap_lessons[: len(course.lessons)]
@@ -68,16 +68,16 @@ def test_curriculum_provides_clickable_api_recaps() -> None:
         "lesson_01_coordinates_deck_api"
     )
     assert course.api_references["show_miss"].introduced_in == (
-        "lesson_14_first_shot"
+        "future_01_api"
     )
     assert course.api_references["show_miss"].signature == "show_miss(board, x, y)"
     assert course.api_references["show_miss"].details
-    assert not course.api_reference_available("show_miss", "lesson_07_recap")
+    assert not course.api_reference_available("show_miss", "lesson_02_recap")
     assert course.api_references["show_ship_count"].introduced_in == (
         "lesson_02_counter"
     )
     assert course.api_references["show_message"].introduced_in == (
-        "lesson_07_button_api"
+        "future_02_api"
     )
 
 
@@ -384,8 +384,8 @@ def test_existing_later_progress_stops_at_the_new_prerequisite_lesson(
         json.dumps(
             {
                 "version": 3,
-                "current_lesson": "lesson_04",
-                "current_task": "lesson_04_lists",
+                "current_lesson": "lesson_02",
+                "current_task": "lesson_02_intro",
                 "completed_tasks": ["exercise_01", "project", "exercise_02"],
                 "earned_stars": ["star"],
                 "theme": DARK_THEME_NAME,

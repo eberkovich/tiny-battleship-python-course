@@ -10,6 +10,10 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
+class CurriculumUnavailableError(ValueError):
+    """No executable lessons are installed during the curriculum reset."""
+
+
 @dataclass(frozen=True)
 class Task:
     id: str
@@ -139,6 +143,10 @@ def _required_text(data: dict[str, Any], key: str) -> str:
 
 def load_course(curriculum_path: Path | None = None) -> Course:
     path = curriculum_path or PROJECT_ROOT / "CURRICULUM.yaml"
+    if curriculum_path is None and not path.is_file():
+        raise CurriculumUnavailableError(
+            "Уроки сейчас перерабатываются. Новый курс ещё не готов."
+        )
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if raw.get("version") != 1 or not raw.get("lessons"):
         raise ValueError("Curriculum version 1 requires at least one lesson")
