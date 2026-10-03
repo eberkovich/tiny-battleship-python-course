@@ -18,21 +18,26 @@ Part 2 (later multi-deck support). This is not a generic education platform.
 Follow `context/lesson_content.md` for teaching rules and the ordered learning
 path. Do not duplicate the curriculum in implementation plans.
 
-### Curriculum reset
+### Foundation pilot and retired curriculum
 
-The former lessons and executable metadata are retired. No replacement lessons
-are implemented yet. During this reset, starting the launcher reports that
-lessons are being redesigned and exits before opening a window or initializing
-a student workspace. The game/UI library, launcher capabilities, installer,
-assets, and `reference/part_01_game.py` remain available. The reference defines
-the final game behavior, not a mandatory teaching sequence; it uses some
-planned UI states that are not exported yet.
+The former lessons and executable metadata are retired. The replacement pilot
+implements only A1–A3: comments, showing text/numbers, and execution order.
+The launcher is runnable again. A1 uses submitted puzzles; A2/A3 also use
+independent console exercises. They do not create a cumulative game file.
+The roadmap lists the 32 planned foundation lessons; only the first three are
+executable. The game section's feature milestones are not yet numbered lessons.
+Author later lessons only after the child pilot informs their design.
+
+The game/UI library, installer, assets, and `reference/part_01_game.py` remain
+available. The reference defines final game behavior, not a mandatory teaching
+sequence; it uses some planned UI states that are not exported yet. If executable
+metadata is absent, launch reports the redesign in Russian and exits before
+opening a window or initializing a student workspace.
 
 New lessons and tasks receive fresh IDs so old completions cannot count toward
 new work. Existing student directories, source files, and progress are never
 deleted or reset. Use fresh student directories for the first replacement
-pilots. Resume a runnable course when the first reviewed foundation lessons
-and their metadata are ready; do not keep a second active legacy curriculum.
+pilots. Do not keep a second active legacy curriculum.
 
 ### Main parts
 
@@ -227,15 +232,22 @@ total, numbering, stage membership, titles, and next-lesson preview from
 curriculum metadata rather than hard-coding them in the launcher.
 
 Completed lessons remain available. The current lesson is available; later
-lessons are visible but locked until all required coding tasks in the current
-lesson pass. The **«Итоги урока»** step is also visible but locked until every
-required coding task in that lesson passes, including a project task when
-present. Foundation lessons do not need a project task. Optional
-star tasks never block the summary or progression. Opening a lesson shows its
-saved current step, or its first step when no current step has been saved. The
-current step is always unlocked; a locked step cannot be selected or saved as
-current. When all required tasks pass, unlock the summary; the optional star
-task remains available.
+lessons and the **«Итоги урока»** step are visible but locked until every
+required activity in the current lesson is completed:
+
+- a coding task, including a project task when present, needs a successful
+  behavioral check;
+- a puzzle needs an answer submission followed by corrective feedback;
+  an incorrect answer still completes the puzzle, but an unanswered one does
+  not.
+
+Each teaching lesson declares required activities; reading articles alone
+must not automatically complete it. Foundation lessons do not need a project
+task. Optional star tasks never block the summary or progression. Opening a
+lesson shows its saved current step, or its first step when no current step has
+been saved. The current step is always unlocked; a locked step cannot be
+selected or saved as current. When all required activities are completed,
+unlock the summary; the optional star task remains available.
 
 #### Debug mode, global controls, and window
 
@@ -247,8 +259,8 @@ fixed controls; only intentional modal overlays may cover the interface.
 
 For development and content review, the launcher accepts `--debug`. This mode
 unlocks every implemented lesson and every step, including summaries, and shows
-a visible **«РЕЖИМ ОТЛАДКИ»** badge. Debug navigation, theme changes, and
-successful runs do not modify persisted progress or completion. Student mode
+a visible **«РЕЖИМ ОТЛАДКИ»** badge. Debug navigation, theme changes, runs, and
+puzzle submissions do not modify persisted progress or completion. Student mode
 remains the default; debug mode still opens and executes files from the
 selected student directory and never overwrites student edits.
 
@@ -310,6 +322,24 @@ progress row or star counter; the task cards themselves show progress.
 Child-facing titles, wording, explanation order, and authoring requirements are
 defined in `context/lesson_content.md`. A `summary` is informational, not
 material or a coding task.
+
+#### Puzzle interaction and feedback
+
+Use the existing `question` step kind for answer-submission puzzles. Start with
+simple answer choices: selecting a choice alone does not complete the puzzle;
+the child must submit it. After submission, show whether it was correct,
+the correct answer, and a short explanation, even when the child answered
+correctly. Incorrect submissions count as completed without requiring a
+successful retry.
+
+The question card shows completion after submission, separately from answer
+correctness in the feedback. A completion mark means the activity was done,
+not that the answer was correct or the concept mastered. Completed puzzles
+remain reviewable with their feedback. They need no student file, editor,
+game window, or Python behavioral checker.
+
+Implement answer collection and feedback with the first authored puzzle in A1;
+a text-only question page is not a submitted puzzle.
 
 #### Content cards and feedback
 
@@ -427,7 +457,7 @@ For a `game` task, a behavioral failure still opens the real UI so the child can
 inspect the result. For a `console` task, the captured output is the visual
 result and the program is not repeated. Syntax errors, runtime failures before
 useful drawing, and timeouts are reported without repeating the run. Only a
-successful behavioral check records completion.
+successful behavioral check records coding-task completion.
 
 Show feedback inside the selected task near its actions. Do not reserve an
 empty status panel or show placeholder messages such as **«Выбери шаг урока»**.
@@ -435,9 +465,12 @@ Use the generic reminder **«Сохрани код в редакторе: Cmd+S�
 
 #### Progress and transient data
 
-Exercise, project, and star completion are recorded separately. Source code and
-verification traces are never stored in progress. Completed tasks may be
-reopened, but the launcher never restores or overwrites their files.
+Exercise, project, star, and submitted-puzzle completion are recorded
+separately. Persist puzzle answers using stable task and choice IDs so their
+completion and feedback survive reopening; do not store attempt histories.
+Source code and verification traces are never stored in progress. Completed
+coding tasks may be reopened, but the launcher never restores or overwrites
+their files.
 Captured output is transient: keep only the latest attempt in memory, clear it
 when changing tasks or starting another run, and never write it to progress or
 telemetry.
@@ -523,13 +556,21 @@ milestone. Roadmap entries may describe future lessons without making them
 executable; implemented lessons must match their roadmap IDs, titles, order,
 and stage membership. The file also stores each public API command's
 introduction step and the signature recap used by later clickable mentions.
-Its lesson content must follow `context/lesson_content.md`.
+Its lesson content must follow `context/lesson_content.md`. Until a game command
+has an authored introduction step, omit its `introduced_in` field: it remains
+available in the global lookup but cannot become an in-page reference.
 
 Task IDs are globally unique across the course because progress, checker
 routing, and API introduction references store them directly. Prefix every new
 task ID with its lesson ID. Replacement content must not reuse retired IDs;
 legacy migration support does not make an old task equivalent to a new one.
 IDs are internal and are never shown to the child.
+
+Required activity IDs include both coding tasks and answer-submission puzzles.
+For a `question`, metadata defines stable answer-choice IDs and labels, the
+correct choice, and its explanation; the question itself stays in lesson
+content. The launcher evaluates the submitted choice directly from metadata,
+not through `acceptance.py`.
 
 Lesson IDs are also stable internal identifiers, not displayed ordinals. The
 launcher derives **«Урок N»** from roadmap position. A lesson inserted into an

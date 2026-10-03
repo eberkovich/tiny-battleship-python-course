@@ -5,14 +5,14 @@ import json
 import os
 import shutil
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from launcher.course import Course, Lesson
 from launcher.theme import DEFAULT_THEME_NAME, THEMES
 
 
-PROGRESS_VERSION = 4
+PROGRESS_VERSION = 5
 TEMPLATE_STATE_VERSION = 1
 LEGACY_TASK_MOVES = {
     "coordinates": "lesson_01_coordinates_coordinates",
@@ -29,6 +29,7 @@ class Progress:
     completed_tasks: set[str]
     earned_stars: set[str]
     theme: str
+    puzzle_answers: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -38,6 +39,7 @@ class Progress:
             "completed_tasks": sorted(self.completed_tasks),
             "earned_stars": sorted(self.earned_stars),
             "theme": self.theme,
+            "puzzle_answers": dict(sorted(self.puzzle_answers.items())),
         }
 
 
@@ -129,7 +131,7 @@ class StudentWorkspace:
     def load_progress(self) -> Progress:
         data = json.loads(self.progress_path.read_text(encoding="utf-8"))
         version = data.get("version")
-        if version not in {1, 2, 3, PROGRESS_VERSION}:
+        if version not in {1, 2, 3, 4, PROGRESS_VERSION}:
             raise ValueError("Unsupported progress version")
         completed_tasks = {
             LEGACY_TASK_MOVES.get(task_id, task_id)
@@ -158,7 +160,7 @@ class StudentWorkspace:
             if current_task in {task.id for task in moved_lesson.tasks}:
                 current_lesson = moved_lesson.id
             elif (
-                version < PROGRESS_VERSION
+                version < 4
                 and current_lesson != "lesson_01"
                 and not set(moved_lesson.completion_tasks) <= completed_tasks
             ):
@@ -171,6 +173,20 @@ class StudentWorkspace:
         }
         if current_task not in lesson_task_ids:
             current_task = lesson.tasks[0].id
+        questions = {
+            task.id: task
+            for lesson in self.course.lessons for task in lesson.tasks
+            if task.kind == "question"
+        }
+        saved_answers = data.get("puzzle_answers", {})
+        puzzle_answers = {}
+        if isinstance(saved_answers, dict):
+            puzzle_answers = {
+                task_id: choice_id for task_id, choice_id in saved_answers.items()
+                if task_id in questions and isinstance(choice_id, str)
+                and choice_id in {choice.id for choice in questions[task_id].choices}
+            }
+        completed_tasks = (completed_tasks - questions.keys()) | puzzle_answers.keys()
         return Progress(
             current_lesson=lesson.id,
             current_task=str(current_task),
@@ -181,6 +197,7 @@ class StudentWorkspace:
                 if data.get("theme") in THEMES
                 else DEFAULT_THEME_NAME
             ),
+            puzzle_answers=puzzle_answers,
         )
 
     def save_progress(self, progress: Progress) -> None:
@@ -231,7 +248,9 @@ class StudentWorkspace:
         return progress
 
     def lesson_complete(self, lesson: Lesson, progress: Progress) -> bool:
-        return set(lesson.completion_tasks) <= progress.completed_tasks
+        return bool(lesson.completion_tasks) and (
+            set(lesson.completion_tasks) <= progress.completed_tasks
+        )
 
     def set_theme(self, theme: str) -> Progress:
         if theme not in THEMES:

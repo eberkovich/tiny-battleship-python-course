@@ -1,0 +1,312 @@
+version: 1
+# The game section is not authored yet; lookup entries have no introduction step.
+api_reference:
+  show_board:
+    signature: "show_board(board)"
+    summary: "Показывает выбранное игровое поле."
+    details:
+      - "board — поле: PLAYER — твоё, ENEMY — противника."
+      - "Повторный вызов не очищает поле."
+  draw_deck:
+    signature: "draw_deck(board, x, y, state=DECK_IDLE)"
+    summary: "Рисует одну палубу корабля."
+    details:
+      - "board — поле: PLAYER или ENEMY."
+      - "x — столбец, y — строка; оба от 1 до 10."
+      - "state — состояние палубы; сейчас доступно DECK_IDLE."
+      - "Неповреждённые палубы противника скрыты."
+  show_miss:
+    signature: "show_miss(board, x, y)"
+    summary: "Показывает промах в клетке."
+    details:
+      - "board — поле: PLAYER или ENEMY."
+      - "x — столбец, y — строка; оба от 1 до 10."
+  show_ship_count:
+    signature: "show_ship_count(board, count)"
+    summary: "Показывает или обновляет счётчик кораблей."
+    details:
+      - "board — поле: PLAYER или ENEMY."
+      - "count — целое число оставшихся кораблей, не меньше нуля."
+  show_message:
+    signature: "show_message(message, label)"
+    summary: "Показывает диалог и ждёт нажатия кнопки."
+    details:
+      - "message — текст сообщения."
+      - "label — надпись на кнопке."
+      - "После нажатия программа продолжает работу."
+  wait_for_cell:
+    signature: "wait_for_cell(board)"
+    summary: "Ждёт нажатия на клетку выбранного поля."
+    details:
+      - "board — поле: PLAYER или ENEMY."
+      - "Возвращает координаты выбранной клетки: столбец x и строку y."
+course:
+  title: "Морской бой: Python для детей"
+  goal: "Научиться программировать и написать свою игру «Морской бой»"
+  promise: "Сначала — задачи на основы Python. Потом — игра с 10 кораблями у тебя и компьютера."
+  route: ["Первые программы", "Самостоятельные задачи", "Морской бой"]
+  roadmap:
+    - id: first_steps
+      title: "Первые программы"
+      summary: "Читаем код, показываем сообщения, считаем и знакомимся с переменными."
+      lessons:
+        - id: a01
+          title: "Читаем первый файл"
+          outcome: "Отличать комментарий от инструкции для Python."
+        - id: a02
+          title: "Показываем текст и числа"
+          outcome: "Показывать текст и числовой ответ."
+        - id: a03
+          title: "Выполняем строки по порядку"
+          outcome: "Читать и записывать вызовы в нужном порядке."
+        - id: a04
+          title: "Числа и вычисления"
+          outcome: "Выбирать вычисление для задачи."
+        - id: a05
+          title: "Группируем вычисления"
+          outcome: "Объяснять порядок сгруппированных вычислений."
+        - id: a06
+          title: "Даём значению имя"
+          outcome: "Использовать имя вместо повторения значения."
+        - id: a07
+          title: "Заменяем значение"
+          outcome: "Следить за заменой значения."
+        - id: a08
+          title: "Обновляем значение"
+          outcome: "Объяснять работу небольшой программы с переменными."
+    - id: functions_and_choices
+      title: "Функции и выбор"
+      summary: "Создаём свои функции, передаём данные и выбираем действия по условиям."
+      lessons:
+        - id: a09
+          title: "Своя функция"
+          outcome: "Вызывать свою функцию."
+        - id: a10
+          title: "Входные данные функции"
+          outcome: "Передавать значения в функцию."
+        - id: a11
+          title: "Возвращаем результат"
+          outcome: "Получать результат функции."
+        - id: a12
+          title: "Используем функции"
+          outcome: "Решать задачу с помощью функции."
+        - id: a13
+          title: "Сравнения"
+          outcome: "Получать результат сравнения."
+        - id: a14
+          title: "Выбираем действие"
+          outcome: "Выбирать одну из двух веток."
+        - id: a15
+          title: "Два условия вместе"
+          outcome: "Проверять два требования."
+        - id: a16
+          title: "Условие наоборот"
+          outcome: "Выражать обратное условие."
+    - id: collections_and_algorithms
+      title: "Списки и алгоритмы"
+      summary: "Работаем с коллекциями, повторяем действия и самостоятельно решаем задачи."
+      lessons:
+        - id: a17
+          title: "Собираем список"
+          outcome: "Хранить связанные значения."
+        - id: a18
+          title: "Считаем элементы"
+          outcome: "Узнавать размер списка."
+        - id: a19
+          title: "Читаем элемент списка"
+          outcome: "Находить значение по его позиции."
+        - id: a20
+          title: "Проверяем наличие"
+          outcome: "Проверять, есть ли значение."
+        - id: a21
+          title: "Действие для каждого элемента"
+          outcome: "Обрабатывать элементы по очереди."
+        - id: a22
+          title: "Внутри цикла и после него"
+          outcome: "Отличать повторяемое действие от действия после цикла."
+        - id: a23
+          title: "Накапливаем сумму"
+          outcome: "Складывать значения по шагам."
+        - id: a24
+          title: "Считаем подходящие элементы"
+          outcome: "Считать элементы по условию."
+        - id: a25
+          title: "Ищем по правилу"
+          outcome: "Искать подходящее значение."
+        - id: a26
+          title: "Добавляем элементы"
+          outcome: "Расширять список."
+        - id: a27
+          title: "Удаляем элементы"
+          outcome: "Безопасно убирать значение."
+        - id: a28
+          title: "Отбираем элементы"
+          outcome: "Собирать подходящие значения."
+        - id: a29
+          title: "Повторяем до цели"
+          outcome: "Повторять действие до результата."
+        - id: a30
+          title: "Почему цикл заканчивается"
+          outcome: "Проверять остановку цикла."
+        - id: a31
+          title: "Планируем программу"
+          outcome: "Планировать решение самостоятельной задачи."
+        - id: a32
+          title: "Решаем новую задачу"
+          outcome: "Применять знакомые инструменты к новой задаче."
+lessons:
+  - id: a01
+    content: lessons/a01/lesson.md
+    completion_tasks: ["a01_q_number","a01_q_reader","a01_q_change"]
+    tasks:
+      - id: a01_intro
+        kind: article
+        title: "Программа и комментарии"
+        section: intro
+      - id: a01_q_number
+        kind: question
+        title: "Появится ли число?"
+        section: q_number
+        choices:
+          - {id: seven, label: "Число 7"}
+          - {id: nothing, label: "Ничего"}
+          - {id: comment, label: "Текст «Покажи число 7»"}
+        correct_choice: nothing
+        explanation: "Перед текстом стоит #. Вся строка — комментарий, поэтому Python не выполняет просьбу и ничего не показывает."
+      - id: a01_directions
+        kind: article
+        title: "Кому адресована подсказка"
+        section: directions
+      - id: a01_q_reader
+        kind: question
+        title: "Кто придумает загадку?"
+        section: q_reader
+        choices:
+          - {id: child, label: "Тебе — человеку, который читает файл"}
+          - {id: python, label: "Python — при запуске файла"}
+        correct_choice: child
+        explanation: "Это подсказка тебе. Python пропускает комментарий: он не придумывает загадку и не выводит эту строку."
+      - id: a01_q_change
+        kind: question
+        title: "Изменится ли работа программы?"
+        section: q_change
+        choices:
+          - {id: "yes", label: "Да, действия Python изменятся"}
+          - {id: "no", label: "Нет, действия Python останутся теми же"}
+        correct_choice: "no"
+        explanation: "Комментарии помогают человеку читать файл, но не задают действий Python. Если исполняемые инструкции одинаковые, изменение только комментариев не меняет их работу."
+      - id: a01_summary
+        kind: summary
+        title: "Итоги урока"
+        section: summary
+  - id: a02
+    content: lessons/a02/lesson.md
+    completion_tasks: ["a02_greeting","a02_q_print","a02_repair","a02_houses","a02_stickers"]
+    tasks:
+      - id: a02_print_text
+        kind: article
+        title: "Показываем текст"
+        section: print_text
+      - id: a02_greeting
+        kind: exercise
+        title: "Поздоровайся"
+        section: greeting
+        student_file: exercises/a02/greeting.py
+        template: lessons/a02/exercises/greeting.py
+        run_mode: console
+      - id: a02_numbers
+        kind: article
+        title: "Число или текст"
+        section: numbers
+      - id: a02_q_print
+        kind: question
+        title: "Что покажет print?"
+        section: q_print
+        choices:
+          - {id: word, label: "Слово print — без кавычек"}
+          - {id: quoted, label: "Текст \"print\" — вместе с кавычками"}
+          - {id: twice, label: "Слово print два раза"}
+        correct_choice: word
+        explanation: "Первое print — имя выполняемой функции. Внутри кавычек находится её аргумент: слово print. Кавычки отмечают границы текста и не выводятся."
+      - id: a02_argument
+        kind: article
+        title: "Имя аргумента и его значение"
+        section: argument
+      - id: a02_repair
+        kind: exercise
+        title: "Почини вызов"
+        section: repair
+        student_file: exercises/a02/repair.py
+        template: lessons/a02/exercises/repair.py
+        run_mode: console
+      - id: a02_houses
+        kind: exercise
+        title: "Выбери подходящие дома"
+        section: houses
+        student_file: exercises/a02/houses.py
+        template: lessons/a02/exercises/houses.py
+        run_mode: console
+        hints:
+          - "Проверь сначала, в каких домах ровно три кота. Затем проверяй только эти дома."
+          - "Для каждого оставшегося дома сравни собак и птиц. Если их поровну, дом не подходит. Посчитай подходящие дома, а не животных."
+      - id: a02_stickers
+        kind: exercise
+        title: "Сколько осталось наклеек?"
+        section: stickers
+        student_file: exercises/a02/stickers.py
+        template: lessons/a02/exercises/stickers.py
+        run_mode: console
+      - id: a02_summary
+        kind: summary
+        title: "Итоги урока"
+        section: summary
+  - id: a03
+    content: lessons/a03/lesson.md
+    completion_tasks: ["a03_q_order","a03_countdown","a03_announcements","a03_race"]
+    tasks:
+      - id: a03_order
+        kind: article
+        title: "Сначала верхняя строка"
+        section: order
+      - id: a03_empty_lines
+        kind: article
+        title: "Строки без действий"
+        section: empty_lines
+      - id: a03_q_order
+        kind: question
+        title: "Два числа или три?"
+        section: q_order
+        choices:
+          - {id: two_five, label: "Сначала 2, затем 5"}
+          - {id: all, label: "Сначала 2, затем 7, затем 5"}
+          - {id: reverse, label: "Сначала 5, затем 2"}
+        correct_choice: two_five
+        explanation: "Python выполняет первый print и показывает 2. Пустую строку и комментарий с # пропускает. Затем выполняет последний print и показывает 5."
+      - id: a03_countdown
+        kind: exercise
+        title: "Обратный отсчёт"
+        section: countdown
+        student_file: exercises/a03/countdown.py
+        template: lessons/a03/exercises/countdown.py
+        run_mode: console
+      - id: a03_announcements
+        kind: exercise
+        title: "Исправь объявления"
+        section: announcements
+        student_file: exercises/a03/announcements.py
+        template: lessons/a03/exercises/announcements.py
+        run_mode: console
+      - id: a03_race
+        kind: exercise
+        title: "Восстанови финиш"
+        section: race
+        student_file: exercises/a03/race.py
+        template: lessons/a03/exercises/race.py
+        run_mode: console
+        hints:
+          - "Лена и Ваня идут рядом именно в таком порядке. Попробуй поставить эту пару на разные места из четырёх."
+          - "Маша может занимать только второе или третье место. Для каждого такого варианта проверь, остаётся ли Пете место раньше Лены."
+      - id: a03_summary
+        kind: summary
+        title: "Итоги урока"
+        section: summary

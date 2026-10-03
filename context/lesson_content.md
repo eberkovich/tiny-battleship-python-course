@@ -70,11 +70,17 @@ step only when the launcher can collect an answer and give feedback; otherwise
 use a supported coding/run activity or an explicitly parent-led pilot check.
 Do not claim that an answer was checked when no mechanism collects it.
 
+For answer-submission puzzles, completion means answering and receiving
+feedback, not answering correctly. A wrong answer is an opportunity to compare
+and understand; it must not force guessing until the child gets a green result.
+
 A guided first exercise is useful, but is not evidence of independent
-understanding. Required work must include reasoning beyond transcription;
-do not reserve that work for optional stars. A green acceptance result proves
-the stated behavior, not mastery. Before expanding the replacement course,
-pilot the first few lessons: can the child explain a short program and solve a
+understanding. Guided syntax practice may resemble its worked example;
+independent reasoning is required within the lesson, but need not always be
+another coding exercise. Required work must include reasoning beyond
+transcription; do not reserve that work for optional stars. A green acceptance
+result proves the stated behavior, not mastery. Before expanding the replacement
+course, pilot the first few lessons: can the child explain a short program and solve a
 changed problem without being given its lines?
 
 ### Explanations and prerequisite order
@@ -172,9 +178,11 @@ short explanations:
 - one or two focused coding exercises;
 - one or two independent problems that cannot be solved by copying an example.
 
-These are learning activities, not new launcher step types. Use the supported
-coding/run workflow or an explicitly parent-led pilot check for puzzles. Count
-each activity once even when it combines prediction, editing, and running.
+These are learning activities, not new launcher step types. Use `question` for
+answer-submission puzzles and the coding/run workflow for tasks that require
+writing or repairing code. Parent-led pilot checks can supplement these, but
+do not substitute for recorded required activity completion. Count each
+activity once even when it combines prediction, editing, and running.
 A meaningful game milestone may serve as an independent problem; do not add
 an isolated duplicate to fill the count.
 
@@ -202,6 +210,27 @@ one component; durable game integration must still be a distinct task. Avoid
 consecutive tasks with essentially the same solution strategy. Required work
 must include a problem whose solution cannot simply be copied from an example.
 
+During initial syntax practice, allow familiar non-programming problems whose
+answers the child reports using taught Python. In A2/A3, normally include only
+one or two such problems alongside Python prediction, debugging, and writing
+practice. Prefer verified children's logic-book problems requiring several
+reasoning steps, not obvious calculations, word tricks, or new mathematics.
+Record the source and distinguish an adaptation from an original book task.
+Judge difficulty with the child pilot, not the book's age label alone.
+
+An initial source is Zhenya Katz's children's logic workbook, with
+[publisher-provided examples](https://deti.mann-ivanov-ferber.ru/2023/11/18/10-veselyx-golovolomok-dlya-razvitiya-logiki-skachat-zadaniya/).
+Use these as task-design references, not permission to reproduce book pages.
+
+For these tasks, state that the child solves the problem and Python displays
+the conclusion; do not imply that the program implements the solution method.
+Ask for only a numeric answer when appropriate to reduce typing errors, after
+teaching numeric arguments. Assess originality across the child's reasoning
+and code together, not by inventing more Python syntax or treating another
+story with the same reasoning as a different problem. Such a task practises
+reasoning and output, not a reusable algorithm; the general-rule requirements
+below still apply when the program is asked to solve varied inputs itself.
+
 Before functions are taught, tasks may be ordinary scripts; do not require an
 unexplained function definition for checker convenience. State explicit inputs
 and outcomes, and use prediction, changed scenarios, or debugging to go beyond
@@ -220,15 +249,36 @@ addresses, or another type; variable names do not explain this. For a function,
 say whether the child writes its body, some missing part, or the complete
 definition, and whether the checker or the child calls it.
 
-Give a labelled concrete example with data distinct from assessment cases and
-the expected result; include an important opposite case when one exists. Make
-existing setup, rule, sample data, required action, and result unmistakably
-different. Label examples **«Пример:»** or **«Например:»**. Never start in the
-middle of an unexplained situation or imply that an example is the task answer.
+Examples in exercise descriptions are optional, not mandatory. Include one
+only to clarify a genuinely non-obvious input/output contract. Do not add a
+worked version of the same task: changing numbers, names, or story details does
+not make it different. The example must not supply the reasoning or steps the
+child is asked to discover. If the task is already clear, omit the example.
+Keep worked examples for teaching new concepts in the explanatory articles.
+
+When a task needs a clarifying example, use data distinct from assessment cases
+and state the expected result; include an important opposite case when needed
+to clarify the contract. Make existing setup, rule, sample data, required action,
+and result unmistakably different. Label examples **«Пример:»** or
+**«Например:»**. Never start in the middle of an unexplained situation or imply
+that an example is the task answer.
 
 After drafting, describe the step's purpose in one sentence. Its title, opening,
 content, example, and ending must match that sentence. Verify title agreement
 between metadata, heading, and starter comments whenever renaming a task.
+
+#### Puzzle answers and corrective feedback
+
+Give each answer-submission puzzle a clear question, plausible choices, a
+verified correct answer, and a brief explanation of why it is correct. Choices
+should reveal a meaningful distinction or likely misconception, not merely
+reward recognition of a copied example. Use only concepts already explained.
+
+After any submission, the child sees the correct answer and explanation,
+including when their answer was wrong. Count the activity as completed, not
+as demonstrated understanding. Coding tasks framed as puzzles still require
+working code; this submission rule does not turn failed coding checks into
+completed exercises. Progression and persistence follow the architecture.
 
 #### Star tasks, hints, and feedback
 
@@ -247,13 +297,17 @@ Every coding task produces immediate feedback through short printed output,
 real graphics/input when relevant, or deliberate debugging. The checker tests
 the stated contract, not one exact source spelling. Keep reference answers out
 of child-facing material. Explain failure in terms of the requested behavior.
+For a reasoning task with a printed answer, distinguish a Python error from an
+incorrect puzzle conclusion. Help a stuck child with progressive hints, not an
+automatic answer reveal; a coding task still needs correct output to pass.
 
 ### Lesson and file composition
 
 A lesson normally contains a concrete problem, short articles interleaved with
 practice, required independent application, an optional star task, and a
 truthful summary. Foundation lessons end with a small program or independent
-problem; game lessons include a meaningful **«Пишем игру»** milestone when
+problem; the initial reading orientation may use only articles and required
+puzzles. Game lessons include a meaningful **«Пишем игру»** milestone when
 appropriate. There is no obligation to use every step kind.
 
 The summary distinguishes practice achievements from integrated game features.
@@ -267,6 +321,12 @@ to change. Do not ask the child to redo checked work or silently discard code.
 Keep teaching experiments in independent files. A temporary debugging addition
 to the game needs an explicit later removal task. Put familiar prerequisite
 setup in starters when it is not the task's learning objective.
+
+In the first coding lesson, provide one guided exercise, then ask the child to
+write complete calls independently. Do not prefill the construction being
+practised, such as `print()` when writing a call is the objective. Debugging
+starters contain deliberately broken code instead; identify the fault's scope
+clearly without supplying the repair.
 
 Copy each isolated exercise/star specification into its starter as Russian
 comments: title, inputs, result, examples, success condition, and any recap.
@@ -313,9 +373,14 @@ boundaries, and execution errors. Avoid exact-prose/source assertions except
 where they protect an essential teaching contract. Full suites and complete
 game scenarios run at checkpoints and handoff, not every text edit.
 
+For every answer-submission puzzle, verify the correct answer and explanation,
+and check that both correct and incorrect submissions reveal feedback and count
+as completed while an unanswered puzzle does not.
+
 Review explanations, terminology, starter copies, title/content agreement,
-prerequisite order, example proximity, ambiguous wording, age suitability,
-accidental solutions, and exercise independence together. Explicitly ask what
+prerequisite order, example proximity, redundant worked task examples,
+ambiguous wording, age suitability, accidental solutions, and exercise
+independence together. Explicitly ask what
 the child must reason out and how understanding is assessed. Pilot early lessons
 with the children before authoring the entire replacement course.
 
@@ -341,17 +406,18 @@ IDs when lessons are authored.
 
 Each entry states its learning goal and evidence of transfer. Puzzle domains
 are illustrative, not complete exercise specifications or solutions. Actual
-tasks still need explicit inputs, examples, success conditions, reference
-answers, and prerequisite review.
+tasks still need explicit inputs, examples only when needed for clarity,
+success conditions, reference answers, and prerequisite review.
 
 ### Section A — Programming foundations
 
 Foundation coding tasks use independent scripts and printed results. No game
 file, coordinate pairs, or graphical helper commands are required. A1 is a
-short reading orientation before coding begins; it does not require a quiz UI
-or an empty-program exercise. Each later lesson includes focused practice and
-independent application, with short articles interleaved rather than one dense
-explanation. Consolidation lessons introduce no hidden syntax.
+short reading orientation before coding begins, with required in-app puzzles
+and corrective feedback, not an empty-program exercise. Each later lesson
+includes focused practice and independent application, with short articles
+interleaved rather than one dense explanation. Consolidation lessons introduce
+no hidden syntax.
 
 #### A1. Reading the first file
 
@@ -360,18 +426,27 @@ comment for the person reading it, not an action. Explain starter directions
 before opening the first commented file. Do not use untaught Python commands
 to demonstrate comments.
 
-**Evidence:** a parent-led reading check: the child identifies the directions
-in a starter and explains why they do not run. Do not claim an automated
-understanding check or invent a source-pattern checker for comments.
+**Evidence:** short in-app puzzles distinguish directions for the reader from
+actions for the computer and explore why changing a comment does not execute
+an action. Each submitted answer reveals the correct answer and explanation
+and completes that puzzle even if wrong. Do not treat completion as proof of
+understanding or invent a source-pattern checker for comments; use the child
+pilot to check whether the child can explain the distinction.
 
-#### A2. Showing a message
+#### A2. Showing text and numbers
 
 **Learn:** `print` shows a supplied value. Explain a function call, parentheses,
-quoted text, and the difference between the argument name in `print(value)`
-and the actual text supplied in a call. Start with one call.
+quoted text, numbers without quotes, and the difference between the argument
+name in `print(value)` and an actual value supplied in a call. Explicitly label
+the signature as an explanatory form, not a runnable line to copy. Start with
+one call; calculations inside Python remain for A4.
 
 **Evidence:** create a message from a stated goal and explain what will be
 shown. Distinguish text inside quotes from the function name outside them.
+Predict unfamiliar calls and repair a syntax mistake. Solve a suitably
+challenging, book-inspired logic problem and a separate arithmetic problem,
+printing only their numeric answers; these check reasoning and call writing,
+not Python algorithms for the puzzles.
 
 #### A3. Executing lines in order
 
@@ -384,8 +459,9 @@ announcement whose order is wrong; explain the output line by line.
 
 #### A4. Numbers and calculations
 
-**Learn:** a number differs from text containing digits. Introduce addition
-and subtraction expressions and printing their calculated result.
+**Learn:** build on A2's number/text distinction. Introduce addition and
+subtraction expressions and printing their calculated result, contrasting a
+calculation with text that only looks like one.
 
 **Evidence:** select calculations for a small shopping or sharing problem,
 and explain the difference between printing text and calculating a value.
@@ -741,17 +817,35 @@ selection rule without changing turn handling or drawing.
 
 ### Authoring and delivery boundary
 
-No replacement lessons are implemented. This definition specifies learning
-outcomes and prerequisite order, not ready-made articles, final task statements,
-or executable metadata. Do not mistake the illustrative puzzles for authored
-lessons or technical test fixtures for student content.
+The A1–A3 pilot is implemented after review of its outlines and exact tasks.
+This learning path still defines outcomes and prerequisite order for later
+lessons, not ready-made articles or final tasks. Do not mistake illustrative
+puzzles or technical test fixtures for student content.
 
-The next authoring step is only the first few foundation lessons. Pilot the
-initial reading, message, and execution-order lessons before expanding through
-calculations and variables. Establish exact prerequisites, examples, distinct
-tasks, and understanding checks; use the child pilots to refine this planned
-split before writing the whole course.
-Restore executable metadata with fresh IDs once those lessons are ready.
+The pilot's prerequisite and activity review is:
+
+- A1: no Python syntax prerequisites. Comment examples precede three submitted
+  puzzles about output, reader instructions, and changing comments. Ask the
+  child to explain the distinction during the pilot; completion is not mastery.
+- A2: A1 comments. Complete calls and quoted text precede guided message writing;
+  number arguments precede prediction and the independent numeric-answer tasks.
+  The labelled signature versus supplied-value examples precede syntax repair.
+  Five activities cover writing, prediction, debugging, two-condition selection,
+  and a separate sharing calculation. The houses task adapts the cited Katz
+  puzzle using original data; the arithmetic task is original.
+- A3: A1 comments and A2 calls. A top-to-bottom trace precedes multi-line work;
+  a separate trace explains blank lines and commented-out calls. Four activities
+  cover prediction, countdown construction, reordered announcements, and an
+  original finish-order deduction. The deduction has one verified solution.
+
+All seven coding tasks have private references checked through the student's
+subprocess checker. Five answer-choice puzzles have verified answers and
+corrective feedback. No task modifies Battleship. Child pilots are still
+pending: check whether the child explains unfamiliar code and solves a changed
+problem without receiving its lines before authoring A4 onward. Revise this
+split explicitly when that evidence calls for it.
+
+Fresh IDs and puzzle submission/progress support are installed with this pilot.
 Extend the runner for varied-input function tasks with the first such task,
 inside the student subprocess, not as speculative work now.
 

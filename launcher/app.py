@@ -80,6 +80,14 @@ def _content_column_width(available_width: int) -> int:
     return max(1, available_width - CONTENT_COLUMN_SIDE_MARGIN * 2)
 
 
+def _card_padding(kind: str) -> tuple[int, int]:
+    return {
+        "note": (NOTE_PADDING_X, NOTE_PADDING_Y),
+        "recap": (RECAP_PADDING_X, RECAP_PADDING_Y),
+        "example": (EXAMPLE_PADDING_X, EXAMPLE_PADDING_Y),
+    }.get(kind, (CONTENT_PADDING_X, CONTENT_PADDING_Y))
+
+
 def _markdown_blocks(text: str) -> list[tuple[str, str]]:
     blocks: list[tuple[str, str]] = []
     in_code = False
@@ -180,6 +188,8 @@ class LauncherApp:
         self.task_status_rects: dict[str, pygame.Rect] = {}
         self.lesson_rects: list[tuple[pygame.Rect, str]] = []
         self.api_links: list[tuple[pygame.Rect, str]] = []
+        self.answer_rects: list[tuple[pygame.Rect, str]] = []
+        self.puzzle_feedback_rect: pygame.Rect | None = None
         self.api_dialog: str | None = None
         self.command_reference_open = False
         self.reference_api_links: list[tuple[pygame.Rect, str]] = []
@@ -321,6 +331,10 @@ class LauncherApp:
             return
         if self.controller.busy:
             return
+        for rect, choice_id in self.answer_rects:
+            if rect.collidepoint(position):
+                self.controller.choose_answer(choice_id)
+                return
         for rect, api_name in self.api_links:
             if rect.collidepoint(position):
                 self.api_dialog = api_name
@@ -355,6 +369,14 @@ class LauncherApp:
                 self.controller.open_code()
             elif button.action == "run":
                 self.controller.start_run()
+            elif button.action == "submit_answer":
+                self.controller.submit_answer()
+                # The renderer clamps this to the content's bottom, revealing
+                # feedback immediately even when it requires scrolling.
+                self.scroll = 1_000_000
+            elif button.action == "hint":
+                self.controller.reveal_hint()
+                self.scroll = 1_000_000
             elif button.action == "game":
                 self.controller.start_game()
             elif button.action == "previous":
@@ -385,6 +407,8 @@ class LauncherApp:
         self.task_status_rects = {}
         self.lesson_rects = []
         self.api_links = []
+        self.answer_rects = []
+        self.puzzle_feedback_rect = None
         self.reference_api_links = []
         self.copy_signature_links = []
         self.note_card_rect = None
@@ -573,7 +597,11 @@ class LauncherApp:
         overlay.fill((0, 0, 0, DIALOG_OVERLAY_ALPHA))
         self.screen.blit(overlay, (0, 0))
 
-        dialog = pygame.Rect(0, 0, 860, 620)
+        height = min(
+            viewport_size[1] - 80,
+            max(620, 160 + len(self.controller.course.api_references) * 80),
+        )
+        dialog = pygame.Rect(0, 0, 860, height)
         dialog.center = (viewport_size[0] // 2, viewport_size[1] // 2)
         pygame.draw.rect(
             self.screen, self.theme.content_card, dialog, border_radius=16
@@ -727,7 +755,7 @@ class LauncherApp:
             (home_left, section_y),
         )
         subtitle = self.small_font.render(
-            "Три этапа — каждый заканчивается видимым результатом.",
+            f"Доступно уроков: {len(course.lessons)}. Остальные — в плане.",
             True,
             self.theme.muted,
         )
@@ -735,16 +763,20 @@ class LauncherApp:
 
         card_y = section_y + 76
         card_width = (home_width - HOME_STAGE_GAP * 2) // 3
+        stage_height = 136 + max(
+            len(_wrap(self.small_font, stage.summary, card_width - 36))
+            for stage in course.roadmap
+        ) * 19
         for index, stage in enumerate(course.roadmap, start=1):
             rect = pygame.Rect(
                 home_left + (index - 1) * (card_width + HOME_STAGE_GAP),
                 card_y,
                 card_width,
-                154,
+                stage_height,
             )
             self._render_home_stage(stage, index, rect)
 
-        actions_y = card_y + 177
+        actions_y = card_y + stage_height + 23
         first_task = course.lessons[0].tasks[0]
         has_progress = bool(
             self.controller.progress.completed_tasks
@@ -893,7 +925,7 @@ class LauncherApp:
             ),
             (rect.x + 18, rect.y + 91),
         )
-        lines = _wrap(self.small_font, stage.summary, rect.width - 36)[:2]
+        lines = _wrap(self.small_font, stage.summary, rect.width - 36)
         for index, line in enumerate(lines):
             self.screen.blit(
                 self.small_font.render(line, True, self.theme.muted),
@@ -1132,6 +1164,15 @@ class LauncherApp:
 
         body_top = 132
         section_blocks = _markdown_blocks(self.controller.sections[task.section])
+        if task.kind == "question":
+            section_blocks.extend(("choice", choice.id) for choice in task.choices)
+            if self.controller.puzzle_feedback:
+                section_blocks.append(("puzzle_feedback", self.controller.puzzle_feedback))
+        hint_count = self.controller.revealed_hints.get(task.id, 0)
+        section_blocks.extend(("recap", hint) for hint in task.hints[:hint_count])
+        if hint_count < len(task.hints):
+            label = "Показать подсказку" if hint_count == 0 else "Следующая подсказка"
+            section_blocks.append(("hint", label))
         if task.kind == "summary":
             next_lesson = self.controller.next_roadmap_lesson()
             if next_lesson is not None:
@@ -1222,9 +1263,12 @@ class LauncherApp:
                 "Открыть редактор", left + 125, button_y, 185, "open"
             )
             self._add_button("Запустить", left + 325, button_y, 135, "run")
+        if task.kind == "question" and not self.controller.task_passed(task):
+            if self.controller.selected_answer is not None:
+                self._add_button("Ответить", left + 125, button_y, 135, "submit_answer")
         can_advance = (
             self.controller.debug
-            or not task.is_coding
+            or (not task.is_coding and task.kind != "question")
             or task.kind == "star"
             or self.controller.task_passed(task)
         )
@@ -1268,7 +1312,6 @@ class LauncherApp:
         self.screen.set_clip(rect)
         card_width = _content_column_width(rect.width)
         card_x = rect.centerx - card_width // 2
-        inner_width = card_width - CONTENT_PADDING_X * 2
         items: list[tuple[str, list[tuple[str, str]]]] = []
         group: list[tuple[str, str]] = []
 
@@ -1281,7 +1324,9 @@ class LauncherApp:
             if block[0] == "divider":
                 flush_group()
                 items.append(("divider", []))
-            elif block[0] in {"note", "recap", "example"}:
+            elif block[0] in {
+                "note", "recap", "example", "choice", "puzzle_feedback", "hint"
+            }:
                 flush_group()
                 example_group = (
                     _markdown_blocks(block[1])
@@ -1292,6 +1337,24 @@ class LauncherApp:
             else:
                 group.append(block)
         flush_group()
+
+        # Measure before drawing, so submission feedback and ordinary scrolling
+        # use the same bounded content viewport.
+        total_height = 0
+        previous_card = False
+        for kind, group in items:
+            if kind == "divider":
+                total_height += 28 + self.submarine_divider.get_height()
+                previous_card = False
+                continue
+            padding_x, padding_y = _card_padding(kind)
+            total_height += (
+                (14 if previous_card else 0)
+                + self._markdown_group_height(group, card_width - padding_x * 2)
+                + padding_y * 2
+            )
+            previous_card = True
+        self.scroll = min(self.scroll, max(0, total_height - rect.height))
 
         y = rect.y - self.scroll
         previous_was_card = False
@@ -1307,22 +1370,8 @@ class LauncherApp:
                 continue
             if previous_was_card:
                 y += 14
-            item_inner_width = (
-                card_width - NOTE_PADDING_X * 2
-                if item_kind == "note"
-                else card_width - RECAP_PADDING_X * 2
-                if item_kind == "recap"
-                else card_width - EXAMPLE_PADDING_X * 2
-                if item_kind == "example"
-                else inner_width
-            )
-            item_padding_y = (
-                NOTE_PADDING_Y if item_kind == "note" else CONTENT_PADDING_Y
-            )
-            if item_kind == "recap":
-                item_padding_y = RECAP_PADDING_Y
-            elif item_kind == "example":
-                item_padding_y = EXAMPLE_PADDING_Y
+            item_padding_x, item_padding_y = _card_padding(item_kind)
+            item_inner_width = card_width - item_padding_x * 2
             content_height = self._markdown_group_height(group, item_inner_width)
             card = pygame.Rect(
                 card_x,
@@ -1334,8 +1383,27 @@ class LauncherApp:
                 "note": self.theme.note_background,
                 "recap": self.theme.recap_background,
                 "example": self.theme.example_background,
+                "choice": self.theme.card,
+                "puzzle_feedback": self.theme.recap_background,
+                "hint": self.theme.note_background,
             }.get(item_kind, self.theme.content_card)
+            if item_kind == "choice" and group[0][1] == self.controller.selected_answer:
+                background = self.theme.card_active
             pygame.draw.rect(self.screen, background, card, border_radius=14)
+            if item_kind == "choice":
+                choice_id = group[0][1]
+                if choice_id == self.controller.selected_answer:
+                    pygame.draw.rect(self.screen, self.theme.accent, card, 2, border_radius=14)
+                visible = card.clip(rect)
+                if visible.height:
+                    self.answer_rects.append((visible, choice_id))
+            elif item_kind == "puzzle_feedback":
+                self.puzzle_feedback_rect = card.clip(rect)
+                pygame.draw.rect(self.screen, self.theme.recap_border, card, 2, border_radius=14)
+            elif item_kind == "hint":
+                visible = card.clip(rect)
+                if visible.height:
+                    self.buttons.append(Button(group[0][1], visible, "hint"))
             if item_kind == "recap":
                 pygame.draw.rect(
                     self.screen,
@@ -1354,16 +1422,7 @@ class LauncherApp:
                 )
             self._draw_markdown_group(
                 group,
-                card.x
-                + (
-                    NOTE_PADDING_X
-                    if item_kind == "note"
-                    else RECAP_PADDING_X
-                    if item_kind == "recap"
-                    else EXAMPLE_PADDING_X
-                    if item_kind == "example"
-                    else CONTENT_PADDING_X
-                ),
+                card.x + item_padding_x,
                 card.y + item_padding_y,
                 item_inner_width,
             )
@@ -1465,6 +1524,14 @@ class LauncherApp:
                 height += 18
             elif kind == "code":
                 height += 43
+            elif kind == "choice":
+                label = next(
+                    choice.label for choice in self.controller.current_task.choices
+                    if choice.id == value
+                )
+                height += len(_wrap(self.font, label, width - 30)) * 30 + 5
+            elif kind == "puzzle_feedback":
+                height += self._markdown_group_height(_markdown_blocks(value), width)
             elif kind == "note":
                 source_lines = value.splitlines()
                 for index, source_line in enumerate(source_lines):
@@ -1509,6 +1576,22 @@ class LauncherApp:
                     y + 4,
                 )
                 y += 43
+            elif kind == "choice":
+                label = next(
+                    choice.label for choice in self.controller.current_task.choices
+                    if choice.id == value
+                )
+                pygame.draw.circle(self.screen, self.theme.accent, (x + 8, y + 12), 8, 2)
+                if value == self.controller.selected_answer:
+                    pygame.draw.circle(self.screen, self.theme.accent, (x + 8, y + 12), 4)
+                for line in _wrap(self.font, label, width - 30):
+                    self.screen.blit(self.font.render(line, True, self.theme.text), (x + 30, y))
+                    y += 30
+                y += 5
+            elif kind == "puzzle_feedback":
+                feedback_blocks = _markdown_blocks(value)
+                self._draw_markdown_group(feedback_blocks, x, y, width)
+                y += self._markdown_group_height(feedback_blocks, width)
             elif kind == "note":
                 source_lines = value.splitlines()
                 for index, source_line in enumerate(source_lines):
@@ -1714,7 +1797,7 @@ class LauncherApp:
         return rect
 
     def _task_has_completion_badge(self, task: Task) -> bool:
-        return task.is_coding and self.controller.task_passed(task)
+        return (task.is_coding or task.kind == "question") and self.controller.task_passed(task)
 
     def _task_has_failure_badge(self, task: Task) -> bool:
         return (

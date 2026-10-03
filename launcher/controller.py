@@ -55,6 +55,8 @@ class LauncherController:
         self.latest_output = ""
         self.game_message = ""
         self.game_message_level = "info"
+        self.selected_answers: dict[str, str] = {}
+        self.revealed_hints: dict[str, int] = {}
 
     @property
     def current_task(self) -> Task:
@@ -136,8 +138,11 @@ class LauncherController:
     def lesson_status(self, lesson: Lesson) -> str:
         if self.workspace.lesson_complete(lesson, self.progress):
             return "completed"
-        coding_ids = {task.id for task in lesson.tasks if task.is_coding}
-        if coding_ids & (self.progress.completed_tasks | self.progress.earned_stars):
+        activity_ids = {
+            task.id for task in lesson.tasks
+            if task.is_coding or task.kind == "question"
+        }
+        if activity_ids & (self.progress.completed_tasks | self.progress.earned_stars):
             return "in_progress"
         return "not_started" if self.lesson_unlocked(lesson.id) else "locked"
 
@@ -193,6 +198,52 @@ class LauncherController:
         target = self.lesson.tasks[index]
         if self.task_unlocked(target):
             self.select_task(target.id)
+
+    def choose_answer(self, choice_id: str) -> None:
+        task = self.current_task
+        if self.busy or task.kind != "question" or self.task_passed(task):
+            return
+        if choice_id not in {choice.id for choice in task.choices}:
+            raise ValueError(f"Unknown choice for {task.id}: {choice_id}")
+        self.selected_answers[task.id] = choice_id
+
+    def submit_answer(self) -> None:
+        task = self.current_task
+        choice_id = self.selected_answers.get(task.id)
+        if (
+            self.busy or task.kind != "question"
+            or self.task_passed(task) or choice_id is None
+        ):
+            return
+        self.progress.puzzle_answers[task.id] = choice_id
+        self.progress.completed_tasks.add(task.id)
+        if not self.debug:
+            self.workspace.save_progress(self.progress)
+
+    @property
+    def selected_answer(self) -> str | None:
+        task_id = self.current_task.id
+        return self.progress.puzzle_answers.get(
+            task_id, self.selected_answers.get(task_id)
+        )
+
+    @property
+    def puzzle_feedback(self) -> str:
+        task = self.current_task
+        answer = self.progress.puzzle_answers.get(task.id)
+        if task.kind != "question" or answer is None:
+            return ""
+        correct = next(
+            choice.label for choice in task.choices if choice.id == task.correct_choice
+        )
+        result = "Верно!" if answer == task.correct_choice else "Не совсем. Давай разберёмся."
+        return f"{result}\n\nПравильный ответ: {correct}\n\n{task.explanation}"
+
+    def reveal_hint(self) -> None:
+        task = self.current_task
+        count = self.revealed_hints.get(task.id, 0)
+        if not self.busy and count < len(task.hints):
+            self.revealed_hints[task.id] = count + 1
 
     def source_path(self) -> Path | None:
         if not self.current_task.is_coding:

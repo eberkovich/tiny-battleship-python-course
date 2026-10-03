@@ -917,7 +917,7 @@ def test_run_passes_selected_lesson_to_checker(tmp_path: Path) -> None:
     assert calls[0][1]["task_id"] == "lesson_02_exercise_01"
 
 
-def test_run_command_reports_curriculum_reset_without_touching_student_files(
+def test_run_command_starts_pilot_without_overwriting_existing_student_files(
     tmp_path: Path,
 ) -> None:
     student = tmp_path / "Два ребёнка" / "Маша"
@@ -947,10 +947,9 @@ def test_run_command_reports_curriculum_reset_without_touching_student_files(
         timeout=10,
     )
 
-    assert result.returncode == 1
-    assert "Уроки сейчас перерабатываются" in result.stderr
+    assert result.returncode == 0, result.stderr
     assert "Traceback" not in result.stderr
-    assert {path.name: path.read_bytes() for path in student.iterdir()} == before
+    assert {name: (student / name).read_bytes() for name in before} == before
 
 
 def test_combined_run_uses_real_subprocesses_end_to_end(

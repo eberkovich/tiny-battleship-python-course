@@ -15,6 +15,12 @@ class CurriculumUnavailableError(ValueError):
 
 
 @dataclass(frozen=True)
+class AnswerChoice:
+    id: str
+    label: str
+
+
+@dataclass(frozen=True)
 class Task:
     id: str
     kind: str
@@ -23,6 +29,10 @@ class Task:
     student_file: Path | None = None
     template: Path | None = None
     run_mode: str = "game"
+    choices: tuple[AnswerChoice, ...] = ()
+    correct_choice: str | None = None
+    explanation: str = ""
+    hints: tuple[str, ...] = ()
 
     @property
     def is_coding(self) -> bool:
@@ -61,7 +71,7 @@ class RoadmapStage:
 
 @dataclass(frozen=True)
 class ApiReference:
-    introduced_in: str
+    introduced_in: str | None
     signature: str
     summary: str
     details: tuple[str, ...]
@@ -209,6 +219,20 @@ def load_course(curriculum_path: Path | None = None) -> Course:
         for item in lesson_data["tasks"]:
             student_file = item.get("student_file")
             template = item.get("template")
+            raw_choices = item.get("choices", [])
+            raw_hints = item.get("hints", [])
+            if not isinstance(raw_choices, list) or not all(
+                isinstance(choice, dict) for choice in raw_choices
+            ):
+                raise ValueError("Puzzle choices must be a list of IDs and labels")
+            if not isinstance(raw_hints, list) or not all(
+                isinstance(hint, str) and hint.strip() for hint in raw_hints
+            ):
+                raise ValueError("Hints must be a list of text lines")
+            choices = tuple(
+                AnswerChoice(_required_text(choice, "id"), _required_text(choice, "label"))
+                for choice in raw_choices
+            )
             task = Task(
                 id=_required_text(item, "id"),
                 kind=_required_text(item, "kind"),
@@ -217,7 +241,28 @@ def load_course(curriculum_path: Path | None = None) -> Course:
                 student_file=Path(student_file) if student_file else None,
                 template=PROJECT_ROOT / template if template else None,
                 run_mode=str(item.get("run_mode", "game")),
+                choices=choices,
+                correct_choice=item.get("correct_choice"),
+                explanation=(
+                    _required_text(item, "explanation")
+                    if item.get("kind") == "question" else ""
+                ),
+                hints=tuple(raw_hints),
             )
+            if task.kind == "question":
+                choice_ids = {choice.id for choice in choices}
+                if (
+                    task.is_coding or task.template is not None or len(choices) < 2
+                    or len(choice_ids) != len(choices)
+                    or not isinstance(task.correct_choice, str)
+                    or task.correct_choice not in choice_ids
+                    or not task.explanation.strip()
+                ):
+                    raise ValueError(f"Invalid answer-submission puzzle: {task.id}")
+            elif choices or task.correct_choice or item.get("explanation"):
+                raise ValueError(f"Answer choices require a question: {task.id}")
+            if task.hints and not task.is_coding:
+                raise ValueError(f"Hints require a coding task and text: {task.id}")
             if task.run_mode not in {"game", "console"}:
                 raise ValueError(f"Unknown run mode for {task.id}: {task.run_mode}")
             if task.run_mode == "console" and not task.is_coding:
@@ -233,15 +278,24 @@ def load_course(curriculum_path: Path | None = None) -> Course:
                 raise ValueError(f"Task IDs must be unique across the course: {task.id}")
             task_ids.add(task.id)
             tasks.append(task)
+        required = tuple(lesson_data["completion_tasks"])
         lessons.append(
             Lesson(
                 id=lesson_id,
                 title=roadmap_by_id[lesson_id].title,
                 content=PROJECT_ROOT / _required_text(lesson_data, "content"),
-                completion_tasks=tuple(lesson_data["completion_tasks"]),
+                completion_tasks=required,
                 tasks=tuple(tasks),
             )
         )
+
+    for lesson in lessons:
+        activities = {
+            task.id for task in lesson.tasks
+            if (task.is_coding and task.kind != "star") or task.kind == "question"
+        }
+        if not lesson.completion_tasks or not set(lesson.completion_tasks) <= activities:
+            raise ValueError(f"Lesson requires declared learning activities: {lesson.id}")
 
     implemented_ids = [lesson.id for lesson in lessons]
     planned_prefix = [
@@ -258,15 +312,18 @@ def load_course(curriculum_path: Path | None = None) -> Course:
         ):
             raise ValueError(f"API reference {name} requires detail lines")
         api_references[name] = ApiReference(
-            introduced_in=_required_text(reference_data, "introduced_in"),
+            introduced_in=reference_data.get("introduced_in"),
             signature=_required_text(reference_data, "signature"),
             summary=_required_text(reference_data, "summary"),
             details=tuple(details),
         )
         introduction = api_references[name].introduced_in
+        if introduction is not None and not isinstance(introduction, str):
+            raise ValueError(f"API introduction must be a task ID: {name}")
         planned_prefixes = tuple(f"{lesson.id}_" for lesson in roadmap_lessons)
-        if introduction not in task_ids and not introduction.startswith(
-            planned_prefixes
+        if (
+            introduction is not None and introduction not in task_ids
+            and not introduction.startswith(planned_prefixes)
         ):
             raise ValueError(
                 f"API reference {name} has unknown introduction task: "

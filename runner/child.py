@@ -63,7 +63,7 @@ def _error_result(error: BaseException, output: str = "") -> RunResult:
         return RunResult(
             "error",
             "syntax_error",
-            f"В коде есть синтаксическая ошибка{line}. Проверь скобки и запятые.",
+            f"Python не смог прочитать код{line}. Проверь запись команды в этой строке.",
             details,
             output,
         )
