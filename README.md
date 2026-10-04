@@ -64,7 +64,9 @@ checker, puzzle feedback/progress, and the mixed lesson workflow.
 The previous curriculum is retired. Fresh lesson/task IDs prevent old
 completions from counting toward new lessons; existing student code is preserved.
 
-Pilot verification (2026-10-03): 148 tests passed, including all seven coding
-references and end-to-end progression. Shell syntax and runtime compilation
-passed. Native macOS startup passed; rendered pages were inspected in both
-themes, with layout checks at 1180×760 and 1600×1000. Child testing is pending.
+Pilot verification (2026-10-04): 168 tests passed, including all seven coding
+references, worked-example outputs, puzzle answer reveals, and end-to-end
+progression. Shell syntax and runtime compilation passed. Real-renderer
+previews were inspected in both themes, with layout checks at 1180×760 and
+1600×1000. Native macOS startup was checked in the initial pilot (2026-10-03).
+Child testing is pending.

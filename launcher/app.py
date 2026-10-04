@@ -31,8 +31,13 @@ RECAP_PADDING_X = 20
 RECAP_PADDING_Y = 14
 EXAMPLE_PADDING_X = 20
 EXAMPLE_PADDING_Y = 18
+CODE_PADDING_X = 14
+CODE_PADDING_Y = 12
+CODE_LINE_HEIGHT = 26
+LITERAL_BLOCK_GAP = 8
 OUTPUT_PADDING_X = 18
 OUTPUT_PADDING_Y = 12
+OUTPUT_HEADER_HEIGHT = 28
 OUTPUT_LINE_HEIGHT = 22
 OUTPUT_MAX_LINES = 6
 DIVIDER_HEIGHT = 40
@@ -60,7 +65,7 @@ def _clean_markdown(text: str) -> str:
 
 
 def _wrap(font: pygame.font.Font, text: str, width: int) -> list[str]:
-    if not text:
+    if not text.strip():
         return [""]
     result: list[str] = []
     words = text.split()
@@ -74,6 +79,25 @@ def _wrap(font: pygame.font.Font, text: str, width: int) -> list[str]:
             line = word
     result.append(line)
     return result
+
+
+def _wrap_literal(font: pygame.font.Font, text: str, width: int) -> list[str]:
+    """Wrap display rows without collapsing spaces or dropping blank lines."""
+    rows: list[str] = []
+    for line in text.split("\n"):
+        if not line:
+            rows.append("")
+        while line:
+            low, high = 1, len(line)
+            while low < high:
+                middle = (low + high + 1) // 2
+                if font.size(line[:middle])[0] <= width:
+                    low = middle
+                else:
+                    high = middle - 1
+            rows.append(line[:low])
+            line = line[low:]
+    return rows
 
 
 def _content_column_width(available_width: int) -> int:
@@ -90,7 +114,8 @@ def _card_padding(kind: str) -> tuple[int, int]:
 
 def _markdown_blocks(text: str) -> list[tuple[str, str]]:
     blocks: list[tuple[str, str]] = []
-    in_code = False
+    code_kind: str | None = None
+    code_lines: list[str] = []
     callout_kind: str | None = None
     paragraph: list[str] = []
     callout: list[str] = []
@@ -107,32 +132,39 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
             callout.clear()
         callout_kind = None
 
+    def flush_code() -> None:
+        nonlocal code_kind
+        if code_kind is not None:
+            blocks.append((code_kind, "\n".join(code_lines)))
+            code_lines.clear()
+        code_kind = None
+
     for raw_line in text.splitlines():
         stripped = raw_line.strip()
+        if code_kind is not None:
+            if stripped == FENCE:
+                flush_code()
+            else:
+                code_lines.append(raw_line)
+            continue
         if callout_kind is not None:
             if stripped.startswith(">"):
                 # Remove only the Markdown quote marker and its optional
                 # separator. Preserve the remaining leading spaces: they are
                 # meaningful Python indentation inside quoted code examples.
-                callout_line = raw_line[1:]
+                callout_line = raw_line.lstrip()[1:]
                 if callout_line.startswith(" "):
                     callout_line = callout_line[1:]
-                callout_line = callout_line.rstrip()
                 if callout_line or callout_kind == "example":
                     callout.append(callout_line)
                 continue
             flush_callout()
         if stripped.startswith(FENCE):
             flush_paragraph()
-            in_code = not in_code
+            language = stripped[len(FENCE):].strip()
+            code_kind = "output" if language == "output" else "code"
             continue
-        if in_code:
-            # Empty quoted lines are Markdown spacing around a code block, not
-            # executable code. Rendering them as rows creates a misleading
-            # blank code card between adjacent statements.
-            if stripped:
-                blocks.append(("code", raw_line))
-        elif stripped == "> [!NOTE]":
+        if stripped == "> [!NOTE]":
             flush_paragraph()
             if blocks and blocks[-1][0] == "space":
                 blocks.pop()
@@ -167,6 +199,7 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
             paragraph.append(stripped)
     flush_paragraph()
     flush_callout()
+    flush_code()
     while blocks and blocks[-1][0] == "space":
         blocks.pop()
     return blocks
@@ -1441,16 +1474,44 @@ class LauncherApp:
     def _output_lines(self, value: str, available_width: int) -> list[str]:
         card_width = _content_column_width(available_width)
         inner_width = card_width - OUTPUT_PADDING_X * 2
-        lines: list[str] = []
-        for raw_line in value.splitlines() or [""]:
-            lines.extend(_wrap(self.code_font, raw_line, inner_width))
+        # Captured stdout ends a row with a newline. It does not create another
+        # empty row unless the program actually prints a second newline.
+        lines = _wrap_literal(self.code_font, value.removesuffix("\n"), inner_width)
         if len(lines) > OUTPUT_MAX_LINES:
             return lines[: OUTPUT_MAX_LINES - 1] + ["…"]
         return lines
 
     def _output_card_height(self, value: str, available_width: int) -> int:
-        line_count = len(self._output_lines(value, available_width))
-        return OUTPUT_PADDING_Y * 2 + 22 + 6 + line_count * OUTPUT_LINE_HEIGHT
+        return self._output_panel_height(self._output_lines(value, available_width))
+
+    def _output_panel_height(self, lines: list[str]) -> int:
+        return OUTPUT_PADDING_Y * 2 + OUTPUT_HEADER_HEIGHT + len(lines) * OUTPUT_LINE_HEIGHT
+
+    def _draw_output_panel(self, lines: list[str], card: pygame.Rect) -> None:
+        pygame.draw.rect(
+            self.screen, self.theme.output_background, card, border_radius=8
+        )
+        icon = pygame.Rect(card.x + OUTPUT_PADDING_X, card.y + OUTPUT_PADDING_Y, 22, 18)
+        pygame.draw.rect(self.screen, self.theme.output_caption, icon, 2, border_radius=3)
+        pygame.draw.lines(
+            self.screen, self.theme.output_caption, False,
+            [(icon.x + 5, icon.y + 5), (icon.x + 9, icon.y + 9), (icon.x + 5, icon.y + 13)],
+            2,
+        )
+        pygame.draw.line(
+            self.screen, self.theme.output_caption,
+            (icon.x + 12, icon.y + 13), (icon.x + 17, icon.y + 13), 2,
+        )
+        title = self.small_font.render("Вывод программы", True, self.theme.output_caption)
+        self.screen.blit(title, (icon.right + 9, card.y + OUTPUT_PADDING_Y - 1))
+        line_y = card.y + OUTPUT_PADDING_Y + OUTPUT_HEADER_HEIGHT
+        previous_clip = self.screen.get_clip()
+        self.screen.set_clip(previous_clip.clip(card.inflate(-OUTPUT_PADDING_X * 2, 0)))
+        for line in lines:
+            rendered = self.code_font.render(line, True, self.theme.output_text)
+            self.screen.blit(rendered, (card.x + OUTPUT_PADDING_X, line_y))
+            line_y += OUTPUT_LINE_HEIGHT
+        self.screen.set_clip(previous_clip)
 
     def _render_output_card(
         self,
@@ -1467,30 +1528,7 @@ class LauncherApp:
             card_width,
             self._output_card_height(value, available_width),
         )
-        pygame.draw.rect(
-            self.screen,
-            self.theme.code_background,
-            card,
-            border_radius=10,
-        )
-        icon = pygame.Rect(card.x + OUTPUT_PADDING_X, card.y + OUTPUT_PADDING_Y, 22, 18)
-        pygame.draw.rect(self.screen, self.theme.code_text, icon, 2, border_radius=3)
-        prompt = self.small_font.render(">_", True, self.theme.code_text)
-        self.screen.blit(prompt, prompt.get_rect(center=icon.center))
-        title = self.small_font.render(
-            "Результат программы",
-            True,
-            self.theme.code_text,
-        )
-        self.screen.blit(
-            title,
-            (icon.right + 9, card.y + OUTPUT_PADDING_Y - 1),
-        )
-        line_y = card.y + OUTPUT_PADDING_Y + 28
-        for line in self._output_lines(value, available_width):
-            rendered = self.code_font.render(line, True, self.theme.code_text)
-            self.screen.blit(rendered, (card.x + OUTPUT_PADDING_X, line_y))
-            line_y += OUTPUT_LINE_HEIGHT
+        self._draw_output_panel(self._output_lines(value, available_width), card)
         self.output_card_rect = card
 
     def _render_fixed_note(
@@ -1523,7 +1561,14 @@ class LauncherApp:
             if kind == "space":
                 height += 18
             elif kind == "code":
-                height += 43
+                height += (
+                    CODE_PADDING_Y * 2
+                    + len(value.split("\n")) * CODE_LINE_HEIGHT
+                    + LITERAL_BLOCK_GAP
+                )
+            elif kind == "output":
+                lines = _wrap_literal(self.code_font, value, width - OUTPUT_PADDING_X * 2)
+                height += self._output_panel_height(lines) + LITERAL_BLOCK_GAP
             elif kind == "choice":
                 label = next(
                     choice.label for choice in self.controller.current_task.choices
@@ -1561,21 +1606,32 @@ class LauncherApp:
             if kind == "space":
                 y += 18
             elif kind == "code":
-                code_rect = pygame.Rect(x, y, width, 35)
+                lines = value.split("\n")
+                code_rect = pygame.Rect(
+                    x, y, width, CODE_PADDING_Y * 2 + len(lines) * CODE_LINE_HEIGHT
+                )
                 pygame.draw.rect(
                     self.screen,
                     self.theme.code_background,
                     code_rect,
-                    border_radius=5,
+                    border_radius=8,
                 )
-                self._draw_text_with_api_links(
-                    self.code_font,
-                    value,
-                    self.theme.code_text,
-                    x + 12,
-                    y + 4,
+                previous_clip = self.screen.get_clip()
+                self.screen.set_clip(
+                    previous_clip.clip(code_rect.inflate(-CODE_PADDING_X * 2, 0))
                 )
-                y += 43
+                for index, line in enumerate(lines):
+                    self._draw_text_with_api_links(
+                        self.code_font, line, self.theme.code_text,
+                        x + CODE_PADDING_X, y + CODE_PADDING_Y + index * CODE_LINE_HEIGHT,
+                    )
+                self.screen.set_clip(previous_clip)
+                y = code_rect.bottom + LITERAL_BLOCK_GAP
+            elif kind == "output":
+                lines = _wrap_literal(self.code_font, value, width - OUTPUT_PADDING_X * 2)
+                output_rect = pygame.Rect(x, y, width, self._output_panel_height(lines))
+                self._draw_output_panel(lines, output_rect)
+                y = output_rect.bottom + LITERAL_BLOCK_GAP
             elif kind == "choice":
                 label = next(
                     choice.label for choice in self.controller.current_task.choices

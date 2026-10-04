@@ -17,7 +17,7 @@ import pygame
 import pytest
 import yaml
 
-from launcher.app import GLOBAL_TOOLBAR_BOTTOM, LauncherApp
+from launcher.app import CODE_PADDING_X, EXAMPLE_PADDING_X, GLOBAL_TOOLBAR_BOTTOM, LauncherApp, _markdown_blocks
 from launcher.controller import LauncherController
 from launcher.course import CurriculumUnavailableError, load_course, load_sections
 from runner.process import run_check
@@ -31,6 +31,69 @@ CODING_TASKS = [
 QUESTIONS = [
     (lesson, task) for lesson in COURSE.lessons for task in lesson.tasks if task.kind == "question"
 ]
+WORKED_EXAMPLES = [
+    (task.id, index, _markdown_blocks(value))
+    for lesson in COURSE.lessons
+    for task in lesson.tasks
+    for index, (kind, value) in enumerate(_markdown_blocks(load_sections(lesson.content)[task.section]))
+    if kind == "example"
+]
+
+
+@pytest.mark.parametrize("task_id,index,blocks", WORKED_EXAMPLES,
+                         ids=[f"{task_id}-{index}" for task_id, index, _ in WORKED_EXAMPLES])
+def test_worked_examples_show_verified_output_separate_from_explanation(task_id, index, blocks) -> None:
+    meaningful = [(kind, value) for kind, value in blocks if kind != "space"]
+    sources = [value for kind, value in meaningful if kind == "code"]
+    outputs = [value for kind, value in meaningful if kind == "output"]
+    assert len(sources) == 1
+    result = subprocess.run(
+        [sys.executable, "-c", sources[0]], capture_output=True, text=True, timeout=3, check=True,
+    )
+    if outputs:
+        assert [kind for kind, _ in meaningful] == ["text", "code", "output", "text"]
+        assert result.stdout.removesuffix("\n") == outputs[0]
+    else:
+        # A1's complete examples contain only comments, so there is no output.
+        assert task_id.startswith("a01_")
+        assert result.stdout == ""
+
+
+@pytest.mark.parametrize("lesson,task", QUESTIONS, ids=[t.id for _, t in QUESTIONS])
+def test_prediction_output_is_revealed_only_after_submission(tmp_path, lesson, task) -> None:
+    controller = LauncherController(tmp_path / "review", debug=True)
+    controller.enter_lesson(lesson.id)
+    controller.select_task(task.id)
+    assert not controller.puzzle_feedback
+    assert all(kind != "output" for kind, _ in _markdown_blocks(controller.sections[task.section]))
+    controller.choose_answer(task.correct_choice)
+    assert not controller.puzzle_feedback
+    controller.submit_answer()
+    blocks = _markdown_blocks(controller.puzzle_feedback)
+    outputs = [value for kind, value in blocks if kind == "output"]
+    if task.id in {"a02_q_print", "a03_q_order"}:
+        source = next(value for kind, value in _markdown_blocks(controller.sections[task.section]) if kind == "code")
+        result = subprocess.run([sys.executable, "-c", source], capture_output=True, text=True, check=True, timeout=3)
+        assert outputs == [result.stdout.removesuffix("\n")]
+    else:
+        assert not outputs
+
+
+def test_pilot_source_lines_fit_the_minimum_example_width(tmp_path) -> None:
+    app = LauncherApp(LauncherController(tmp_path / "review", debug=True))
+    # At the minimum window size, an example is narrower than a content card.
+    inner_width = 700 - EXAMPLE_PADDING_X * 2 - CODE_PADDING_X * 2
+    for lesson in COURSE.lessons:
+        for section in load_sections(lesson.content).values():
+            blocks = _markdown_blocks(section)
+            blocks.extend(
+                child for kind, value in blocks.copy() if kind == "example"
+                for child in _markdown_blocks(value)
+            )
+            for kind, value in blocks:
+                if kind == "code":
+                    assert all(app.code_font.size(line)[0] <= inner_width for line in value.split("\n"))
+    pygame.quit()
 
 
 def test_pilot_scope_and_material_are_consistent() -> None:

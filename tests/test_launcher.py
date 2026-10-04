@@ -15,7 +15,12 @@ from launcher.app import (
     HOME_SCROLL_VIEW_TOP,
     LauncherApp,
     WINDOW_SIZE,
+    CODE_LINE_HEIGHT,
+    CODE_PADDING_X,
+    CODE_PADDING_Y,
+    LITERAL_BLOCK_GAP,
     _markdown_blocks,
+    _wrap_literal,
 )
 from launcher.controller import LauncherController
 from launcher.course import Lesson, Task, load_course
@@ -106,7 +111,7 @@ def test_markdown_example_keeps_its_explanation_code_and_result_together() -> No
     ]
 
 
-def test_markdown_example_does_not_render_empty_code_rows() -> None:
+def test_markdown_example_preserves_one_complete_code_block() -> None:
     blocks = _markdown_blocks(
         "> [!EXAMPLE]\n"
         "> **Пример:** цикл повторяет команду.\n"
@@ -122,10 +127,77 @@ def test_markdown_example_does_not_render_empty_code_rows() -> None:
     assert _markdown_blocks(blocks[0][1]) == [
         ("text", "**Пример:** цикл повторяет команду."),
         ("space", ""),
-        ("code", "values = [1, 2]"),
-        ("code", "for value in values:"),
-        ("code", "    print(value)"),
+        ("code", "values = [1, 2]\n\nfor value in values:\n    print(value)"),
     ]
+
+
+def test_markdown_distinguishes_notation_source_output_and_explanation() -> None:
+    assert _markdown_blocks(
+        "```text\nprint(value)\n```\n\n"
+        "```python\nprint('  x  ')\nprint('')\n```\n\n"
+        "```output\n  x  \n\n```\n\nОбъяснение."
+    ) == [
+        ("code", "print(value)"), ("space", ""),
+        ("code", "print('  x  ')\nprint('')"), ("space", ""),
+        ("output", "  x  \n"), ("space", ""),
+        ("text", "Объяснение."),
+    ]
+    quoted = _markdown_blocks(
+        "> [!EXAMPLE]\n> ```output\n>   x  \n>\n> ```"
+    )
+    assert _markdown_blocks(quoted[0][1]) == [("output", "  x  \n")]
+
+
+def test_literal_output_wrap_preserves_whitespace_and_empty_rows() -> None:
+    pygame.font.init()
+    font = pygame.font.SysFont("Menlo", 18)
+    text = "  alpha  beta  \n\n    gamma\n"
+    assert _wrap_literal(font, text, 1000) == text.split("\n")
+    wrapped = _wrap_literal(font, "  alpha  beta  ", font.size("  alpha")[0])
+    assert "".join(wrapped) == "  alpha  beta  "
+    assert len(wrapped) > 1
+
+
+def test_multiline_source_is_one_panel_and_output_uses_shared_renderer(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    app = LauncherApp(LauncherController(tmp_path / "student"))
+    source = "values = [1, 2]\n\nfor value in values:\n    print(value)"
+    height = CODE_PADDING_Y * 2 + 4 * CODE_LINE_HEIGHT
+    assert app._markdown_group_height([("code", source)], 600) == height + LITERAL_BLOCK_GAP
+    panels, source_rows, output_panels = [], [], []
+    original_rect = pygame.draw.rect
+
+    def record_rect(surface, color, rect, *args, **kwargs):
+        if color == app.theme.code_background:
+            panels.append(pygame.Rect(rect))
+        return original_rect(surface, color, rect, *args, **kwargs)
+
+    monkeypatch.setattr(pygame.draw, "rect", record_rect)
+    monkeypatch.setattr(app, "_draw_text_with_api_links", lambda font, text, color, x, y: source_rows.append((text, x, y)))
+    app._draw_markdown_group([("code", source)], 20, 30, 600)
+    assert panels == [pygame.Rect(20, 30, 600, height)]
+    assert source_rows == [
+        (line, 20 + CODE_PADDING_X, 30 + CODE_PADDING_Y + index * CODE_LINE_HEIGHT)
+        for index, line in enumerate(source.split("\n"))
+    ]
+
+    original_output = app._draw_output_panel
+
+    def record_output(lines, rect):
+        output_panels.append((lines, rect.copy()))
+        original_output(lines, rect)
+
+    monkeypatch.setattr(app, "_draw_output_panel", record_output)
+    output = "  1\n\n2  "
+    app._draw_markdown_group([("output", output)], 20, 30, 600)
+    app._render_output_card(output, 20, 30, 662)
+    assert output_panels[0][0] == output_panels[1][0] == output.split("\n")
+    assert output_panels[0][1].size == output_panels[1][1].size
+    assert app._output_lines(output, 662) == output.split("\n")
+    assert app._output_lines("  1\n\n2  \n", 662) == output.split("\n")
+    assert app._output_lines("\n", 662) == [""]
+    assert app.theme.output_background != app.theme.code_background
 
 
 def test_editor_command_passes_exact_cyrillic_path_without_shell(tmp_path: Path) -> None:

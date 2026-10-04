@@ -85,6 +85,35 @@ changed problem without being given its lines?
 
 ### Explanations and prerequisite order
 
+#### Wording and editorial benchmarks
+
+Use natural, direct Russian that describes actual code elements and what
+Python does. Do not replace an explanation with invented "places", "helpers",
+or other abstractions the child must first decipher. Simpler wording must
+remain precise; brevity alone is not clarity. Any analogy must support, not
+replace, the literal explanation.
+
+Introduce a distinction through concrete examples before generalizing it.
+Keep terminology consistent and distinguish explanatory notation from
+executable Python explicitly. The child should be able to identify what each
+sentence refers to in the code, without guessing its meaning.
+
+Use these books as editorial benchmarks, not sources of wording to copy or
+translate:
+
+- [Python for Kids — Jason R. Briggs](https://nostarch.com/python-kids-2nd-edition):
+  the child-facing approach and accessible explanations;
+- [Think Python — Allen B. Downey](https://allendowney.github.io/ThinkPython/chap03.html):
+  precise definitions and explanations of execution;
+- [Invent Your Own Computer Games with Python — Al Sweigart](https://inventwithpython.com/invent4thed/chapter2.html):
+  concrete code walkthroughs and connections between instructions and behavior.
+
+Before approving an explanation, consult the equivalent treatment in these
+references and compare its specificity, sequencing, and technical precision.
+Check the Russian wording independently for naturalness and readability;
+matching a book's tone is not enough. Rewrite any sentence whose referent or
+meaning a beginner would have to infer from unexplained abstractions.
+
 #### Explain behavior, not just spelling
 
 Start every article with a concrete orientation and purpose. Teach in short
@@ -120,6 +149,29 @@ Prefer complete statements with meaningful names over unexplained placeholders
 or isolated operators. To explain a change, show complete before-and-after code
 and say what changed. Show a punctuation mark alone only when it is the subject
 and a nearby complete example gives its context.
+
+#### Code, output, and explanation
+
+A worked example that prints a result follows this order: short introduction
+→ one complete source-code block → exact output in its own block → brief
+explanation of why that output occurs. Keep explanatory prose outside both
+blocks. Show output literally rather than embedding it in sentences describing
+what appears; preserve its line breaks and meaningful whitespace.
+
+Verify that the displayed output matches the example program. For prediction
+puzzles, reveal the correct output and its explanation only after submission;
+possible outputs may still appear as answer choices. This presentation rule
+does not require adding examples to exercises; the exercise-originality and
+optional-example rules still apply. Visual treatment and the output caption
+are defined in the architecture.
+
+#### Example–explanation agreement
+
+Every example must demonstrate the exact point stated in its introduction and
+explanation. During review, identify which part of the code and its result
+supports that point. Correct syntax alone is insufficient. If the example does
+not support the claim, change the example or the explanation. When teaching a
+distinction, show the relevant contrast explicitly.
 
 #### Audit every first use
 
@@ -339,10 +391,17 @@ Refer to the child-facing tool as **«редактор»**, not a brand or filen
 Visual styling, themes, icons, layout, and run behavior belong to the
 architecture. Author content using its supported blocks:
 
-- `> [!EXAMPLE]`: one labelled example, explanation, contiguous fenced code,
-  and result together. Preserve four-space Python indentation in all lessons;
-  verify source and rendered indentation. Do not let blank lines turn into
-  separate code cards or split one example across unrelated blocks.
+- `> [!EXAMPLE]`: one labelled worked example following the code–output–
+  explanation sequence above. Use one contiguous fenced block per complete
+  source fragment; keep literal output separate from source and prose. Preserve
+  four-space Python indentation, blank lines, and line breaks; verify source
+  and rendered formatting. Do not split statements into separate code cards
+  or split one example across unrelated blocks.
+- Fenced `python`: Python source, including deliberate faults in repair tasks;
+  fenced `text`: explanatory notation,
+  explicitly identified as not ready to run; fenced `output`: literal printed
+  output, never an explanation or invented shell prompt. Within an example,
+  keep all three backticks and every source/output line quoted with `>`.
 - `> [!RECAP]`: one or two brief ideas beginning **«На всякий случай:»**,
   only for a needed prerequisite from an earlier lesson. Never recap the current
   lesson or repeat a reminder already given in the same lesson's context.
@@ -378,11 +437,13 @@ and check that both correct and incorrect submissions reveal feedback and count
 as completed while an unanswered puzzle does not.
 
 Review explanations, terminology, starter copies, title/content agreement,
-prerequisite order, example proximity, redundant worked task examples,
-ambiguous wording, age suitability, accidental solutions, and exercise
-independence together. Explicitly ask what
-the child must reason out and how understanding is assessed. Pilot early lessons
-with the children before authoring the entire replacement course.
+prerequisite order, example proximity and agreement with the explanation,
+redundant worked task examples, ambiguous wording, age suitability, accidental
+solutions, and exercise independence together. Apply the editorial benchmark
+review above and check that sentences refer to identifiable code elements or
+behavior. Explicitly ask what the child must reason out and how understanding
+is assessed. Pilot early lessons with the children before authoring the entire
+replacement course.
 
 ## Learning path definition
 
@@ -436,9 +497,10 @@ pilot to check whether the child can explain the distinction.
 #### A2. Showing text and numbers
 
 **Learn:** `print` shows a supplied value. Explain a function call, parentheses,
-quoted text, numbers without quotes, and the difference between the argument
-name in `print(value)` and an actual value supplied in a call. Explicitly label
-the signature as an explanatory form, not a runnable line to copy. Start with
+quoted text, numbers without quotes, and the difference between `value` in our
+explanatory notation `print(value)` and an actual value supplied in a call.
+Explicitly label this as explanatory notation, not a runnable line to copy or
+Python's formal parameter name for `print`. Start with
 one call; calculations inside Python remain for A4.
 
 **Evidence:** create a message from a stated goal and explain what will be
@@ -829,7 +891,7 @@ The pilot's prerequisite and activity review is:
   child to explain the distinction during the pilot; completion is not mastery.
 - A2: A1 comments. Complete calls and quoted text precede guided message writing;
   number arguments precede prediction and the independent numeric-answer tasks.
-  The labelled signature versus supplied-value examples precede syntax repair.
+  Explanatory call notation versus supplied-value examples precede syntax repair.
   Five activities cover writing, prediction, debugging, two-condition selection,
   and a separate sharing calculation. The houses task adapts the cited Katz
   puzzle using original data; the arithmetic task is original.

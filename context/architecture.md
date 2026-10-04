@@ -369,20 +369,43 @@ linking away from the task or revealing its solution. Use the same content and
 layout in both themes; colors come only from shared theme palette constants.
 
 Render Markdown `> [!EXAMPLE]` inside scrollable lesson content as a compact
-example card containing its explanation, code, and visible result. Use a quiet
+example card grouping its introduction, source code, output, and explanation
+in that order, with visually separate code and output blocks. Use a quiet
 background, one-pixel border, rounded corners, and normal lesson typography;
-do not add an icon or a redundant type caption. Dark and light themes use the
-same content and layout, with colors supplied only by theme palette constants.
+do not add an icon or a redundant example-type caption. Dark and light themes
+use the same content and layout, with colors supplied only by theme palette
+constants.
+
+#### Source code and program output
+
+Render each complete fenced source fragment as one IDE-like block with a
+continuous background, monospace text, and consistent padding, separated from
+the explanatory prose. Preserve indentation, blank lines, and line breaks.
+Never draw each statement as a separate card.
+
+Render literal program output in a separate compact terminal-style block
+captioned **«Вывод программы»**, with monospace text and a treatment distinct
+from source code and explanation. Do not add invented `$` or `>>>` prompts.
+Keep explanations and check feedback outside the output block. Use the same
+output style and caption for worked examples and actual program runs; their
+placement remains inline for examples and fixed for the latest run. Shared
+layout and rendering apply in both themes; only palette constants differ.
+
+Use fenced `python` for source, `text` for explicitly identified explanatory
+notation, and `output` for literal printed results. Preserve captured output
+without trimming spaces or blank rows. A final newline terminates the last
+display row; it does not add another empty row. Wrap long output for display
+without collapsing whitespace; source lines retain their original layout.
 
 Before the first console exercise is activated, capture bounded student
 `stdout` for every coding run. When it is non-empty, show only the latest run's
 output in a distinct fixed card named
-**«Результат программы»** above contextual check feedback. Use a small terminal
-icon, monospace text, and a code-like background so the card cannot be confused
-with lesson-content cards or the quiet workflow note. Hide it before the first
-output and never reserve an empty placeholder. Keep it visible after a failed
-check or runtime error when partial output exists. Do not show runner protocol
-lines in this card.
+**«Вывод программы»** above contextual check feedback, using the output style
+defined above and a small terminal icon so the card cannot be confused with
+lesson-content cards or the quiet workflow note. Hide it before the first output
+and never reserve an empty placeholder. Keep it visible after a failed check
+or runtime error when partial output exists. Do not show runner protocol lines
+in this card.
 
 #### API help
 

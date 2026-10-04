@@ -24,6 +24,9 @@ class ThemePalette:
     example_border: Color
     code_background: Color
     code_text: Color
+    output_background: Color
+    output_text: Color
+    output_caption: Color
     text: Color
     muted: Color
     accent: Color
@@ -54,6 +57,9 @@ DARK_THEME = ThemePalette(
     example_border=(102, 132, 158),
     code_background=(17, 29, 49),
     code_text=(205, 231, 246),
+    output_background=(18, 39, 43),
+    output_text=(207, 237, 230),
+    output_caption=(141, 191, 182),
     text=(239, 245, 255),
     muted=(174, 191, 211),
     accent=(63, 190, 181),
@@ -84,6 +90,9 @@ LIGHT_THEME = ThemePalette(
     example_border=(119, 151, 168),
     code_background=(24, 39, 58),
     code_text=(218, 239, 248),
+    output_background=(29, 49, 53),
+    output_text=(216, 243, 232),
+    output_caption=(157, 208, 196),
     text=(27, 43, 58),
     muted=(93, 111, 126),
     accent=(22, 145, 142),

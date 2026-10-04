@@ -227,10 +227,15 @@ lessons:
           - {id: quoted, label: "Текст \"print\" — вместе с кавычками"}
           - {id: twice, label: "Слово print два раза"}
         correct_choice: word
-        explanation: "Первое print — имя выполняемой функции. Внутри кавычек находится её аргумент: слово print. Кавычки отмечают границы текста и не выводятся."
+        explanation: |
+          ```output
+          print
+          ```
+
+          Перед скобкой print — имя функции. В кавычках записан текст, который ей передают: слово print. Функция выводит этот текст без кавычек.
       - id: a02_argument
         kind: article
-        title: "Имя аргумента и его значение"
+        title: "Аргумент в описании и в программе"
         section: argument
       - id: a02_repair
         kind: exercise
@@ -281,7 +286,13 @@ lessons:
           - {id: all, label: "Сначала 2, затем 7, затем 5"}
           - {id: reverse, label: "Сначала 5, затем 2"}
         correct_choice: two_five
-        explanation: "Python выполняет первый print и показывает 2. Пустую строку и комментарий с # пропускает. Затем выполняет последний print и показывает 5."
+        explanation: |
+          ```output
+          2
+          5
+          ```
+
+          Python выполняет первый print, пропускает пустую строку и комментарий, затем выполняет последний print. Вызов с числом 7 написан после #, поэтому он не выполняется.
       - id: a03_countdown
         kind: exercise
         title: "Обратный отсчёт"
@@ -298,7 +309,7 @@ lessons:
         run_mode: console
       - id: a03_race
         kind: exercise
-        title: "Восстанови финиш"
+        title: "Восстанови порядок финиша"
         section: race
         student_file: exercises/a03/race.py
         template: lessons/a03/exercises/race.py

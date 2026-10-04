@@ -40,7 +40,7 @@ class BoundedOutput:
         pass
 
     def value(self) -> str:
-        value = "".join(self.parts).rstrip()
+        value = "".join(self.parts)
         if self.truncated:
             value += "\n… вывод сокращён …"
         return value

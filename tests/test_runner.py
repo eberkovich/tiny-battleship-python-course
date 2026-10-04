@@ -126,7 +126,7 @@ def test_checker_routes_to_requested_lesson_acceptance(tmp_path: Path) -> None:
         "def check(task_id, snapshot, output):\n"
         "    assert task_id == 'lesson_02_exercise_01'\n"
         "    assert snapshot['boards']['enemy']['visible']\n"
-        "    assert output == '42'\n"
+        "    assert output == '42\\n'\n"
         "    return Outcome()\n",
         encoding="utf-8",
     )
@@ -154,7 +154,7 @@ def test_checker_routes_to_requested_lesson_acceptance(tmp_path: Path) -> None:
     assert result is not None
     assert result.passed
     assert result.message == "Проверен второй урок."
-    assert result.output == "42"
+    assert result.output == "42\n"
 
 
 def test_partial_output_is_preserved_after_runtime_error(tmp_path: Path) -> None:
@@ -164,7 +164,17 @@ def test_partial_output_is_preserved_after_runtime_error(tmp_path: Path) -> None
     result = run_check(source, "exercise_01", lesson_id="lesson_01")
 
     assert result.status == "error"
-    assert result.output == "начало"
+    assert result.output == "начало\n"
+
+
+def test_captured_output_preserves_spaces_and_blank_rows(tmp_path: Path) -> None:
+    source = tmp_path / "literal_output.py"
+    source.write_text(
+        "print('  начало  ')\nprint('')\nprint('конец  ')\nprint('')\n",
+        encoding="utf-8",
+    )
+    result = run_check(source, "exercise_01", lesson_id="lesson_01")
+    assert result.output == "  начало  \n\nконец  \n\n"
 
 
 def test_student_output_is_bounded(tmp_path: Path) -> None:
