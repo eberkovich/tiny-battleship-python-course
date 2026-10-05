@@ -4,18 +4,21 @@ An interactive tutorial where children first learn Python through small
 independent problems, then build their own Battleship game. The graphical
 helpers provide rendering and input; the child writes the game logic.
 
-## Foundation pilot
+## Foundation lessons
 
-The first three replacement lessons are ready for a child pilot:
+The first five replacement lessons are available:
 
 - A1: reading a file and understanding comments — three answer-choice puzzles.
 - A2: displaying text and numbers — five activities, including logic and arithmetic.
 - A3: execution order — four activities, including debugging and a deduction problem.
+- A4: arithmetic — six activities, ending with a workbook-based figure exchange.
+- A5: grouping with parentheses — five activities, including saving and rope problems.
 
 Puzzle submissions reveal the correct answer and explanation even after a
 wrong answer. Coding tasks need correct output. These lessons use independent
-files, not the cumulative game. Later lessons remain planned, not executable;
-pilot these three before expanding the course. Teaching principles and the path are in
+files, not the cumulative game. The user has tried A1–A3 with the children and
+reports positive feedback; A4/A5 are ready for their next trial. Later lessons
+remain planned, not executable. Teaching principles and the path are in
 [context/lesson_content.md](context/lesson_content.md#learning-path-definition).
 
 ## Current platform and language support
@@ -64,9 +67,11 @@ checker, puzzle feedback/progress, and the mixed lesson workflow.
 The previous curriculum is retired. Fresh lesson/task IDs prevent old
 completions from counting toward new lessons; existing student code is preserved.
 
-Pilot verification (2026-10-04): 168 tests passed, including all seven coding
-references, worked-example outputs, puzzle answer reveals, and end-to-end
-progression. Shell syntax and runtime compilation passed. Real-renderer
-previews were inspected in both themes, with layout checks at 1180×760 and
-1600×1000. Native macOS startup was checked in the initial pilot (2026-10-03).
-Child testing is pending.
+Verification (2026-10-04): 226 tests passed, including all sixteen coding
+references, untouched-starter rejection, worked-example outputs, puzzle
+feedback, and end-to-end progression through A1–A5. Shell syntax and runtime/
+reference compilation passed. Real-renderer previews were inspected in both
+themes at 1180×760 and 1600×1000, alongside automated layout checks.
+Native macOS startup was checked in the initial pilot (2026-10-03). A1–A3
+child-pilot feedback is user-reported, not a measured mastery result; A4/A5
+child testing is next.

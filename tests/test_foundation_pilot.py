@@ -71,10 +71,13 @@ def test_prediction_output_is_revealed_only_after_submission(tmp_path, lesson, t
     controller.submit_answer()
     blocks = _markdown_blocks(controller.puzzle_feedback)
     outputs = [value for kind, value in blocks if kind == "output"]
-    if task.id in {"a02_q_print", "a03_q_order"}:
-        source = next(value for kind, value in _markdown_blocks(controller.sections[task.section]) if kind == "code")
+    sources = [value for kind, value in _markdown_blocks(controller.sections[task.section]) if kind == "code"]
+    if sources:
+        assert len(sources) == 1
+        source = sources[0]
         result = subprocess.run([sys.executable, "-c", source], capture_output=True, text=True, check=True, timeout=3)
-        assert outputs == [result.stdout.removesuffix("\n")]
+        # Comment-only A1 snippets intentionally have no output card.
+        assert outputs == ([result.stdout.removesuffix("\n")] if result.stdout else [])
     else:
         assert not outputs
 
@@ -97,9 +100,9 @@ def test_pilot_source_lines_fit_the_minimum_example_width(tmp_path) -> None:
 
 
 def test_pilot_scope_and_material_are_consistent() -> None:
-    assert [lesson.id for lesson in COURSE.lessons] == ["a01", "a02", "a03"]
+    assert [lesson.id for lesson in COURSE.lessons] == ["a01", "a02", "a03", "a04", "a05"]
     assert len(COURSE.roadmap_lessons) == 32
-    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4]
+    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4, 6, 5]
     all_ids = set()
     for lesson in COURSE.lessons:
         sections = load_sections(lesson.content)
@@ -124,6 +127,12 @@ def test_reference_uses_student_checker(lesson, task) -> None:
     reference = PROJECT_ROOT / "lessons" / lesson.id / "reference" / task.template.name
     result = run_check(reference, task.id, lesson_id=lesson.id)
     assert result.passed, result
+
+
+@pytest.mark.parametrize("lesson,task", CODING_TASKS, ids=[t.id for _, t in CODING_TASKS])
+def test_untouched_starter_does_not_complete_the_coding_task(lesson, task) -> None:
+    result = run_check(task.template, task.id, lesson_id=lesson.id)
+    assert not result.passed
 
 
 def specification_comments(text: str) -> list[str]:
@@ -229,7 +238,7 @@ def test_fresh_workspaces_are_independent_and_have_no_game_file(tmp_path) -> Non
     for controller in (first, second):
         assert not (controller.workspace.root / "battleship.py").exists()
         assert not controller.game_available
-        assert len(list(controller.workspace.root.rglob("*.py"))) == 7
+        assert len(list(controller.workspace.root.rglob("*.py"))) == len(CODING_TASKS)
     first.enter_lesson("a01")
     first.select_task("a01_q_number")
     first.choose_answer("seven")
@@ -278,6 +287,15 @@ def test_answer_keys_have_independent_evidence() -> None:
                  and order.index(3) == order.index(2) + 1
                  and order.index(4) not in (0, 3)]
     assert solutions == [(1, 4, 2, 3)]
+    # Independent domain checks, not just reusing the reference expressions.
+    triangles = sum(3 for _ in range(52 // 2))
+    assert triangles % 2 == 0
+    circles = sum(74 for _ in range(triangles // 2))
+    assert circles == 2886
+    assert 137 + 29 * 36 < 1210 == 137 + 29 * 37
+    assert 1525 + 842 == 2367
+    assert 1525 - 842 == 683
+    assert 24 * 24 <= 584 < 25 * 24
 
 
 @pytest.mark.parametrize("source,lesson,task,code", [
@@ -286,6 +304,13 @@ def test_answer_keys_have_independent_evidence() -> None:
     ("print(11)\nprint(11)", "a02", "a02_stickers", "behavior_mismatch"),
     ("print(1)\nprint(2)\nprint(3)", "a03", "a03_countdown", "behavior_mismatch"),
     ("print(1423)", "a03", "a03_race", "behavior_mismatch"),
+    ("print(25)", "a04", "a04_boxes", "behavior_mismatch"),
+    ("print(92)", "a04", "a04_repair", "behavior_mismatch"),
+    ("print(5772)", "a04", "a04_exchange", "behavior_mismatch"),
+    ("print(11 + 7 * 3)", "a05", "a05_target", "behavior_mismatch"),
+    ("print(9 * (13 + 2)", "a05", "a05_repair", "syntax_error"),
+    ("print(1210 - 137 // 29)", "a05", "a05_dictionary", "behavior_mismatch"),
+    ("print(842)", "a05", "a05_ropes", "behavior_mismatch"),
 ])
 def test_focused_failures_keep_programming_and_reasoning_distinct(tmp_path, source, lesson, task, code) -> None:
     path = tmp_path / "answer.py"
@@ -341,8 +366,8 @@ def test_full_pilot_progress_requires_every_activity_and_survives_reopening(tmp_
         assert controller.completed_lesson_count == index + 1
         controller.select_task(lesson.tasks[-1].id)
     reopened = LauncherController(controller.workspace.root)
-    assert reopened.current_task.id == "a03_summary"
-    assert reopened.completed_lesson_count == 3
+    assert reopened.current_task.id == COURSE.lessons[-1].tasks[-1].id
+    assert reopened.completed_lesson_count == len(COURSE.lessons)
     assert not (reopened.workspace.root / "battleship.py").exists()
 
 

@@ -20,13 +20,16 @@ path. Do not duplicate the curriculum in implementation plans.
 
 ### Foundation pilot and retired curriculum
 
-The former lessons and executable metadata are retired. The replacement pilot
-implements only A1–A3: comments, showing text/numbers, and execution order.
-The launcher is runnable again. A1 uses submitted puzzles; A2/A3 also use
-independent console exercises. They do not create a cumulative game file.
-The roadmap lists the 32 planned foundation lessons; only the first three are
+The former lessons and executable metadata are retired. The replacement course
+implements A1–A5: comments, showing text/numbers, execution order, arithmetic,
+and grouping calculations. The launcher is runnable. A1 uses submitted puzzles;
+A2–A5 also use independent console exercises. They do not create a cumulative
+game file.
+The roadmap lists the 32 planned foundation lessons; only the first five are
 executable. The game section's feature milestones are not yet numbered lessons.
-Author later lessons only after the child pilot informs their design.
+The user reports positive child-pilot feedback for A1–A3 and approved A4/A5
+authoring. Continue to use child feedback when designing later lessons;
+activity completion alone is not evidence of understanding.
 
 The game/UI library, installer, assets, and `reference/part_01_game.py` remain
 available. The reference defines final game behavior, not a mandatory teaching
@@ -322,6 +325,15 @@ progress row or star counter; the task cards themselves show progress.
 Child-facing titles, wording, explanation order, and authoring requirements are
 defined in `context/lesson_content.md`. A `summary` is informational, not
 material or a coding task.
+
+#### Deferred A8¾ capstone visual reference
+
+The planned standalone capstone between A8 and A9 is named **A8¾**. When it is
+authored, include a small Harry Potter visual nod, such as a platform-style
+sign bearing A8¾. Keep it a restrained accent within the existing design,
+not a separate theme or layout. It does not require a Harry Potter task;
+task selection and its deferred checkpoint belong to `context/lesson_content.md`.
+Use the same visual asset in both themes.
 
 #### Puzzle interaction and feedback
 

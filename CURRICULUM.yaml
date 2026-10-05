@@ -321,3 +321,147 @@ lessons:
         kind: summary
         title: "Итоги урока"
         section: summary
+  - id: a04
+    content: lessons/a04/lesson.md
+    completion_tasks: ["a04_score","a04_q_text","a04_shorten","a04_boxes","a04_repair","a04_exchange"]
+    tasks:
+      - id: a04_calculations
+        kind: article
+        title: "Python считает за тебя"
+        section: calculations
+      - id: a04_score
+        kind: exercise
+        title: "Подсчитай баллы"
+        section: score
+        student_file: exercises/a04/score.py
+        template: lessons/a04/exercises/score.py
+        run_mode: console
+      - id: a04_calculation_or_text
+        kind: article
+        title: "Вычисление или текст"
+        section: calculation_or_text
+      - id: a04_q_text
+        kind: question
+        title: "Число или запись?"
+        section: q_text
+        choices:
+          - {id: text_then_number, label: "Сначала текст 240 + 36, затем число 276"}
+          - {id: two_numbers, label: "Число 276 два раза"}
+          - {id: two_texts, label: "Текст 240 + 36 два раза"}
+        correct_choice: text_then_number
+        explanation: |
+          ```output
+          240 + 36
+          276
+          ```
+
+          В верхнем вызове кавычки обозначают текст: Python выводит запись, не складывая числа. В нижнем кавычек нет: сначала Python вычисляет сумму, затем выводит число 276.
+      - id: a04_multiplication
+        kind: article
+        title: "Умножение"
+        section: multiplication
+      - id: a04_shorten
+        kind: exercise
+        title: "От сложения к умножению"
+        section: shorten
+        student_file: exercises/a04/shorten.py
+        template: lessons/a04/exercises/shorten.py
+        run_mode: console
+      - id: a04_division
+        kind: article
+        title: "Деление нацело"
+        section: division
+      - id: a04_boxes
+        kind: exercise
+        title: "Заполни коробки"
+        section: boxes
+        student_file: exercises/a04/boxes.py
+        template: lessons/a04/exercises/boxes.py
+        run_mode: console
+      - id: a04_order
+        kind: article
+        title: "Порядок вычислений"
+        section: order
+      - id: a04_repair
+        kind: exercise
+        title: "Исправь удвоение"
+        section: repair
+        student_file: exercises/a04/repair.py
+        template: lessons/a04/exercises/repair.py
+        run_mode: console
+      - id: a04_exchange
+        kind: exercise
+        title: "Обмен фигур"
+        section: exchange
+        student_file: exercises/a04/exchange.py
+        template: lessons/a04/exercises/exchange.py
+        run_mode: console
+        hints:
+          - "Нарисуй две стрелки: квадраты → треугольники → кружки. Сначала найди, сколько треугольников получится из всех квадратов."
+          - "Квадраты обменивают парами. Сколько таких пар у тебя есть и сколько треугольников даёт каждая? Затем так же посчитай пары полученных треугольников."
+      - id: a04_summary
+        kind: summary
+        title: "Итоги урока"
+        section: summary
+  - id: a05
+    content: lessons/a05/lesson.md
+    completion_tasks: ["a05_q_order","a05_target","a05_repair","a05_dictionary","a05_ropes"]
+    tasks:
+      - id: a05_grouping
+        kind: article
+        title: "Сначала то, что в скобках"
+        section: grouping
+      - id: a05_q_order
+        kind: question
+        title: "Какой результат получится?"
+        section: q_order
+        choices:
+          - {id: grouped, label: "65"}
+          - {id: ungrouped, label: "79"}
+          - {id: inner_only, label: "25"}
+        correct_choice: grouped
+        explanation: |
+          ```output
+          65
+          ```
+
+          Сначала Python вычисляет сумму в скобках: 18 + 7 — это 25. Затем вычитает 25 из 90 и выводит число 65. Если не заметить внутренние скобки и считать слева направо, получится другой ответ.
+      - id: a05_target
+        kind: exercise
+        title: "Получи нужное число"
+        section: target
+        student_file: exercises/a05/target.py
+        template: lessons/a05/exercises/target.py
+        run_mode: console
+      - id: a05_pairs
+        kind: article
+        title: "Каждой скобке нужна пара"
+        section: pairs
+      - id: a05_repair
+        kind: exercise
+        title: "Почини скобки"
+        section: repair
+        student_file: exercises/a05/repair.py
+        template: lessons/a05/exercises/repair.py
+        run_mode: console
+      - id: a05_dictionary
+        kind: exercise
+        title: "Накопи на словарь"
+        section: dictionary
+        student_file: exercises/a05/dictionary.py
+        template: lessons/a05/exercises/dictionary.py
+        run_mode: console
+      - id: a05_ropes
+        kind: exercise
+        title: "Две верёвки"
+        section: ropes
+        student_file: exercises/a05/ropes.py
+        template: lessons/a05/exercises/ropes.py
+        run_mode: console
+        hints:
+          - "Нарисуй верёвки одну под другой, начиная от одной линии. Отметь у длинной лишние 683 сантиметра. Остальные части двух верёвок одинаковой длины."
+          - "Представь, что у длинной отрезали лишние 683 сантиметра. Тогда останутся две одинаковые короткие верёвки. Найди длину одной, а затем восстанови длину исходной длинной."
+      - id: a05_summary
+        kind: summary
+        title: "Итоги урока"
+        section: summary

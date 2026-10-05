@@ -262,12 +262,19 @@ one component; durable game integration must still be a distinct task. Avoid
 consecutive tasks with essentially the same solution strategy. Required work
 must include a problem whose solution cannot simply be copied from an example.
 
+For logical tasks in any lesson, find an existing, age-appropriate problem in
+a reputable children's workbook rather than inventing one. Verify the actual
+problem and record the book, author, page or exercise, and source link when
+available. Preserve its reasoning structure; change only numerical data when
+needed to make Python calculation useful instead of easy mental arithmetic.
+Recheck solvability, constraints, and taught prerequisites after adaptation,
+and clearly distinguish the adaptation from the original workbook problem.
+
 During initial syntax practice, allow familiar non-programming problems whose
 answers the child reports using taught Python. In A2/A3, normally include only
 one or two such problems alongside Python prediction, debugging, and writing
-practice. Prefer verified children's logic-book problems requiring several
-reasoning steps, not obvious calculations, word tricks, or new mathematics.
-Record the source and distinguish an adaptation from an original book task.
+practice. Choose problems requiring several reasoning steps, not obvious
+calculations, word tricks, or new mathematics.
 Judge difficulty with the child pilot, not the book's age label alone.
 
 An initial source is Zhenya Katz's children's logic workbook, with
@@ -455,10 +462,13 @@ build a complete one-cell Battleship game. The final game has two 10×10 boards,
 feedback, counters, non-repeating shots, alternating turns, and victory/defeat.
 Multi-deck ships are a later game part, not the second learning section below.
 
-Section A is split into **32 planned lessons**: each A-number below denotes one
-lesson, not a topic block. Some lessons consolidate a known tool rather than
-introducing more syntax. This is a working split, not a count to preserve at
-the expense of understanding; revise boundaries explicitly after child pilots.
+Section A currently has **32 main planned lessons**, plus the standalone
+**A8¾** interim capstone between A8 and A9; its task selection is deferred.
+Each A-number below denotes one lesson, not a topic block. Some lessons
+consolidate a known tool
+rather than introducing more syntax. This is a working split, not a count to
+preserve at the expense of understanding; revise boundaries explicitly after
+child pilots.
 Section B still defines game-feature milestones, not individual lessons.
 
 The labels and English titles below are authoring references, not runtime IDs
@@ -522,21 +532,32 @@ announcement whose order is wrong; explain the output line by line.
 #### A4. Numbers and calculations
 
 **Learn:** build on A2's number/text distinction. Introduce addition and
-subtraction expressions and printing their calculated result, contrasting a
-calculation with text that only looks like one.
+subtraction, multiplication (`*`), and integer division (`//`) in expressions
+whose result is printed. Contrast calculation with text that only looks like
+one. Explain whole groups and leftover quantities using positive integers;
+exclude ordinary division, fractional values, and negative-division behavior.
+Introduce each operation before practice. Explain multiplication/division
+precedence and left-to-right evaluation within equal-priority operations
+before combining them. Grouping parentheses remain for A5.
 
-**Evidence:** select calculations for a small shopping or sharing problem,
-and explain the difference between printing text and calculating a value.
-Use only familiar arithmetic.
+**Evidence:** construct a calculation with useful larger numbers, distinguish
+text from computed output, replace repeated addition with multiplication,
+count complete groups, and repair a wrong operation. Independently choose
+calculations for the approved workbook-based two-step figure exchange. Only
+numbers are enlarged; preserve the original reasoning and exact exchanges.
+Use familiar arithmetic, without variables or hidden syntax.
 
 #### A5. Grouping a calculation
 
 **Learn:** parentheses group part of a calculation. Trace the grouped result
-before the surrounding addition or subtraction; distinguish grouping from
+before surrounding operations; distinguish grouping from
 the parentheses around function arguments.
 
 **Evidence:** compare two expressions and explain why grouping changes the
-result. Translate a small two-step problem without receiving answer lines.
+result, choose grouping for a target, and repair an unmatched parenthesis.
+Independently model the approved workbook-based saving-for-a-dictionary and
+unequal-rope problems. Use larger exact integer data so Python calculation is
+useful. Examples teach grouping syntax, not these problems' solution methods.
 
 #### A6. Giving a value a name
 
@@ -561,6 +582,21 @@ value. Use ordinary assignment, not unexplained abbreviated update syntax.
 
 **Evidence:** track a wallet or score through gains and losses; choose updates
 for a changed scenario and explain every intermediate value.
+
+#### A8¾. Interim capstone — task selection deferred
+
+The capstone is a standalone lesson between A8 and A9, not an article,
+exercise, or project task within A8. Keep A9 and later labels unchanged.
+When A8 is ready and its lesson checks pass, remind the user to select the
+capstone task. Do not research the task or author the lesson before then.
+At that checkpoint, find a suitable project in the tutorial books referenced
+above or another reputable tutorial, using only concepts taught through A8.
+Discuss the proposed task with the user before authoring it.
+
+A Harry Potter setting is welcome but not required. Prioritize educational
+quality: choose a stronger unthemed task over a weaker themed one; do not force
+a theme onto the task. The small visual reference is defined in
+`context/architecture.md`, independently of the task's subject.
 
 #### A9. Defining and calling a function
 
@@ -879,12 +915,12 @@ selection rule without changing turn handling or drawing.
 
 ### Authoring and delivery boundary
 
-The A1–A3 pilot is implemented after review of its outlines and exact tasks.
+The A1–A5 lessons are implemented after review of their outlines and tasks.
 This learning path still defines outcomes and prerequisite order for later
 lessons, not ready-made articles or final tasks. Do not mistake illustrative
 puzzles or technical test fixtures for student content.
 
-The pilot's prerequisite and activity review is:
+The authored lessons' prerequisite and activity review is:
 
 - A1: no Python syntax prerequisites. Comment examples precede three submitted
   puzzles about output, reader instructions, and changing comments. Ask the
@@ -899,13 +935,38 @@ The pilot's prerequisite and activity review is:
   a separate trace explains blank lines and commented-out calls. Four activities
   cover prediction, countdown construction, reordered announcements, and an
   original finish-order deduction. The deduction has one verified solution.
+- A4: A2 numeric/text calls and A3 execution order. Addition/subtraction and
+  left-to-right evaluation precede score calculation; a separate text/computed
+  output comparison precedes prediction. Multiplication precedes rewriting
+  repeated addition; integer division precedes complete-box counting. Mixed
+  operation order precedes operator repair and independent figure exchange.
+  Six required activities; hints only for the multi-step exchange. Source:
+  *Challenging Word Problems 2*, Singapore Math Inc., printed p. 138, exercise 2;
+  verified publisher-sample link and adaptation recorded in
+  `lessons/a04/acceptance.py`.
+- A5: A4 expressions and all four arithmetic operations. Grouping and the
+  distinction from call parentheses precede prediction and target construction;
+  pairing precedes syntax repair. Five required activities, including independent
+  saving and unequal-length problems. Hints only for the harder rope problem.
+  Sources: the same workbook, printed p. 155, exercise 8, and its rope problem
+  reproduced by Cassandra Turner. Source links and original/adapted quantities
+  are recorded in `lessons/a05/acceptance.py`; no unverified individual author
+  is named.
 
-All seven coding tasks have private references checked through the student's
-subprocess checker. Five answer-choice puzzles have verified answers and
-corrective feedback. No task modifies Battleship. Child pilots are still
-pending: check whether the child explains unfamiliar code and solves a changed
-problem without receiving its lines before authoring A4 onward. Revise this
-split explicitly when that evidence calls for it.
+All sixteen coding tasks have private references checked through the student's
+subprocess checker. Seven answer-choice puzzles have verified answers and
+corrective feedback. No task modifies Battleship. The user reports that A1–A3
+worked well when tried with the children and approved continuing with A4/A5.
+This is pilot feedback, not a measured mastery result; A4/A5 still need child
+feedback. Continue checking whether the child can explain unfamiliar code and
+solve a changed problem without receiving its lines. Revise this split
+explicitly when that evidence calls for it.
+
+The behavioral checker verifies literal printed results, not whether the child
+used a particular expression or understands it. For arithmetic lessons, the
+task still requires calculation rather than a precomputed answer; review the
+child's expression and reasoning during the pilot instead of adding brittle
+source-pattern checks.
 
 Fresh IDs and puzzle submission/progress support are installed with this pilot.
 Extend the runner for varied-input function tasks with the first such task,
