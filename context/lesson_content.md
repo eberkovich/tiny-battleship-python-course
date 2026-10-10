@@ -93,6 +93,11 @@ or other abstractions the child must first decipher. Simpler wording must
 remain precise; brevity alone is not clarity. Any analogy must support, not
 replace, the literal explanation.
 
+Titles and questions must use familiar, literal wording for the action or
+observable result the child is being asked about. Avoid strained metaphors or
+vague personification that substitutes an internal execution detail for that
+result.
+
 Introduce a distinction through concrete examples before generalizing it.
 Keep terminology consistent and distinguish explanatory notation from
 executable Python explicitly. The child should be able to identify what each
@@ -121,6 +126,12 @@ explanation–example cycles: the first complete example follows the minimum
 explanation needed to read it, not several screens of terminology. Put another
 small example next to each difficult distinction instead of collecting them
 at the end.
+
+Before introducing a new tool, show a familiar difficulty it helps resolve.
+When useful, compare the old and new approaches to the same small problem:
+what must be repeated, remembered, or changed, and what becomes easier? Explain
+that benefit before the syntax. Do not claim that a problem is impossible
+without the new tool when the old approach still works.
 
 For a new construction, explain its purpose, how to read it, Python's execution
 steps, changed values or state, new punctuation, and a likely mistake. Use
@@ -220,6 +231,22 @@ define the Python concept through a launcher card or a game-board comparison.
 
 ### Exercise design
 
+#### Meaningful challenges
+
+**Important:** Include a genuinely challenging independent task in each lesson.
+Choose either:
+
+- a programming problem requiring thought and planning with already-taught
+  concepts;
+- when those concepts are too limited, a logical problem meaningfully connected
+  to the lesson topic.
+
+For either kind of challenge, select an existing problem from the tutorials
+referenced above or another reputable published source, then adapt it to the
+child's level and our prerequisites. Do not invent an artificial substitute.
+The challenge must come from figuring out a solution, not copying an example,
+doing tedious calculations, or encountering unexplained syntax.
+
 #### Activity mix and volume
 
 Plan **4–6 required activities per typical coding lesson**, interleaved with
@@ -254,6 +281,19 @@ ordering, small calculations, familiar words, counting, searches, or robot-like
 instructions when appropriate. Increasing difficulty means more independent
 reasoning, not more identical calls or larger numbers.
 
+Give the taught concept a genuine job in independent application: retaining a
+useful result, reusing data, tracking changes, or expressing a reusable rule.
+A requirement to use certain syntax is not itself a reason to use it. Larger
+numbers can make calculation worth delegating to Python, but do not by
+themselves explain the need for variables or another programming concept.
+
+Separate choosing a solution from doing its calculations. In independent
+problems, the child decides the steps; the program performs those steps and
+keeps or reuses their results. Do not provide the strategy being assessed or
+invite precomputed answers when writing the calculation is the objective.
+The early A2/A3 numeric-answer reasoning activities remain a deliberate
+exception, not a model for later programming application.
+
 An independent exercise must differ meaningfully from both its preceding
 example and any project task. Changing only inputs, names, coordinates, labels,
 or call count does not count. Compare the child-owned steps and reasoning,
@@ -263,12 +303,15 @@ consecutive tasks with essentially the same solution strategy. Required work
 must include a problem whose solution cannot simply be copied from an example.
 
 For logical tasks in any lesson, find an existing, age-appropriate problem in
-a reputable children's workbook rather than inventing one. Verify the actual
-problem and record the book, author, page or exercise, and source link when
-available. Preserve its reasoning structure; change only numerical data when
+a reputable children's workbook or mathematics-teaching resource rather than
+inventing one. Verify the actual problem and record the book or resource,
+author, page or exercise, and source link when available. Preserve its reasoning
+structure; change only numerical data when
 needed to make Python calculation useful instead of easy mental arithmetic.
 Recheck solvability, constraints, and taught prerequisites after adaptation,
 and clearly distinguish the adaptation from the original workbook problem.
+Identify any additional programming requirement separately; it must preserve
+the source problem's reasoning and use only established prerequisites.
 
 During initial syntax practice, allow familiar non-programming problems whose
 answers the child reports using taught Python. In A2/A3, normally include only
@@ -449,7 +492,11 @@ redundant worked task examples, ambiguous wording, age suitability, accidental
 solutions, and exercise independence together. Apply the editorial benchmark
 review above and check that sentences refer to identifiable code elements or
 behavior. Explicitly ask what the child must reason out and how understanding
-is assessed. Pilot early lessons with the children before authoring the entire
+is assessed. For each main example and independent application, name the
+difficulty the new tool removes and the decision left for the child to make.
+If either answer is vague, revise the material; keep the mathematical burden
+familiar so it does not obscure the programming idea. Pilot early lessons with
+the children before authoring the entire
 replacement course.
 
 ## Learning path definition
@@ -563,17 +610,30 @@ useful. Examples teach grouping syntax, not these problems' solution methods.
 
 **Learn:** assignment associates a name with a value; reading that name uses
 its current value. Explain `=` and sensible names with name-to-value diagrams.
+Motivate storing shared data once and retaining useful computed results.
 
 **Evidence:** use a named value in more than one known calculation and explain
 each lookup. Do not confuse the name, its quoted spelling, and its value.
+Independently choose calculations for a sourced sharing problem, retaining a
+result needed by subsequent calculations. Optional pair weighing adds a
+distinct reasoning challenge, not another required activity.
 
-#### A7. Replacing a stored value
+#### A7. Changing and preserving a stored value
 
 **Learn:** reassignment gives an existing name a new value. Trace the state
 before and after the assignment and show that earlier output stays unchanged.
+Explain why one name can represent a changing current value during one run.
+For an arithmetic update, read the current right-hand value, calculate, then
+save the result under the left-hand name. Distinguish printing a calculation
+from saving it. Show how another name can retain a number before it changes.
 
-**Evidence:** predict a sequence with two assignments and outputs; diagnose
-changing the wrong name. This practises replacement, not arithmetic updates.
+**Evidence:** two concrete output predictions and four coding tasks: construct
+sequential balance updates, debug a printed-but-unsaved change, independently
+choose a minimum-coin change algorithm, and swap two stored values without
+losing either. Introduce saving a number, not the completed swap algorithm.
+Adapt the two independent challenges from published programming tutorials;
+keep ordinary assignments and known arithmetic, without tuple shortcuts,
+function definitions, loops, or modulo.
 
 #### A8. Updating from the previous value
 
@@ -581,7 +641,9 @@ changing the wrong name. This practises replacement, not arithmetic updates.
 value. Use ordinary assignment, not unexplained abbreviated update syntax.
 
 **Evidence:** track a wallet or score through gains and losses; choose updates
-for a changed scenario and explain every intermediate value.
+for a changed scenario and explain every intermediate value. Independently
+investigate how reordering known updates changes their result, rather than
+only translating a supplied sequence.
 
 #### A8¾. Interim capstone — task selection deferred
 
@@ -915,7 +977,7 @@ selection rule without changing turn handling or drawing.
 
 ### Authoring and delivery boundary
 
-The A1–A5 lessons are implemented after review of their outlines and tasks.
+The A1–A8 lessons are implemented in the agreed prerequisite order.
 This learning path still defines outcomes and prerequisite order for later
 lessons, not ready-made articles or final tasks. Do not mistake illustrative
 puzzles or technical test fixtures for student content.
@@ -952,21 +1014,58 @@ The authored lessons' prerequisite and activity review is:
   reproduced by Cassandra Turner. Source links and original/adapted quantities
   are recorded in `lessons/a05/acceptance.py`; no unverified individual author
   is named.
+- A6: A2 calls/text/numbers, A3 order, and A4/A5 expressions. Assignment,
+  lookup, and quoted-name distinction precede numeric/text construction;
+  naming and case precede name repair. The opening compares repeated ticket
+  prices with one saved input; the computed-result example reuses a child count
+  to calculate provisions. Expressions and saved results precede prediction,
+  packing/remainder calculation, and independent card sharing. Five required
+  activities, plus optional pair weighing with progressive hints. Card sharing
+  is from Yee Fook Shiong's *New Syllabus Mathematics Strategies Primary 3*
+  (2007), verified in Cassy Turner's reproduced problem. Original quantities
+  remain; printing both final collections is our extension. Pair weighing is
+  a published Math Central problem from the University of Regina: the same
+  measurements are expressed as whole grams and extended to individual weights.
+  Source links, adaptations, and editorial references are recorded in
+  `lessons/a06/acceptance.py`; no unavailable page number or book attribution
+  is invented. Both tasks retain a result needed by later calculations.
+- A7: A6 assignment, lookup, separate names, and saved computed results.
+  The opening motivates tracking a changing value during one program run.
+  Replacement precedes output prediction; the evaluate-right-then-store-left
+  trace precedes balance updates; print versus save precedes balance debugging.
+  Minimum-coin change adapts Al Sweigart's *Python Programming Exercises,
+  Gently Explained*, exercise 37, to unlimited 10-, 5-, and 1-ruble coins and
+  an ordinary script. Saving a number precedes a second code prediction and
+  independently swapping two values, adapted from the ordinary-assignment
+  example in *Think Python 2*, section 12.2. Neither challenge algorithm is
+  supplied in the preceding examples. Six required activities; progressive
+  hints only for the independent challenges. Source links and adaptations
+  are recorded in `lessons/a07/acceptance.py`. Fresh task IDs and file paths
+  preserve old student solutions without counting old completions.
+- A8: A6/A7 state and replacement, with A4 arithmetic. The evaluate-right-then-
+  store-left trace precedes sequential updates; the print-versus-save contrast
+  precedes prediction and reset-to-start debugging. Two-quantity score/lives
+  tracking combines established ideas. The final independent code investigation
+  asks the child to rearrange three updates to maximize the robot's final charge;
+  both optimal orders pass, and hints encourage comparison rather than copying.
+  Five required activities. Ordinary assignment only; no abbreviated updates,
+  new helpers, functions, loops, or lists. Event tasks are original programming
+  simulations, not purported workbook word problems.
 
-All sixteen coding tasks have private references checked through the student's
-subprocess checker. Seven answer-choice puzzles have verified answers and
+All twenty-nine coding tasks have private references checked through the student's
+subprocess checker. Eleven answer-choice puzzles have verified answers and
 corrective feedback. No task modifies Battleship. The user reports that A1–A3
-worked well when tried with the children and approved continuing with A4/A5.
-This is pilot feedback, not a measured mastery result; A4/A5 still need child
+worked well when tried with the children and approved continuing through A8.
+This is pilot feedback, not a measured mastery result; A4–A8 still need child
 feedback. Continue checking whether the child can explain unfamiliar code and
 solve a changed problem without receiving its lines. Revise this split
 explicitly when that evidence calls for it.
 
 The behavioral checker verifies literal printed results, not whether the child
-used a particular expression or understands it. For arithmetic lessons, the
-task still requires calculation rather than a precomputed answer; review the
-child's expression and reasoning during the pilot instead of adding brittle
-source-pattern checks.
+used a particular expression or understands it. Arithmetic and variable tasks
+still require the stated calculations, assignments, and reuse rather than
+precomputed answers; review the child's program and reasoning during the pilot
+instead of adding brittle source-pattern checks.
 
 Fresh IDs and puzzle submission/progress support are installed with this pilot.
 Extend the runner for varied-input function tasks with the first such task,

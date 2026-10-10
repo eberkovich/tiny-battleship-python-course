@@ -6,18 +6,24 @@ helpers provide rendering and input; the child writes the game logic.
 
 ## Foundation lessons
 
-The first five replacement lessons are available:
+The first eight replacement lessons are available:
 
 - A1: reading a file and understanding comments — three answer-choice puzzles.
 - A2: displaying text and numbers — five activities, including logic and arithmetic.
 - A3: execution order — four activities, including debugging and a deduction problem.
 - A4: arithmetic — six activities, ending with a workbook-based figure exchange.
 - A5: grouping with parentheses — five activities, including saving and rope problems.
+- A6: naming and reusing values — five activities, including card sharing,
+  plus an optional pair-weighing challenge.
+- A7: changing and preserving values — six activities, including minimum-coin
+  change and swapping two values.
+- A8: old-value updates — five activities, including two changing values and
+  investigating the best execution order.
 
 Puzzle submissions reveal the correct answer and explanation even after a
 wrong answer. Coding tasks need correct output. These lessons use independent
 files, not the cumulative game. The user has tried A1–A3 with the children and
-reports positive feedback; A4/A5 are ready for their next trial. Later lessons
+reports positive feedback; A4–A8 are ready for their next trial. Later lessons
 remain planned, not executable. Teaching principles and the path are in
 [context/lesson_content.md](context/lesson_content.md#learning-path-definition).
 
@@ -67,11 +73,13 @@ checker, puzzle feedback/progress, and the mixed lesson workflow.
 The previous curriculum is retired. Fresh lesson/task IDs prevent old
 completions from counting toward new lessons; existing student code is preserved.
 
-Verification (2026-10-04): 226 tests passed, including all sixteen coding
+Verification (2026-10-10): 331 tests passed, including all twenty-nine coding
 references, untouched-starter rejection, worked-example outputs, puzzle
-feedback, and end-to-end progression through A1–A5. Shell syntax and runtime/
-reference compilation passed. Real-renderer previews were inspected in both
+feedback, optional-star progression, varied-input coin-change and swap
+references, preserved earlier student work, both optimal robot command orders,
+and end-to-end progression through A1–A8. Shell syntax and runtime/reference
+compilation passed. Headless real-renderer previews were inspected in both
 themes at 1180×760 and 1600×1000, alongside automated layout checks.
 Native macOS startup was checked in the initial pilot (2026-10-03). A1–A3
-child-pilot feedback is user-reported, not a measured mastery result; A4/A5
+child-pilot feedback is user-reported, not a measured mastery result; A4–A8
 child testing is next.

@@ -69,8 +69,8 @@ course:
           title: "Даём значению имя"
           outcome: "Использовать имя вместо повторения значения."
         - id: a07
-          title: "Заменяем значение"
-          outcome: "Следить за заменой значения."
+          title: "Изменяем значение переменной"
+          outcome: "Изменять и сохранять значения."
         - id: a08
           title: "Обновляем значение"
           outcome: "Объяснять работу небольшой программы с переменными."
@@ -462,6 +462,239 @@ lessons:
           - "Нарисуй верёвки одну под другой, начиная от одной линии. Отметь у длинной лишние 683 сантиметра. Остальные части двух верёвок одинаковой длины."
           - "Представь, что у длинной отрезали лишние 683 сантиметра. Тогда останутся две одинаковые короткие верёвки. Найди длину одной, а затем восстанови длину исходной длинной."
       - id: a05_summary
+        kind: summary
+        title: "Итоги урока"
+        section: summary
+  - id: a06
+    content: lessons/a06/lesson.md
+    completion_tasks: ["a06_coins", "a06_repair", "a06_q_lookup", "a06_packs", "a06_cards"]
+    tasks:
+      - id: a06_assignment
+        kind: article
+        title: "Зачем нужны переменные"
+        section: assignment
+      - id: a06_coins
+        kind: exercise
+        title: "Монеты и их имя"
+        section: coins
+        student_file: exercises/a06/coins.py
+        template: lessons/a06/exercises/coins.py
+        run_mode: console
+      - id: a06_names
+        kind: article
+        title: "Как писать имена"
+        section: names
+      - id: a06_repair
+        kind: exercise
+        title: "Найди несовпадение"
+        section: repair
+        student_file: exercises/a06/repair.py
+        template: lessons/a06/exercises/repair.py
+        run_mode: console
+      - id: a06_calculations
+        kind: article
+        title: "Считаем со значениями переменных"
+        section: calculations
+      - id: a06_q_lookup
+        kind: question
+        title: "Что выведет программа?"
+        section: q_lookup
+        choices:
+          - {id: text_then_values, label: "stars, затем 46, затем 23"}
+          - {id: numbers_only, label: "23, затем 46, затем 23"}
+          - {id: changed_value, label: "stars, затем 46, затем 46"}
+        correct_choice: text_then_values
+        explanation: |
+          ```output
+          stars
+          46
+          23
+          ```
+
+          Первый print выводит текст в кавычках. Во втором имя stars обозначает число 23: умножение даёт 46. Вычисление в print не заменяет значение stars, поэтому последний вызов показывает 23.
+      - id: a06_packs
+        kind: exercise
+        title: "Упакуй наклейки"
+        section: packs
+        student_file: exercises/a06/packs.py
+        template: lessons/a06/exercises/packs.py
+        run_mode: console
+      - id: a06_cards
+        kind: exercise
+        title: "Подели карточки поровну"
+        section: cards
+        student_file: exercises/a06/cards.py
+        template: lessons/a06/exercises/cards.py
+        run_mode: console
+        hints:
+          - "Попробуй нарисовать две коллекции. Что произойдёт с разницей, если Гэвин отдаст Хоуи одну карточку? У одного станет на одну меньше, у другого — на одну больше."
+          - "После передачи количества должны совпасть. Вспомни: каждая переданная карточка уменьшает разницу сразу с двух сторон. Найденное количество для передачи используй при подсчёте обеих коллекций."
+      - id: a06_weights
+        kind: star
+        title: "Три взвешивания"
+        section: weights
+        student_file: exercises/a06/weights.py
+        template: lessons/a06/exercises/weights.py
+        run_mode: console
+        hints:
+          - "Нарисуй три взвешивания. Посчитай, сколько раз каждая курица побывала на весах."
+          - "Если сложить все три показания весов, вес каждой курицы попадёт в сумму два раза. Как получить вес всех трёх без повторений?"
+          - "Когда известен общий вес, вычти из него вес двух куриц вместе. Останется вес той курицы, которая не входит в эту пару."
+      - id: a06_summary
+        kind: summary
+        title: "Итоги урока"
+        section: summary
+  - id: a07
+    content: lessons/a07/lesson.md
+    completion_tasks: ["a07_q_replace", "a07_balance", "a07_balance_repair", "a07_change", "a07_q_saved", "a07_swap"]
+    tasks:
+      - id: a07_new_value
+        kind: article
+        title: "То же имя, новое значение"
+        section: new_value
+      - id: a07_q_replace
+        kind: question
+        title: "Какие числа появятся?"
+        section: q_replace
+        choices:
+          - {id: current, label: "26, 41, 41"}
+          - {id: rewritten, label: "41, 41, 41"}
+          - {id: unchanged, label: "26, 26, 26"}
+        correct_choice: current
+        explanation: |
+          ```output
+          26
+          41
+          41
+          ```
+
+          Первый print показывает текущее значение number: 26. Затем присваивание заменяет его на 41. Оба следующих print показывают 41: между ними значение не менялось. Ранее выведенное число 26 остаётся в выводе.
+      - id: a07_calculate_update
+        kind: article
+        title: "Прибавляем к текущему значению"
+        section: calculate_update
+      - id: a07_balance
+        kind: exercise
+        title: "Награда и покупки"
+        section: balance
+        student_file: exercises/a07/balance.py
+        template: lessons/a07/exercises/balance.py
+        run_mode: console
+      - id: a07_print_or_save
+        kind: article
+        title: "Вывести — не значит сохранить"
+        section: print_or_save
+      - id: a07_balance_repair
+        kind: exercise
+        title: "Куда пропала покупка?"
+        section: balance_repair
+        student_file: exercises/a07/balance_repair.py
+        template: lessons/a07/exercises/balance_repair.py
+        run_mode: console
+      - id: a07_change
+        kind: exercise
+        title: "Размени деньги"
+        section: change
+        student_file: exercises/a07/change.py
+        template: lessons/a07/exercises/change.py
+        run_mode: console
+        hints:
+          - "Сравни одну монету в 10 рублей с несколькими мелкими монетами на ту же сумму. В каком случае монет меньше?"
+          - "Вспомни задачу про полные наборы: деление нацело помогает узнать, сколько целых групп помещается в количестве. После выбора монет нужно учесть, какая сумма ещё осталась."
+      - id: a07_keep_number
+        kind: article
+        title: "Сохраняем прежнее число"
+        section: keep_number
+      - id: a07_q_saved
+        kind: question
+        title: "Что сохранили?"
+        section: q_saved
+        choices:
+          - {id: separate, label: "25, затем 20"}
+          - {id: linked, label: "25, затем 27"}
+          - {id: no_update, label: "18, затем 20"}
+        correct_choice: separate
+        explanation: |
+          ```output
+          25
+          20
+          ```
+
+          В saved сохраняется число 18. Следующее присваивание меняет только number на 25. Первый print показывает 25; второй вычисляет saved + 2, то есть 18 + 2, и показывает 20. Сама saved при этом не меняется.
+      - id: a07_swap
+        kind: exercise
+        title: "Поменяй значения местами"
+        section: swap
+        student_file: exercises/a07/swap.py
+        template: lessons/a07/exercises/swap.py
+        run_mode: console
+        hints:
+          - "Запиши на бумаге значения left и right после каждого присваивания. Что произойдёт, если новое число заменит единственное сохранённое старое?"
+          - "До замены сохрани число, которое понадобится позже, под другим именем. После этого подумай, в каком порядке выполнить остальные присваивания."
+      - id: a07_results
+        kind: summary
+        title: "Итоги урока"
+        section: results
+  - id: a08
+    content: lessons/a08/lesson.md
+    completion_tasks: ["a08_wallet", "a08_q_update", "a08_repair", "a08_two_values", "a08_robot_order"]
+    tasks:
+      - id: a08_update
+        kind: article
+        title: "Новое значение из предыдущего"
+        section: update
+      - id: a08_wallet
+        kind: exercise
+        title: "Выигрыш и покупка"
+        section: wallet
+        student_file: exercises/a08/wallet.py
+        template: lessons/a08/exercises/wallet.py
+        run_mode: console
+      - id: a08_calculation_or_update
+        kind: article
+        title: "Посчитать не значит сохранить"
+        section: calculation_or_update
+      - id: a08_q_update
+        kind: question
+        title: "Прибавили ли очки?"
+        section: q_update
+        choices:
+          - {id: not_added, label: "Сначала 34, затем 21"}
+          - {id: added, label: "Сначала 34, затем 29"}
+          - {id: stored_only, label: "Сначала 26, затем 21"}
+        correct_choice: not_added
+        explanation: |
+          ```output
+          34
+          21
+          ```
+
+          Первый print показывает результат 26 + 8, но points остаётся 26. Присваивание затем вычисляет 26 - 5 и сохраняет 21. Последний print показывает новое значение. Если бы прибавление было сохранено, второе число получилось бы другим.
+      - id: a08_repair
+        kind: exercise
+        title: "Не теряй прошлый выигрыш"
+        section: repair
+        student_file: exercises/a08/repair.py
+        template: lessons/a08/exercises/repair.py
+        run_mode: console
+      - id: a08_two_values
+        kind: exercise
+        title: "Следи за двумя значениями"
+        section: two_values
+        student_file: exercises/a08/two_values.py
+        template: lessons/a08/exercises/two_values.py
+        run_mode: console
+      - id: a08_robot_order
+        kind: exercise
+        title: "Выбери порядок команд"
+        section: robot_order
+        student_file: exercises/a08/robot_order.py
+        template: lessons/a08/exercises/robot_order.py
+        run_mode: console
+        hints:
+          - "Сравни два порядка: зарядка до коридора и зарядка после него. Посчитай оба результата, не меняя начальные 96."
+          - "Зарядка удваивает не начальные 96, а заряд к моменту этой команды. Подумай, как расходы до зарядки влияют на то, сколько она добавит."
+      - id: a08_summary
         kind: summary
         title: "Итоги урока"
         section: summary

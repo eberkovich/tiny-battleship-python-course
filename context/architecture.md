@@ -21,13 +21,13 @@ path. Do not duplicate the curriculum in implementation plans.
 ### Foundation pilot and retired curriculum
 
 The former lessons and executable metadata are retired. The replacement course
-implements A1–A5: comments, showing text/numbers, execution order, arithmetic,
-and grouping calculations. The launcher is runnable. A1 uses submitted puzzles;
-A2–A5 also use independent console exercises. They do not create a cumulative
-game file.
-The roadmap lists the 32 planned foundation lessons; only the first five are
+implements A1–A8: comments, showing text/numbers, execution order, arithmetic,
+grouping calculations, naming values, replacement, and old-value updates.
+The launcher is runnable. A1 uses submitted puzzles; A2–A8 also use independent
+console exercises. They do not create a cumulative game file.
+The roadmap lists the 32 planned foundation lessons; only the first eight are
 executable. The game section's feature milestones are not yet numbered lessons.
-The user reports positive child-pilot feedback for A1–A3 and approved A4/A5
+The user reports positive child-pilot feedback for A1–A3 and approved A4–A8
 authoring. Continue to use child feedback when designing later lessons;
 activity completion alone is not evidence of understanding.
 

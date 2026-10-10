@@ -100,9 +100,11 @@ def test_pilot_source_lines_fit_the_minimum_example_width(tmp_path) -> None:
 
 
 def test_pilot_scope_and_material_are_consistent() -> None:
-    assert [lesson.id for lesson in COURSE.lessons] == ["a01", "a02", "a03", "a04", "a05"]
+    assert [lesson.id for lesson in COURSE.lessons] == [
+        "a01", "a02", "a03", "a04", "a05", "a06", "a07", "a08",
+    ]
     assert len(COURSE.roadmap_lessons) == 32
-    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4, 6, 5]
+    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4, 6, 5, 5, 6, 5]
     all_ids = set()
     for lesson in COURSE.lessons:
         sections = load_sections(lesson.content)
@@ -112,13 +114,17 @@ def test_pilot_scope_and_material_are_consistent() -> None:
             all_ids.add(task.id)
             assert task.section in sections
             assert task.title in sections[task.section]
-            assert task.kind not in {"project", "star"}
+            assert task.kind != "project"
+            if task.kind == "star":
+                assert task.is_coding
+                assert task.id not in lesson.completion_tasks
             if task.is_coding:
                 assert task.run_mode == "console"
                 assert task.template.is_file()
                 assert "battleship_ui" not in task.template.read_text()
         assert set(lesson.completion_tasks) == {
-            task.id for task in lesson.tasks if task.is_coding or task.kind == "question"
+            task.id for task in lesson.tasks
+            if task.kind != "star" and (task.is_coding or task.kind == "question")
         }
 
 
@@ -127,6 +133,54 @@ def test_reference_uses_student_checker(lesson, task) -> None:
     reference = PROJECT_ROOT / "lessons" / lesson.id / "reference" / task.template.name
     result = run_check(reference, task.id, lesson_id=lesson.id)
     assert result.passed, result
+
+
+@pytest.mark.parametrize("amount", [0, 1, 5, 9, 10, 16, 137, 284])
+def test_change_reference_conserves_amount_and_minimizes_coin_count(amount) -> None:
+    reference = PROJECT_ROOT / "lessons/a07/reference/change.py"
+    # Vary only the initial data in this private reference, not student files.
+    body = reference.read_text().split("\n", 1)[1]
+    result = subprocess.run(
+        [sys.executable, "-c", f"amount = {amount}\n" + body],
+        capture_output=True, text=True, timeout=3, check=True,
+    )
+    counts = tuple(map(int, result.stdout.splitlines()))
+    assert len(counts) == 3
+    assert all(count >= 0 for count in counts)
+    assert sum(count * coin for count, coin in zip(counts, (10, 5, 1))) == amount
+    # Independent exhaustive optimum, not the reference's greedy calculation.
+    minimum = [0]
+    for value in range(1, amount + 1):
+        minimum.append(1 + min(minimum[value - coin] for coin in (1, 5, 10) if coin <= value))
+    assert sum(counts) == minimum[amount]
+
+
+@pytest.mark.parametrize("left,right", [(17, 43), (43, 17), (12, 12), (0, 7), (284, 137)])
+def test_swap_reference_preserves_both_changed_starting_values(left, right) -> None:
+    reference = PROJECT_ROOT / "lessons/a07/reference/swap.py"
+    body = reference.read_text().split("\n", 2)[2]
+    result = subprocess.run(
+        [sys.executable, "-c", f"left = {left}\nright = {right}\n" + body],
+        capture_output=True, text=True, timeout=3, check=True,
+    )
+    assert result.stdout.splitlines() == [str(right), str(left)]
+
+
+@pytest.mark.parametrize("source,task", [
+    (
+        "left = 137\nright = 284\nsaved = right\nright = left\nleft = saved\nprint(left)\nprint(right)",
+        "a07_swap",
+    ),
+    (
+        "amount = 137\ntens = amount // 10\namount = amount - tens * 10\n"
+        "fives = amount // 5\namount = amount - fives * 5\nprint(tens)\nprint(fives)\nprint(amount)",
+        "a07_change",
+    ),
+])
+def test_independent_challenges_accept_other_valid_student_programs(tmp_path, source, task) -> None:
+    path = tmp_path / "answer.py"
+    path.write_text(source + "\n")
+    assert run_check(path, task, lesson_id="a07").passed
 
 
 @pytest.mark.parametrize("lesson,task", CODING_TASKS, ids=[t.id for _, t in CODING_TASKS])
@@ -140,13 +194,13 @@ def specification_comments(text: str) -> list[str]:
     blocks = text.split("> [!NOTE]", 1)[0].replace("**", "").replace("`", "")
     lines = []
     for line in blocks.splitlines():
-        if "[!EXAMPLE]" in line:
+        if any(marker in line for marker in ("[!EXAMPLE]", "[!RECAP]")):
             continue
         if line.startswith("## "):
             line = line[3:]
         if line.startswith(">"):
             line = line[1:].removeprefix(" ")
-        if line not in {"python", "text"}:
+        if line not in {"python", "text", "output"}:
             lines.append(line)
     return [line for line in lines if line.strip()]
 
@@ -262,6 +316,26 @@ def test_legacy_completion_cannot_complete_replacement_tasks(tmp_path) -> None:
     assert source.read_text() == "# Preserve this game\n"
 
 
+@pytest.mark.parametrize("old_id,new_id,old_file", [
+    ("a06_magazines", "a06_cards", "exercises/a06/magazines.py"),
+    ("a07_floors", "a07_balance", "exercises/a07/floors.py"),
+    ("a07_repair", "a07_balance_repair", "exercises/a07/repair.py"),
+    ("a07_tickets", "a07_change", "exercises/a07/tickets.py"),
+    ("a07_restore", "a07_swap", "exercises/a07/restore.py"),
+    ("a08_robot", "a08_robot_order", "exercises/a08/robot.py"),
+])
+def test_revised_problem_gets_fresh_completion_without_removing_student_work(tmp_path, old_id, new_id, old_file) -> None:
+    controller = LauncherController(tmp_path / "child")
+    old_source = controller.workspace.root / old_file
+    old_source.write_text("# My earlier solution\nprint(99)\n")
+    controller.progress.completed_tasks.add(old_id)
+    controller.workspace.save_progress(controller.progress)
+    reopened = LauncherController(controller.workspace.root)
+    assert old_id not in reopened.progress.completed_tasks
+    assert new_id not in reopened.progress.completed_tasks
+    assert old_source.read_text() == "# My earlier solution\nprint(99)\n"
+
+
 def test_invalid_saved_choice_does_not_complete_puzzle(tmp_path) -> None:
     controller = LauncherController(tmp_path / "child")
     controller.progress.completed_tasks.add("a01_q_number")
@@ -296,6 +370,49 @@ def test_answer_keys_have_independent_evidence() -> None:
     assert 1525 + 842 == 2367
     assert 1525 - 842 == 683
     assert 24 * 24 <= 584 < 25 * 24
+    # A6: reconstruct the stock, conserve cards, and reconstruct each weighing.
+    assert 59 * 24 + 23 == 1439
+    assert 0 <= 23 < 24
+    assert 356 - 70 == 286
+    assert 356 - 143 == 70 + 143 == 213
+    assert 356 + 70 == 213 * 2
+    assert 6500 + 4100 == 10600
+    assert 6500 + 2000 == 8500
+    assert 4100 + 2000 == 6100
+    assert 6500 + 4100 + 2000 == 12600
+    # A7: conserve the balance and reconstruct the minimum-coin amount.
+    assert 217 - 136 == sum(27 for _ in range(3))
+    assert 217 - 119 == sum(49 for _ in range(2))
+    assert 55 + 25 == 80
+    assert 65 - 55 == 10
+    assert sum([10] * 13 + [5] + [1] * 2) == 137
+    # A8: check event effects independently of the reference statement spelling.
+    assert 115 - 40 + 15 == 90
+    assert 2 + 1 == 3
+    assert 230 == 115 * 2
+
+
+def test_robot_investigation_accepts_both_optimal_orders_and_rejects_others(tmp_path) -> None:
+    updates = (
+        "energy = energy - 7 * 4",
+        "energy = energy * 2",
+        "energy = energy - 3 * 9",
+    )
+    path = tmp_path / "answer.py"
+    outcomes = []
+    for order in itertools.permutations(range(3)):
+        # Independently trace changes, then check the equivalent student script.
+        energy = 96
+        for action in order:
+            if action == 1:
+                energy *= 2
+            else:
+                energy -= (7 * 4 if action == 0 else 3 * 9)
+        outcomes.append(energy)
+        path.write_text("\n".join(["energy = 96", *(updates[i] for i in order), "print(energy)", ""]))
+        result = run_check(path, "a08_robot_order", lesson_id="a08")
+        assert result.passed == (order[0] == 1), (order, energy, result)
+    assert sorted(outcomes) == [82, 82, 109, 110, 137, 137]
 
 
 @pytest.mark.parametrize("source,lesson,task,code", [
@@ -311,6 +428,20 @@ def test_answer_keys_have_independent_evidence() -> None:
     ("print(9 * (13 + 2)", "a05", "a05_repair", "syntax_error"),
     ("print(1210 - 137 // 29)", "a05", "a05_dictionary", "behavior_mismatch"),
     ("print(842)", "a05", "a05_ropes", "behavior_mismatch"),
+    ('coins = 136\nprint("coins")\nprint(coins)', "a06", "a06_coins", "behavior_mismatch"),
+    ("tickets = 18\nprint(Tickets)", "a06", "a06_repair", "name_error"),
+    ("print(60)\nprint(23)", "a06", "a06_packs", "behavior_mismatch"),
+    ("print(286)\nprint(70)\nprint(356)", "a06", "a06_cards", "behavior_mismatch"),
+    ("print(25200)\nprint(6500)\nprint(4100)\nprint(2000)", "a06", "a06_weights", "behavior_mismatch"),
+    ("coins = 136\nprint(coins)\nprint(coins + 3 * 27)\ncoins = coins - 2 * 49\nprint(coins)", "a07", "a07_balance", "behavior_mismatch"),
+    ("coins = 80\nprint(coins - 25)\ncoins = coins + 10\nprint(coins)", "a07", "a07_balance_repair", "behavior_mismatch"),
+    ("print(0)\nprint(0)\nprint(137)", "a07", "a07_change", "behavior_mismatch"),
+    ("print(13)\nprint(1)\nprint(7)", "a07", "a07_change", "behavior_mismatch"),
+    ("left = 137\nright = 284\nleft = right\nright = left\nprint(left)\nprint(right)", "a07", "a07_swap", "behavior_mismatch"),
+    ("points = 45\npoints = points + 17\nprint(points)\npoints = 45 + 9\nprint(points)", "a08", "a08_repair", "behavior_mismatch"),
+    ("coins = 120\nprint(coins)\nprint(coins + 57)\ncoins = coins - 38\nprint(coins)", "a08", "a08_wallet", "behavior_mismatch"),
+    ("print(109)", "a08", "a08_robot_order", "behavior_mismatch"),
+    ("print(115)\nprint(2)\nprint(180)\nprint(3)", "a08", "a08_two_values", "behavior_mismatch"),
 ])
 def test_focused_failures_keep_programming_and_reasoning_distinct(tmp_path, source, lesson, task, code) -> None:
     path = tmp_path / "answer.py"
@@ -364,6 +495,9 @@ def test_full_pilot_progress_requires_every_activity_and_survives_reopening(tmp_
             assert controller.task_passed(task)
         assert controller.lesson_complete()
         assert controller.completed_lesson_count == index + 1
+        for task in lesson.tasks:
+            if task.kind == "star":
+                assert not controller.task_passed(task)
         controller.select_task(lesson.tasks[-1].id)
     reopened = LauncherController(controller.workspace.root)
     assert reopened.current_task.id == COURSE.lessons[-1].tasks[-1].id
@@ -393,25 +527,28 @@ def test_puzzle_ui_collects_answer_reveals_feedback_and_marks_card(tmp_path) -> 
     pygame.quit()
 
 
-def test_hint_ui_reveals_in_order_without_progress_or_layout_changes(tmp_path) -> None:
+@pytest.mark.parametrize("lesson_id,task_id", [
+    ("a02", "a02_houses"), ("a06", "a06_weights"), ("a08", "a08_robot_order"),
+    ("a07", "a07_change"), ("a07", "a07_swap"),
+])
+def test_hint_ui_reveals_in_order_without_progress_or_layout_changes(tmp_path, lesson_id, task_id) -> None:
     controller = LauncherController(tmp_path / "review", debug=True)
-    controller.enter_lesson("a02")
-    controller.select_task("a02_houses")
+    controller.enter_lesson(lesson_id)
+    controller.select_task(task_id)
     app = LauncherApp(controller)
     app.scroll = 1_000_000
     app.render()
     before = controller.workspace.progress_path.read_bytes()
     note = app.note_card_rect.copy()
-    button = next(button for button in app.buttons if button.action == "hint")
     assert not controller.revealed_hints
-    app._click(button.rect.center)
-    app.render()
-    assert controller.revealed_hints["a02_houses"] == 1
-    assert app.note_card_rect == note
-    button = next(button for button in app.buttons if button.action == "hint")
-    app._click(button.rect.center)
-    app.render()
-    assert controller.revealed_hints["a02_houses"] == 2
+    for count in range(1, len(controller.current_task.hints) + 1):
+        app.scroll = 1_000_000
+        app.render()
+        button = next(button for button in app.buttons if button.action == "hint")
+        app._click(button.rect.center)
+        app.render()
+        assert controller.revealed_hints[task_id] == count
+        assert app.note_card_rect == note
     assert not any(button.action == "hint" for button in app.buttons)
     assert not controller.task_passed(controller.current_task)
     assert controller.workspace.progress_path.read_bytes() == before
