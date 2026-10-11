@@ -42,6 +42,8 @@ class ThemePalette:
     project: Color
     summary: Color
     progress_idle: Color
+    parchment_text: Color
+    plaque_text: Color
 
 
 DARK_THEME = ThemePalette(
@@ -75,6 +77,8 @@ DARK_THEME = ThemePalette(
     project=(234, 143, 74),
     summary=(164, 139, 219),
     progress_idle=(70, 84, 105),
+    parchment_text=(59, 41, 30),
+    plaque_text=(255, 226, 158),
 )
 
 LIGHT_THEME = ThemePalette(
@@ -108,6 +112,8 @@ LIGHT_THEME = ThemePalette(
     project=(194, 91, 31),
     summary=(112, 78, 178),
     progress_idle=(92, 112, 126),
+    parchment_text=(59, 41, 30),
+    plaque_text=(255, 226, 158),
 )
 
 THEMES = {

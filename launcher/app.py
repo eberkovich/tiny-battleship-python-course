@@ -11,7 +11,7 @@ import pygame
 
 from battleship_ui.icons import draw_ship_icon
 from launcher.controller import LauncherController
-from launcher.course import RoadmapLesson, RoadmapStage, Task
+from launcher.course import IllustrationGroup, RoadmapLesson, RoadmapStage, Task
 from launcher.theme import DARK_THEME_NAME, THEMES, ThemePalette
 
 
@@ -31,6 +31,7 @@ RECAP_PADDING_X = 20
 RECAP_PADDING_Y = 14
 EXAMPLE_PADDING_X = 20
 EXAMPLE_PADDING_Y = 18
+ILLUSTRATION_PADDING_Y = 12
 CODE_PADDING_X = 14
 CODE_PADDING_Y = 12
 CODE_LINE_HEIGHT = 26
@@ -109,6 +110,7 @@ def _card_padding(kind: str) -> tuple[int, int]:
         "note": (NOTE_PADDING_X, NOTE_PADDING_Y),
         "recap": (RECAP_PADDING_X, RECAP_PADDING_Y),
         "example": (EXAMPLE_PADDING_X, EXAMPLE_PADDING_Y),
+        "illustration": (CONTENT_PADDING_X, ILLUSTRATION_PADDING_Y),
     }.get(kind, (CONTENT_PADDING_X, CONTENT_PADDING_Y))
 
 
@@ -184,6 +186,9 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
             if blocks and blocks[-1][0] == "space":
                 blocks.pop()
             blocks.append(("divider", ""))
+        elif stripped.startswith("<!-- illustration:") and stripped.endswith("-->"):
+            flush_paragraph()
+            blocks.append(("illustration", stripped[len("<!-- illustration:"):-3].strip()))
         elif re.match(r"^#{1,6}\s+", stripped):
             flush_paragraph()
         elif not stripped:
@@ -239,6 +244,11 @@ class LauncherApp:
         self.home_title_rect: pygame.Rect | None = None
         self.home_hero_rect: pygame.Rect | None = None
         self.lesson_title_rect: pygame.Rect | None = None
+        self.illustration_rects: list[pygame.Rect] = []
+        self.plaque_rect: pygame.Rect | None = None
+        self.background_rect: pygame.Rect | None = None
+        self.lesson_assets: dict[Path, pygame.Surface] = {}
+        self.scaled_lesson_assets: dict[tuple[Path, bool], tuple[tuple[int, int], pygame.Surface]] = {}
         self.home_plan_expanded = False
         self.home_content_height = self.screen.get_height()
         self.home_plan_top = 0
@@ -465,6 +475,9 @@ class LauncherApp:
         self.home_title_rect = None
         self.home_hero_rect = None
         self.lesson_title_rect = None
+        self.illustration_rects = []
+        self.plaque_rect = None
+        self.background_rect = None
         if self.controller.view == "home":
             self._render_home()
             self.scroll = min(
@@ -909,7 +922,7 @@ class LauncherApp:
             or self.controller.progress.current_task != first_task.id
         )
         action = (
-            f"Продолжить урок {self.controller.current_lesson_number}"
+            f"Продолжить урок {self.controller.current_lesson_label}"
             if has_progress
             else "Начать первый урок"
         )
@@ -980,7 +993,7 @@ class LauncherApp:
             (rect.x + 20, rect.y + 18),
         )
         lesson = self.title_font.render(
-            f"Урок {self.controller.current_lesson_number} из "
+            f"Урок {self.controller.current_lesson_label} из "
             f"{self.controller.total_lesson_count}",
             True,
             self.theme.text,
@@ -1042,14 +1055,15 @@ class LauncherApp:
             self.font.render(stage.title, True, self.theme.text),
             (rect.x + 18, rect.y + 61),
         )
-        first = self.controller.course.roadmap_position(stage.lessons[0].id)
-        last = self.controller.course.roadmap_position(stage.lessons[-1].id)
-        self.screen.blit(
-            self.task_font.render(
-                f"Уроки {first}–{last}", True, self.theme.project
-            ),
-            (rect.x + 18, rect.y + 91),
-        )
+        labels = [self.controller.roadmap_lesson_label(lesson) for lesson in stage.lessons]
+        labels = [label for label in labels if label]
+        if labels:
+            self.screen.blit(
+                self.task_font.render(
+                    f"Уроки {labels[0]}–{labels[-1]}", True, self.theme.project
+                ),
+                (rect.x + 18, rect.y + 91),
+            )
         lines = _wrap(self.small_font, stage.summary, rect.width - 36)
         for index, line in enumerate(lines):
             self.screen.blit(
@@ -1110,7 +1124,7 @@ class LauncherApp:
             )
             y = panel.y + 94
             for planned in stage.lessons:
-                number = course.roadmap_position(planned.id)
+                number = self.controller.roadmap_lesson_label(planned)
                 status = self.controller.roadmap_lesson_status(planned)
                 row = pygame.Rect(x, y, column_width, 32)
                 unlocked = status not in {"locked", "future"}
@@ -1124,12 +1138,13 @@ class LauncherApp:
                 color = self.theme.text if unlocked else self.theme.muted
                 number_surface = self.task_font.render(str(number), True, self.theme.project)
                 self.screen.blit(number_surface, (row.x + 8, row.y + 7))
-                title = _wrap(self.task_font, planned.title, row.width - 72)[0]
+                marker = self._roadmap_entry_marker(status)
+                marker_width = 52 if marker == "planned" else 32
+                title = _wrap(self.task_font, self.controller.roadmap_lesson_title(planned), row.width - 60 - marker_width)[0]
                 self.screen.blit(
                     self.task_font.render(title, True, color),
-                    (row.x + 36, row.y + 7),
+                    (row.x + 52, row.y + 7),
                 )
-                marker = self._roadmap_entry_marker(status)
                 if marker == "completed":
                     self._draw_check((row.right - 17, row.centery), self.theme.success)
                 elif marker == "planned":
@@ -1157,7 +1172,7 @@ class LauncherApp:
         )
         self._add_button("Все уроки", 18, 76, 125, "home", height=38)
         lesson_label = self.small_font.render(
-            f"УРОК {self.controller.current_lesson_number} ИЗ "
+            f"УРОК {self.controller.current_lesson_label} ИЗ "
             f"{self.controller.total_lesson_count} · "
             f"ЭТАП {self.controller.current_stage_number}",
             True,
@@ -1282,10 +1297,21 @@ class LauncherApp:
         button_y = self.screen.get_height() - 60
         task = self.controller.current_task
         self.output_card_rect = None
+        self.illustration_rects = []
+        self.plaque_rect = None
+        self.background_rect = None
         self._draw_task_icon(task, (left + 17, 98), self._task_color(task))
         title = self.title_font.render(task.title, True, self.theme.text)
         self.lesson_title_rect = title.get_rect(topleft=(left + 42, 78))
         self.screen.blit(title, self.lesson_title_rect)
+        presentation = self.controller.lesson.presentation
+        if presentation.plaque is not None:
+            plaque = pygame.Rect(left + width - 82, 77, 82, 44)
+            if plaque.left > self.lesson_title_rect.right + 12:
+                self._draw_asset(presentation.plaque, plaque)
+                label = self.font.render(self.controller.current_lesson_label, True, self.theme.plaque_text)
+                self.screen.blit(label, label.get_rect(center=plaque.center))
+                self.plaque_rect = plaque
 
         body_top = 132
         section_blocks = _markdown_blocks(self.controller.sections[task.section])
@@ -1301,11 +1327,13 @@ class LauncherApp:
         if task.kind == "summary":
             next_lesson = self.controller.next_roadmap_lesson()
             if next_lesson is not None:
-                number = self.controller.course.roadmap_position(next_lesson.id)
+                number = self.controller.roadmap_lesson_label(next_lesson)
+                title = self.controller.roadmap_lesson_title(next_lesson)
+                preview = f"Дальше — урок {number}. {title}" if number else f"Дальше — {title}"
                 section_blocks.extend(
                     [
                         ("divider", ""),
-                        ("text", f"Дальше — урок {number}. {next_lesson.title}"),
+                        ("text", preview),
                     ]
                 )
         note_values = [value for kind, value in section_blocks if kind == "note"]
@@ -1435,12 +1463,19 @@ class LauncherApp:
         rect: pygame.Rect,
     ) -> None:
         self.screen.set_clip(rect)
+        background = self.controller.lesson.presentation.background
+        if background is not None:
+            self._draw_asset(background, rect, cover=True)
+            self.background_rect = rect.copy()
         card_width = _content_column_width(rect.width)
         card_x = rect.centerx - card_width // 2
         items: list[tuple[str, list[tuple[str, str]]]] = []
         group: list[tuple[str, str]] = []
 
         def flush_group() -> None:
+            if background is not None:
+                while group and group[-1][0] == "space":
+                    group.pop()
             if group:
                 items.append(("content", group.copy()))
                 group.clear()
@@ -1449,6 +1484,11 @@ class LauncherApp:
             if block[0] == "divider":
                 flush_group()
                 items.append(("divider", []))
+            elif background is not None and block[0] == "space":
+                flush_group()
+            elif background is not None and block[0] == "illustration":
+                flush_group()
+                items.append(("illustration", [block]))
             elif block[0] in {
                 "note", "recap", "example", "choice", "puzzle_feedback", "hint"
             }:
@@ -1504,7 +1544,7 @@ class LauncherApp:
                 card_width,
                 content_height + item_padding_y * 2,
             )
-            background = {
+            card_background = {
                 "note": self.theme.note_background,
                 "recap": self.theme.recap_background,
                 "example": self.theme.example_background,
@@ -1513,8 +1553,9 @@ class LauncherApp:
                 "hint": self.theme.note_background,
             }.get(item_kind, self.theme.content_card)
             if item_kind == "choice" and group[0][1] == self.controller.selected_answer:
-                background = self.theme.card_active
-            pygame.draw.rect(self.screen, background, card, border_radius=14)
+                card_background = self.theme.card_active
+            if item_kind != "illustration":
+                pygame.draw.rect(self.screen, card_background, card, border_radius=14)
             if item_kind == "choice":
                 choice_id = group[0][1]
                 if choice_id == self.controller.selected_answer:
@@ -1555,6 +1596,81 @@ class LauncherApp:
             previous_was_card = True
         self.screen.set_clip(None)
 
+    def _draw_asset(self, path: Path, rect: pygame.Rect, *, cover: bool = False) -> None:
+        if rect.width <= 0 or rect.height <= 0:
+            return
+        key = (path, cover)
+        cached = self.scaled_lesson_assets.get(key)
+        if cached is None or cached[0] != rect.size:
+            if path not in self.lesson_assets:
+                source = pygame.image.load(path).convert_alpha()
+                bounds = source.get_bounding_rect()
+                self.lesson_assets[path] = source.subsurface(bounds).copy() if bounds.width else source
+            source = self.lesson_assets[path]
+            factors = (rect.width / source.get_width(), rect.height / source.get_height())
+            scale = max(factors) if cover else min(factors)
+            size = (max(1, round(source.get_width() * scale)), max(1, round(source.get_height() * scale)))
+            scaled = pygame.transform.smoothscale(source, size)
+            if cover:
+                scaled = scaled.subsurface(pygame.Rect(0, 0, *rect.size).move(
+                    (scaled.get_width() - rect.width) // 2,
+                    (scaled.get_height() - rect.height) // 2,
+                )).copy()
+            self.scaled_lesson_assets[key] = (rect.size, scaled)
+        surface = self.scaled_lesson_assets[key][1]
+        self.screen.blit(surface, surface.get_rect(center=rect.center))
+
+    def _illustration_group(self, group_id: str) -> IllustrationGroup:
+        return next(group for group in self.controller.current_task.illustrations if group.id == group_id)
+
+    def _illustration_caption_lines(self, group: IllustrationGroup, width: int) -> list[list[str]]:
+        gap = 42 if group.relation else 16
+        column_width = (width - gap * (len(group.items) - 1)) // len(group.items)
+        return [
+            [wrapped for line in item.caption.splitlines()
+             for wrapped in _wrap(self.small_font, line, column_width - 24)]
+            for item in group.items
+        ]
+
+    def _illustration_height(self, group: IllustrationGroup, width: int) -> int:
+        rows = self._illustration_caption_lines(group, width)
+        caption_height = max((len(lines) for lines in rows), default=0) * 22
+        padding = 40 if group.parchment else 20
+        return group.image_height + (caption_height + padding + 8 if caption_height else 0) + 12
+
+    def _draw_illustration_group(self, group: IllustrationGroup, x: int, y: int, width: int) -> None:
+        gap = 42 if group.relation else 16
+        column_width = (width - gap * (len(group.items) - 1)) // len(group.items)
+        rows = self._illustration_caption_lines(group, width)
+        padding = 40 if group.parchment else 20
+        caption_height = max((len(lines) for lines in rows), default=0) * 22 + padding
+        for index, (item, lines) in enumerate(zip(group.items, rows)):
+            left = x + index * (column_width + gap)
+            image_rect = pygame.Rect(left, y, column_width, group.image_height)
+            self._draw_asset(item.image, image_rect)
+            self.illustration_rects.append(image_rect)
+            if lines:
+                caption_rect = pygame.Rect(left, image_rect.bottom + 8, column_width, caption_height)
+                if group.parchment:
+                    self._draw_asset(self.controller.lesson.presentation.parchment, caption_rect, cover=True)
+                else:
+                    caption_width = max(self.small_font.size(line)[0] for line in lines) + 24
+                    caption_rect.width = min(column_width, caption_width)
+                    caption_rect.centerx = image_rect.centerx
+                    pygame.draw.rect(self.screen, self.theme.content_card, caption_rect, border_radius=10)
+                color = self.theme.parchment_text if group.parchment else self.theme.text
+                for row, line in enumerate(lines):
+                    label = self.small_font.render(line, True, color)
+                    self.screen.blit(label, label.get_rect(centerx=caption_rect.centerx, top=caption_rect.y + padding // 2 + row * 22))
+                self.illustration_rects.append(caption_rect)
+        if group.relation:
+            relation = self.title_font.render(group.relation, True, self.theme.accent)
+            label_rect = relation.get_rect(center=(x + column_width + gap // 2, y + group.image_height // 2))
+            backing = label_rect.inflate(16, 8)
+            pygame.draw.rect(self.screen, self.theme.content_card, backing, border_radius=10)
+            self.screen.blit(relation, label_rect)
+            self.illustration_rects.append(backing)
+
     def _note_card_height(self, value: str, available_width: int) -> int:
         card_width = _content_column_width(available_width)
         inner_width = card_width - NOTE_PADDING_X * 2
@@ -1570,7 +1686,7 @@ class LauncherApp:
         # empty row unless the program actually prints a second newline.
         lines = _wrap_literal(self.code_font, value.removesuffix("\n"), inner_width)
         if len(lines) > OUTPUT_MAX_LINES:
-            return lines[: OUTPUT_MAX_LINES - 1] + ["…"]
+            return ["…"] + lines[-(OUTPUT_MAX_LINES - 1):]
         return lines
 
     def _output_card_height(self, value: str, available_width: int) -> int:
@@ -1654,6 +1770,8 @@ class LauncherApp:
         for kind, value in blocks:
             if kind == "space":
                 height += 18
+            elif kind == "illustration":
+                height += self._illustration_height(self._illustration_group(value), width)
             elif kind == "code":
                 height += (
                     CODE_PADDING_Y * 2
@@ -1699,6 +1817,10 @@ class LauncherApp:
         for kind, value in blocks:
             if kind == "space":
                 y += 18
+            elif kind == "illustration":
+                group = self._illustration_group(value)
+                self._draw_illustration_group(group, x, y, width)
+                y += self._illustration_height(group, width)
             elif kind == "code":
                 lines = value.split("\n")
                 code_rect = pygame.Rect(

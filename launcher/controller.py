@@ -124,6 +124,8 @@ class LauncherController:
             self.progress = self.workspace.set_theme(theme)
 
     def lesson_unlocked(self, lesson_id: str) -> bool:
+        if not any(lesson.id == lesson_id for lesson in self.course.lessons):
+            return False
         if self.debug:
             return True
         index = next(
@@ -151,6 +153,10 @@ class LauncherController:
         return self.course.roadmap_position(self.lesson.id)
 
     @property
+    def current_lesson_label(self) -> str:
+        return self.course.lesson_label(self.lesson.id)
+
+    @property
     def total_lesson_count(self) -> int:
         return len(self.course.roadmap_lessons)
 
@@ -175,6 +181,30 @@ class LauncherController:
         except KeyError:
             return "future"
         return self.lesson_status(implemented)
+
+    def roadmap_lesson_revealed(self, lesson: RoadmapLesson) -> bool:
+        if lesson.locked_title is None:
+            return True
+        if self.debug and any(item.id == lesson.id for item in self.course.lessons):
+            return True
+        position = self.course.roadmap_position(lesson.id)
+        if position == 1:
+            return True
+        previous = self.course.roadmap_lessons[position - 2]
+        try:
+            implemented = self.course.lesson(previous.id)
+        except KeyError:
+            return False
+        return self.workspace.lesson_complete(implemented, self.progress)
+
+    def roadmap_lesson_title(self, lesson: RoadmapLesson) -> str:
+        return lesson.title if self.roadmap_lesson_revealed(lesson) else lesson.locked_title
+
+    def roadmap_lesson_label(self, lesson: RoadmapLesson) -> str:
+        return self.course.lesson_label(lesson.id) if self.roadmap_lesson_revealed(lesson) else ""
+
+    def roadmap_lesson_outcome(self, lesson: RoadmapLesson) -> str:
+        return lesson.outcome if self.roadmap_lesson_revealed(lesson) else ""
 
     def next_roadmap_lesson(self) -> RoadmapLesson | None:
         index = self.course.roadmap_position(self.lesson.id)

@@ -77,6 +77,11 @@ course:
         - id: a09_input
           title: "От текста к числам"
           outcome: "Преобразовывать ответы в числа и выбирать вычисления."
+        - id: a09_bonus
+          display_label: "9¾"
+          locked_title: "Секретный урок"
+          title: "Касса для братьев Уизли"
+          outcome: "Написать кассу: покупки, чек, оплата и сдача."
     - id: functions_and_choices
       title: "Функции и выбор"
       summary: "Создаём свои функции, передаём данные и выбираем действия по условиям."
@@ -792,3 +797,67 @@ lessons:
         kind: summary
         title: "Итоги урока"
         section: conversion_results
+  - id: a09_bonus
+    content: lessons/a09_bonus/lesson.md
+    completion_tasks: ["a09_bonus_checkout"]
+    presentation:
+      background: lessons/a09_bonus/assets/diagon_alley.png
+      plaque: lessons/a09_bonus/assets/platform_plaque.png
+      parchment: lessons/a09_bonus/assets/price_scroll.png
+    tasks:
+      - id: a09_bonus_welcome
+        kind: article
+        title: "Магазин братьев Уизли"
+        section: welcome
+        illustrations:
+          twins:
+            image_height: 160
+            items:
+              - image: lessons/a09_bonus/assets/twins.png
+      - id: a09_bonus_money
+        kind: article
+        title: "Деньги волшебников"
+        section: money
+        illustrations:
+          galleon_exchange:
+            image_height: 88
+            relation: "="
+            items:
+              - image: lessons/a09_bonus/assets/galleon.png
+                caption: "1 галлеон\nЗолотая монета"
+              - image: lessons/a09_bonus/assets/sickle.png
+                caption: "17 сиклей\nСеребряные монеты"
+          sickle_exchange:
+            image_height: 88
+            relation: "="
+            items:
+              - image: lessons/a09_bonus/assets/sickle.png
+                caption: "1 сикль\nСеребряная монета"
+              - image: lessons/a09_bonus/assets/knut.png
+                caption: "29 кнатов\nБронзовые монеты"
+      - id: a09_bonus_checkout
+        kind: exercise
+        title: "Проект. Покупка и сдача"
+        section: checkout
+        student_file: exercises/a09_bonus/checkout.py
+        template: lessons/a09_bonus/exercises/checkout.py
+        run_mode: interactive
+        illustrations:
+          catalogue:
+            image_height: 120
+            parchment: true
+            items:
+              - image: lessons/a09_bonus/assets/extendable_ears.png
+                caption: "Удлинители ушей\n17 сиклей за штуку"
+              - image: lessons/a09_bonus/assets/skiving_snackboxes.png
+                caption: "Забастовочные завтраки\n23 сикля за коробку"
+              - image: lessons/a09_bonus/assets/pygmy_puff.png
+                caption: "Карликовые пушистики\n31 сикль за пушистика"
+        hints:
+          - "Раздели работу на покупки и оплату. Какие ответы и цены нужно сохранить, чтобы посчитать три строки чека и общую стоимость? Сначала запусти только эту часть."
+          - "Оплата содержит разные монеты. Вспомни, сколько кнатов в сикле и сколько сиклей в галлеоне. Как выразить и оплату, и стоимость покупки в одних и тех же монетах?"
+          - "Вспомни задачу про сдачу из урока 7: деление нацело помогает узнать число крупных монет. После этого вычти их стоимость из суммы. Что нужно сделать с оставшейся суммой?"
+      - id: a09_bonus_results
+        kind: summary
+        title: "Итоги урока"
+        section: results

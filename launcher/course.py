@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,28 @@ class AnswerChoice:
 
 
 @dataclass(frozen=True)
+class Illustration:
+    image: Path
+    caption: str = ""
+
+
+@dataclass(frozen=True)
+class IllustrationGroup:
+    id: str
+    items: tuple[Illustration, ...]
+    image_height: int = 128
+    parchment: bool = False
+    relation: str = ""
+
+
+@dataclass(frozen=True)
+class LessonPresentation:
+    background: Path | None = None
+    plaque: Path | None = None
+    parchment: Path | None = None
+
+
+@dataclass(frozen=True)
 class Task:
     id: str
     kind: str
@@ -33,6 +56,7 @@ class Task:
     correct_choice: str | None = None
     explanation: str = ""
     hints: tuple[str, ...] = ()
+    illustrations: tuple[IllustrationGroup, ...] = ()
 
     @property
     def is_coding(self) -> bool:
@@ -46,6 +70,7 @@ class Lesson:
     content: Path
     completion_tasks: tuple[str, ...]
     tasks: tuple[Task, ...]
+    presentation: LessonPresentation = LessonPresentation()
 
     def task(self, task_id: str) -> Task:
         for task in self.tasks:
@@ -59,6 +84,8 @@ class RoadmapLesson:
     id: str
     title: str
     outcome: str
+    display_label: str | None = None
+    locked_title: str | None = None
 
 
 @dataclass(frozen=True)
@@ -103,6 +130,15 @@ class Course:
         for index, lesson in enumerate(self.roadmap_lessons, start=1):
             if lesson.id == lesson_id:
                 return index
+        raise KeyError(lesson_id)
+
+    def lesson_label(self, lesson_id: str) -> str:
+        number = 0
+        for lesson in self.roadmap_lessons:
+            if lesson.display_label is None:
+                number += 1
+            if lesson.id == lesson_id:
+                return lesson.display_label or str(number)
         raise KeyError(lesson_id)
 
     def roadmap_stage(self, lesson_id: str) -> RoadmapStage:
@@ -151,6 +187,53 @@ def _required_text(data: dict[str, Any], key: str) -> str:
     return value
 
 
+def _optional_text(data: dict[str, Any], key: str) -> str | None:
+    return _required_text(data, key) if key in data else None
+
+
+def _asset_path(value: Any) -> Path | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("Illustration asset requires a path")
+    path = (PROJECT_ROOT / value).resolve()
+    if not path.is_relative_to(PROJECT_ROOT.resolve()) or not path.is_file():
+        raise ValueError(f"Missing or unsafe illustration asset: {value}")
+    return path
+
+
+def _illustrations(raw: Any) -> tuple[IllustrationGroup, ...]:
+    if not isinstance(raw, dict):
+        raise ValueError("Illustrations must be named groups")
+    groups = []
+    for name, data in raw.items():
+        if not isinstance(name, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", name):
+            raise ValueError("Invalid illustration group name")
+        if not isinstance(data, dict):
+            raise ValueError("Illustration group requires settings and items")
+        items = data.get("items")
+        height = data.get("image_height", 128)
+        parchment = data.get("parchment", False)
+        relation = data.get("relation", "")
+        if (
+            not isinstance(items, list) or not 1 <= len(items) <= 3
+            or not all(isinstance(item, dict) for item in items)
+            or type(height) is not int or not 32 <= height <= 200
+            or not isinstance(parchment, bool) or not isinstance(relation, str)
+            or (relation and len(items) != 2)
+        ):
+            raise ValueError(f"Invalid illustration group: {name}")
+        illustrations = []
+        for item in items:
+            path = _asset_path(_required_text(item, "image"))
+            caption = item.get("caption", "")
+            if not isinstance(caption, str):
+                raise ValueError("Illustration captions must be text")
+            illustrations.append(Illustration(path, caption))
+        groups.append(IllustrationGroup(name, tuple(illustrations), height, parchment, relation))
+    return tuple(groups)
+
+
 def load_course(curriculum_path: Path | None = None) -> Course:
     path = curriculum_path or PROJECT_ROOT / "CURRICULUM.yaml"
     if curriculum_path is None and not path.is_file():
@@ -188,6 +271,8 @@ def load_course(curriculum_path: Path | None = None) -> Course:
                 id=_required_text(entry, "id"),
                 title=_required_text(entry, "title"),
                 outcome=_required_text(entry, "outcome"),
+                display_label=_optional_text(entry, "display_label"),
+                locked_title=_optional_text(entry, "locked_title"),
             )
             if planned.id in roadmap_lesson_ids:
                 raise ValueError(
@@ -248,6 +333,7 @@ def load_course(curriculum_path: Path | None = None) -> Course:
                     if item.get("kind") == "question" else ""
                 ),
                 hints=tuple(raw_hints),
+                illustrations=_illustrations(item.get("illustrations", {})),
             )
             if task.kind == "question":
                 choice_ids = {choice.id for choice in choices}
@@ -279,6 +365,16 @@ def load_course(curriculum_path: Path | None = None) -> Course:
             task_ids.add(task.id)
             tasks.append(task)
         required = tuple(lesson_data["completion_tasks"])
+        presentation = lesson_data.get("presentation", {})
+        if not isinstance(presentation, dict):
+            raise ValueError("Lesson presentation must contain asset paths")
+        visual = LessonPresentation(
+            background=_asset_path(presentation.get("background")),
+            plaque=_asset_path(presentation.get("plaque")),
+            parchment=_asset_path(presentation.get("parchment")),
+        )
+        if any(group.parchment for task in tasks for group in task.illustrations) and visual.parchment is None:
+            raise ValueError("Parchment illustration captions require a parchment asset")
         lessons.append(
             Lesson(
                 id=lesson_id,
@@ -286,10 +382,18 @@ def load_course(curriculum_path: Path | None = None) -> Course:
                 content=PROJECT_ROOT / _required_text(lesson_data, "content"),
                 completion_tasks=required,
                 tasks=tuple(tasks),
+                presentation=visual,
             )
         )
 
     for lesson in lessons:
+        if any(task.illustrations for task in lesson.tasks):
+            sections = load_sections(lesson.content)
+            for task in lesson.tasks:
+                referenced = set(re.findall(r"<!-- illustration:\s*([a-z][a-z0-9_]*)\s*-->", sections.get(task.section, "")))
+                declared = {group.id for group in task.illustrations}
+                if not referenced <= declared:
+                    raise ValueError(f"Unknown illustration group in task: {task.id}")
         activities = {
             task.id for task in lesson.tasks
             if (task.is_coding and task.kind != "star") or task.kind == "question"

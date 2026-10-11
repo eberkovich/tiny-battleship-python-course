@@ -25,8 +25,10 @@ implements A1–A9: comments, showing text/numbers, execution order, arithmetic,
 grouping calculations, naming and changing values, text input, and conversion
 to integers. The launcher is runnable. A1 uses submitted puzzles; A2–A9 use independent
 console exercises. They do not create a cumulative game file.
-The roadmap lists the 33 planned foundation lessons; only the first nine are
-executable. The game section's feature milestones are not yet numbered lessons.
+The required A9¾ standalone shop capstone follows A9. The roadmap lists 33
+numbered foundation lessons plus this capstone: 34 required entries, of which
+nine numbered lessons and the capstone are executable. The game section's
+feature milestones are not yet numbered lessons.
 The user reports positive child-pilot feedback for A1–A3 and approved A4–A9
 authoring. Continue to use child feedback when designing later lessons;
 activity completion alone is not evidence of understanding.
@@ -252,6 +254,26 @@ been saved. The current step is always unlocked; a locked step cannot be
 selected or saved as current. When all required activities are completed,
 unlock the summary; the optional star task remains available.
 
+#### Required secret capstone
+
+The A9¾ standalone capstone is required, not an optional star task.
+Insert it between A9 and A10: completing A9 unlocks it, and completing its
+checkout task unlocks its summary and permits progression to A10. Before A9
+is completed, show its roadmap entry as **«Секретный урок»** with a lock; hide
+the 9¾ display label, real title, outcome, and shop artwork in all locked
+previews. Do not leak the concealed label through stage lesson ranges or
+next-lesson previews. Keep its row aligned with the other lesson titles, leaving
+the number gutter blank. Reveal those
+details once its prerequisite is completed. Debug mode reveals and unlocks
+implemented lessons as usual; unimplemented roadmap entries stay non-executable.
+
+Once revealed, display this capstone as **9¾** without renumbering A1–A33 or changing their
+stable IDs. Include it in the foundation progress denominator
+and completion count: 33 numbered lessons plus one required capstone make 34.
+Derive custom display labels and concealed locked titles from metadata, not
+lesson-ID-specific launcher branches. Its teaching scenario belongs to
+`context/lesson_content.md`.
+
 #### Debug mode, global controls, and window
 
 The debug badge, game launcher, command reference, and theme switch occupy a
@@ -326,14 +348,35 @@ Child-facing titles, wording, explanation order, and authoring requirements are
 defined in `context/lesson_content.md`. A `summary` is informational, not
 material or a coding task.
 
-#### Planned A9¾ capstone visual reference
+#### A9¾ capstone visual reference
 
-The planned standalone bonus capstone after A9 is named **A9¾**. When it is
-authored, include a small Harry Potter visual nod, such as a platform-style
-sign bearing A9¾. Keep it a restrained accent within the existing design,
-not a separate theme or layout. It does not require a Harry Potter task;
-the settled task and its authoring boundary belong to `context/lesson_content.md`.
-Use the same visual asset in both themes.
+The standalone capstone after A9 is named **A9¾**. Use original static
+storybook illustrations for Diagon Alley, the
+Weasley twins, three shop products with parchment price tags, and a restrained
+platform-style A9¾ plaque. Confine the background to the lesson content region
+and put explanatory paragraphs on separate opaque readable cards. Draw
+illustration rows directly over the artwork, not inside a large article card;
+use compact solid caption and relationship-label backings, retaining parchment
+price tags. Keep the ordinary sidebar and fixed toolbar. Render meaningful
+labels and prices with application fonts. This is
+not a separate theme or shop application. The settled task and its authoring
+boundary belong to `context/lesson_content.md`. Use identical assets and layout
+in both themes, with any contrast treatment defined by palette constants.
+
+Before the capstone's payment/change part, show a compact illustrated currency
+diagram with gold Galleon, silver Sickle, and bronze Knut images. Display two clear
+relationships: 1 Galleon = 17 Sickles; 1 Sickle = 29 Knuts. Use readable
+application-font labels and numbers, not lettering baked into the artwork or
+17/29 individual coin pictures. Keep the same coin assets and layout in both
+themes; the teaching sequence belongs to `context/lesson_content.md`.
+
+Lesson presentation is opt-in metadata: project-local background, plaque, and
+caption-parchment paths; tasks declare named illustration groups referenced by
+`<!-- illustration: group_name -->` in their content. Each row contains one to
+three aspect-fitted images with application-font captions and an optional
+two-item relationship label. Validate paths and group references when loading,
+cache images, and clear presentation on leaving the lesson. Ordinary lessons
+retain their existing layout; no renderer branches on a lesson ID.
 
 #### Puzzle interaction and feedback
 
@@ -402,6 +445,10 @@ Keep explanations and check feedback outside the output block. Use the same
 output style and caption for worked examples and actual program runs; their
 placement remains inline for examples and fixed for the latest run. Shared
 layout and rendering apply in both themes; only palette constants differ.
+The bounded latest-run card displays the most recent output rows, with an
+ellipsis above them when older rows are omitted. Captured output remains
+unchanged; input dialogs also display recent output, including the receipt
+before payment is requested.
 
 Use fenced `python` for source, `text` for explicitly identified explanatory
 notation, `input` for supplied user answers, and `output` for literal printed results.
@@ -625,9 +672,12 @@ content. The launcher evaluates the submitted choice directly from metadata,
 not through `acceptance.py`.
 
 Lesson IDs are also stable internal identifiers, not displayed ordinals. The
-launcher derives **«Урок N»** from roadmap position. A lesson inserted into an
-existing roadmap therefore receives a new unique ID without renaming later
-lessons or invalidating their saved progress.
+launcher derives ordering from roadmap position and displayed labels from
+metadata. Ordinary entries use sequential numbers; an explicitly labelled
+entry such as 9¾ does not consume a regular displayed ordinal but still counts
+as a required lesson. Inserting it requires no renaming of later lessons or
+invalidating their saved progress. Optional `locked_title` metadata conceals
+the real title and outcome while its prerequisite is unmet.
 
 #### Optional hints
 
@@ -677,6 +727,17 @@ Require exactly the specified number of reads, and compare the result printed
 after the final answer, not incidental question wording. All private cases
 must pass. This checks behavior with unfamiliar data without AST pattern
 requirements or importing arbitrary student code into the launcher.
+
+The A9¾ checkout additionally requires intermediate output: the basket receipt
+before payment inputs and change afterward. It uses an optional
+private hook `check_interaction(task_id, answers, output_segments)` for this
+chronological contract. Supply printed-output segments before each input and
+after the last one, excluding each `input` prompt argument. Preserve fresh
+globals, exact read counts, legacy `check_inputs` behavior, and isolation of
+private case output from the child's actual output. Compare numeric result
+rows, their field order, and timing without requiring labels, currency words,
+exact spelling, or decorative punctuation. Do not add student-facing
+callbacks or special input functions.
 
 Do not add per-lesson manifests until one shared curriculum file causes actual
 friction.

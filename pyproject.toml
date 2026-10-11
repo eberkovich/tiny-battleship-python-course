@@ -23,6 +23,7 @@ include = ["battleship_ui*", "launcher*", "runner*", "lessons*"]
 [tool.setuptools.package-data]
 battleship_ui = ["assets/*.png"]
 launcher = ["assets/*.png"]
+"lessons.a09_bonus" = ["lesson.md", "assets/*.png", "assets/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -154,9 +154,11 @@ def _check_input_cases(source: Path, task_id: str, acceptance) -> RunResult:
         output = BoundedOutput()
         consumed = 0
         answer_start = 0
+        segments = []
 
         def case_input(prompt=""):
             nonlocal consumed, answer_start
+            segments.append(output.value()[answer_start:])
             output.write(str(prompt))
             if consumed >= len(answers):
                 raise InputMismatch()
@@ -170,9 +172,11 @@ def _check_input_cases(source: Path, task_id: str, acceptance) -> RunResult:
                 runpy.run_path(str(source), run_name="__main__")
             if consumed != len(answers):
                 raise InputMismatch()
-            outcome = acceptance.check_inputs(
-                task_id, answers, output.value()[answer_start:]
-            )
+            segments.append(output.value()[answer_start:])
+            if hasattr(acceptance, "check_interaction"):
+                outcome = acceptance.check_interaction(task_id, answers, tuple(segments))
+            else:
+                outcome = acceptance.check_inputs(task_id, answers, segments[-1])
             if not outcome.passed:
                 # Private case output must not replace the child's own run.
                 return RunResult("failed", "behavior_mismatch", outcome.message)

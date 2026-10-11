@@ -112,14 +112,16 @@ def test_pilot_source_lines_fit_the_minimum_example_width(tmp_path) -> None:
 
 def test_pilot_scope_and_material_are_consistent() -> None:
     assert [lesson.id for lesson in COURSE.lessons] == [
-        "a01", "a02", "a03", "a04", "a05", "a06", "a07", "a08", "a09_input",
+        "a01", "a02", "a03", "a04", "a05", "a06", "a07", "a08", "a09_input", "a09_bonus",
     ]
-    assert len(COURSE.roadmap_lessons) == 33
+    assert len(COURSE.roadmap_lessons) == 34
     assert {lesson.id for lesson in COURSE.roadmap_lessons} == {
-        *(f"a{number:02}" for number in range(1, 33)), "a09_input",
+        *(f"a{number:02}" for number in range(1, 33)), "a09_input", "a09_bonus",
     }
-    assert COURSE.roadmap_position("a09") == 10
-    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4, 6, 5, 5, 6, 5, 6]
+    assert COURSE.roadmap_position("a09") == 11
+    assert COURSE.lesson_label("a09") == "10"
+    assert COURSE.lesson_label("a09_bonus") == "9¾"
+    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4, 6, 5, 5, 6, 5, 6, 1]
     all_ids = set()
     for lesson in COURSE.lessons:
         sections = load_sections(lesson.content)
@@ -204,9 +206,11 @@ def test_untouched_starter_does_not_complete_the_coding_task(lesson, task) -> No
     assert not result.passed
 
 
-def specification_comments(text: str) -> list[str]:
+def specification_comments(text: str, illustrations=()) -> list[str]:
     """Normalize only supported markup; protect the complete starter-copy contract."""
     blocks = text.split("> [!NOTE]", 1)[0].replace("**", "").replace("`", "")
+    for group in illustrations:
+        blocks = blocks.replace(f"<!-- illustration: {group.id} -->", "\n".join(item.caption for item in group.items))
     lines = []
     for line in blocks.splitlines():
         if any(marker in line for marker in ("[!EXAMPLE]", "[!RECAP]")):
@@ -227,7 +231,7 @@ def test_starters_contain_complete_task_without_workflow(lesson, task) -> None:
         line.removeprefix("#").removeprefix(" ")
         for line in task.template.read_text().splitlines() if line.startswith("#")
     ]
-    assert " ".join(comments).split() == " ".join(specification_comments(content)).split()
+    assert " ".join(comments).split() == " ".join(specification_comments(content, task.illustrations)).split()
     assert "Открой редактор" not in task.template.read_text()
 
 

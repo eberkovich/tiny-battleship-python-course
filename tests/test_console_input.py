@@ -46,6 +46,27 @@ def finish(job):
     pytest.fail("Child did not finish")
 
 
+@pytest.mark.parametrize("prompt", ["", "Question? "])
+def test_chronological_checker_excludes_prompts_and_checks_before_next_input(tmp_path, monkeypatch, prompt):
+    import runner.process
+    fixture_root = ROOT / "tests/fixtures"
+    monkeypatch.setattr(runner.process, "PROJECT_ROOT", fixture_root)
+    monkeypatch.setenv("PYTHONPATH", os.pathsep.join((str(fixture_root), str(ROOT))))
+    source = tmp_path / "checkout.py"
+    source.write_text(
+        'print("start")\n'
+        f'first = input({prompt!r})\n'
+        'print("receipt", first)\n'
+        f'second = input({prompt!r})\n'
+        'print("change", int(first) + int(second))\n'
+    )
+    assert run_check(source, "interaction", lesson_id="interaction").passed
+    source.write_text(source.read_text().replace('print("receipt", first)\n', '').replace(
+        'print("change",', 'print("receipt", first)\nprint("change",'
+    ))
+    assert not run_check(source, "interaction", lesson_id="interaction").passed
+
+
 @pytest.mark.parametrize("answer", ["Луна", "7", "two words", "", "🦉"])
 def test_input_waits_without_blocking_and_preserves_literal_answer(tmp_path, answer):
     source = tmp_path / "read.py"

@@ -359,6 +359,15 @@ addresses, or another type; variable names do not explain this. For a function,
 say whether the child writes its body, some missing part, or the complete
 definition, and whether the checker or the child calls it.
 
+When output wording is not the learning objective, prefer numbers in a simple,
+explicit order. Explain each number's meaning and unit in the specification;
+do not require copying product names, currency words, arbitrary labels, or
+decorative separators. Check calculated values, necessary row/field order,
+and timing, not incidental spelling, punctuation, or extra spaces. Optional
+labels and freely worded input questions must not cause a correct calculation
+to fail. Require richer output formatting only when it has a genuine teaching
+purpose.
+
 Examples in exercise descriptions are optional, not mandatory. Include one
 only to clarify a genuinely non-obvious input/output contract. Do not add a
 worked version of the same task: changing numbers, names, or story details does
@@ -518,8 +527,8 @@ feedback, counters, non-repeating shots, alternating turns, and victory/defeat.
 Multi-deck ships are a later game part, not the second learning section below.
 
 Section A currently has **33 main planned lessons**, plus the standalone
-**A9¾** bonus capstone after A9. Its shop-calculator task is selected but not
-authored yet.
+**A9¾** required capstone after A9: 34 required lessons in total, without
+renumbering A1–A33. Its shop-calculator task is authored as one required project.
 Each A-number below denotes one lesson, not a topic block. Some lessons
 consolidate a known tool
 rather than introducing more syntax. This is a working split, not a count to
@@ -671,25 +680,50 @@ text versus changed number, solve NRICH's number trick in reverse, and compute
 the hens/sheep population from NRICH's Heads and Feet. Private checks vary the
 inputs; the last two independent problems have progressive optional hints.
 
-#### A9¾. Interim capstone — selected, not authored
+#### A9¾. Interim capstone — one customer checkout
 
-A separate bonus lesson after A9, before defining functions, consolidates input,
-variables, and arithmetic without new syntax. Build a small shop calculator
+A separate required capstone after A9, before defining functions, consolidates
+input, variables, and arithmetic without new syntax. Build a small shop calculator
 adapted from Code Avengers Python 1, sections 7.3–7.4 (two products, quantities,
 subtotals, total, and receipt). Omit its optional conditional discount:
 https://assets.codeavengers.com/file/cloud/python/1/lesson-plans/ca-py1-instructions.pdf
 
 Use the Weasley brothers' shop **«Всевозможные волшебные вредилки»** and products
-**«Удлинители ушей»** and **«Забастовочные завтраки»**. Choose fictional integer
-prices, not purported canonical prices. The approved light opening is:
+**«Удлинители ушей»**, **«Забастовочные завтраки»**, and
+**«Карликовые пушистики»**. The user expanded the original two-product task to
+three products. Choose fictional integer prices in Sickles, not purported
+canonical prices. Build the same program in two parts: basket subtotals and
+receipt first, then payment and change. These parts form one customer checkout
+scenario in one program: enter the three purchase quantities, see the basket
+receipt and total, then enter payment and receive change. The payment/change
+extension is an additional adaptation, not a claim about the source worksheet.
+
+Before the second part, explain the denominations and their conversion using
+an illustrated reminder: 1 Galleon = 17 Sickles and 1 Sickle = 29 Knuts. These
+are new domain facts, not new Python syntax. Use only established arithmetic
+and guarantee sufficient payment; do not add modulo, conditions, or validation.
+Payment inputs are nonnegative whole coin quantities, in order: Galleons,
+Sickles, Knuts. Give change in these denominations, using the largest possible
+number of Galleons, then Sickles, with the remainder in Knuts. The receipt must
+be visible before payment is requested, and change after payment is entered.
+Use a numeric receipt: three rows of quantity and subtotal in Sickles, in
+catalogue order, followed by one row containing only the total in Sickles.
+Print change as three numbers on one row: Galleons, Sickles, Knuts. Show zero
+quantities too. Labels and currency words are optional and their spelling is
+not assessed; numeric values, row/field order, and timing remain required.
+Currency reference:
+https://www.harrypotter.com/fact-file/objects/wizarding-money
+
+The approved light opening is:
 
 > С волшебными розыгрышами у братьев всё отлично, а вот подсчёт покупок отнимает слишком много времени. Возможно, тут пригодилась бы когтевранская сообразительность, а не гриффиндорская смелость. Но это не точно.
 >
 > Зато твоя программа-касса им точно пригодится!
 
-Remind the user about this separate project after A9 is ready. Do not author it
-as part of A8/A9 or count it among the 33 main lessons. Its small A9¾ visual
-reference belongs to `context/architecture.md` and uses the same asset in both themes.
+Do not author this project as part of A8/A9 or renumber the 33 main lessons.
+Completion of A9¾ is required before A10. Its concealed/revealed navigation,
+inclusion in progress totals, visual design, and illustrated currency reminder
+belong to `context/architecture.md`.
 
 #### A10. Defining and calling a function
 
@@ -1009,6 +1043,10 @@ selection rule without changing turn handling or drawing.
 ### Authoring and delivery boundary
 
 The A1–A9 lessons are implemented in the agreed prerequisite order.
+The separate A9¾ capstone is also authored: one required independent program
+combines six inputs, a three-product receipt before payment, and change after
+payment. The currency article introduces the domain facts, not new Python
+syntax; three optional hints support composition without giving completed code.
 This learning path still defines outcomes and prerequisite order for later
 lessons, not ready-made articles or final tasks. Do not mistake illustrative
 puzzles or technical test fixtures for student content.
