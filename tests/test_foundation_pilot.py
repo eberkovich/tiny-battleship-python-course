@@ -46,12 +46,14 @@ def test_worked_examples_show_verified_output_separate_from_explanation(task_id,
     meaningful = [(kind, value) for kind, value in blocks if kind != "space"]
     sources = [value for kind, value in meaningful if kind == "code"]
     outputs = [value for kind, value in meaningful if kind == "output"]
+    answers = [value for kind, value in meaningful if kind == "input"]
     assert len(sources) == 1
     result = subprocess.run(
         [sys.executable, "-c", sources[0]], capture_output=True, text=True, timeout=3, check=True,
+        input=(answers[0] + "\n") if answers else "",
     )
     if outputs:
-        assert [kind for kind, _ in meaningful] == ["text", "code", "output", "text"]
+        assert [kind for kind, _ in meaningful] == ["text", "code", *(["input"] if answers else []), "output", "text"]
         assert result.stdout.removesuffix("\n") == outputs[0]
     else:
         # A1's complete examples contain only comments, so there is no output.
@@ -75,7 +77,16 @@ def test_prediction_output_is_revealed_only_after_submission(tmp_path, lesson, t
     if sources:
         assert len(sources) == 1
         source = sources[0]
-        result = subprocess.run([sys.executable, "-c", source], capture_output=True, text=True, check=True, timeout=3)
+        answers = [value for kind, value in _markdown_blocks(controller.sections[task.section]) if kind == "input"]
+        result = subprocess.run(
+            [sys.executable, "-c", source], capture_output=True, text=True,
+            input=(answers[0] + "\n") if answers else "", timeout=3,
+        )
+        if "input()" in source and not answers:
+            # A waiting prediction ends at the first unanswered input, not after it.
+            assert result.returncode != 0 and "EOFError" in result.stderr
+        else:
+            assert result.returncode == 0, result.stderr
         # Comment-only A1 snippets intentionally have no output card.
         assert outputs == ([result.stdout.removesuffix("\n")] if result.stdout else [])
     else:
@@ -101,10 +112,14 @@ def test_pilot_source_lines_fit_the_minimum_example_width(tmp_path) -> None:
 
 def test_pilot_scope_and_material_are_consistent() -> None:
     assert [lesson.id for lesson in COURSE.lessons] == [
-        "a01", "a02", "a03", "a04", "a05", "a06", "a07", "a08",
+        "a01", "a02", "a03", "a04", "a05", "a06", "a07", "a08", "a09_input",
     ]
-    assert len(COURSE.roadmap_lessons) == 32
-    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4, 6, 5, 5, 6, 5]
+    assert len(COURSE.roadmap_lessons) == 33
+    assert {lesson.id for lesson in COURSE.roadmap_lessons} == {
+        *(f"a{number:02}" for number in range(1, 33)), "a09_input",
+    }
+    assert COURSE.roadmap_position("a09") == 10
+    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4, 6, 5, 5, 6, 5, 6]
     all_ids = set()
     for lesson in COURSE.lessons:
         sections = load_sections(lesson.content)
@@ -119,7 +134,7 @@ def test_pilot_scope_and_material_are_consistent() -> None:
                 assert task.is_coding
                 assert task.id not in lesson.completion_tasks
             if task.is_coding:
-                assert task.run_mode == "console"
+                assert task.run_mode in {"console", "interactive"}
                 assert task.template.is_file()
                 assert "battleship_ui" not in task.template.read_text()
         assert set(lesson.completion_tasks) == {
@@ -322,7 +337,8 @@ def test_legacy_completion_cannot_complete_replacement_tasks(tmp_path) -> None:
     ("a07_repair", "a07_balance_repair", "exercises/a07/repair.py"),
     ("a07_tickets", "a07_change", "exercises/a07/tickets.py"),
     ("a07_restore", "a07_swap", "exercises/a07/restore.py"),
-    ("a08_robot", "a08_robot_order", "exercises/a08/robot.py"),
+    ("a08_robot_order", "a08_story", "exercises/a08/robot_order.py"),
+    ("a08_wallet", "a08_introduce", "exercises/a08/wallet.py"),
 ])
 def test_revised_problem_gets_fresh_completion_without_removing_student_work(tmp_path, old_id, new_id, old_file) -> None:
     controller = LauncherController(tmp_path / "child")
@@ -386,33 +402,6 @@ def test_answer_keys_have_independent_evidence() -> None:
     assert 55 + 25 == 80
     assert 65 - 55 == 10
     assert sum([10] * 13 + [5] + [1] * 2) == 137
-    # A8: check event effects independently of the reference statement spelling.
-    assert 115 - 40 + 15 == 90
-    assert 2 + 1 == 3
-    assert 230 == 115 * 2
-
-
-def test_robot_investigation_accepts_both_optimal_orders_and_rejects_others(tmp_path) -> None:
-    updates = (
-        "energy = energy - 7 * 4",
-        "energy = energy * 2",
-        "energy = energy - 3 * 9",
-    )
-    path = tmp_path / "answer.py"
-    outcomes = []
-    for order in itertools.permutations(range(3)):
-        # Independently trace changes, then check the equivalent student script.
-        energy = 96
-        for action in order:
-            if action == 1:
-                energy *= 2
-            else:
-                energy -= (7 * 4 if action == 0 else 3 * 9)
-        outcomes.append(energy)
-        path.write_text("\n".join(["energy = 96", *(updates[i] for i in order), "print(energy)", ""]))
-        result = run_check(path, "a08_robot_order", lesson_id="a08")
-        assert result.passed == (order[0] == 1), (order, energy, result)
-    assert sorted(outcomes) == [82, 82, 109, 110, 137, 137]
 
 
 @pytest.mark.parametrize("source,lesson,task,code", [
@@ -438,10 +427,10 @@ def test_robot_investigation_accepts_both_optimal_orders_and_rejects_others(tmp_
     ("print(0)\nprint(0)\nprint(137)", "a07", "a07_change", "behavior_mismatch"),
     ("print(13)\nprint(1)\nprint(7)", "a07", "a07_change", "behavior_mismatch"),
     ("left = 137\nright = 284\nleft = right\nright = left\nprint(left)\nprint(right)", "a07", "a07_swap", "behavior_mismatch"),
-    ("points = 45\npoints = points + 17\nprint(points)\npoints = 45 + 9\nprint(points)", "a08", "a08_repair", "behavior_mismatch"),
-    ("coins = 120\nprint(coins)\nprint(coins + 57)\ncoins = coins - 38\nprint(coins)", "a08", "a08_wallet", "behavior_mismatch"),
-    ("print(109)", "a08", "a08_robot_order", "behavior_mismatch"),
-    ("print(115)\nprint(2)\nprint(180)\nprint(3)", "a08", "a08_two_values", "behavior_mismatch"),
+    ('answer = input()\nanswer = input()\nprint(answer)\nprint(answer)', "a08", "a08_lost_answer", "behavior_mismatch"),
+    ('answer = input()\nprint("Наш участник:")\nprint("Луна")', "a08", "a08_introduce", "behavior_mismatch"),
+    ('year = input()\nprint(18)', "a09_input", "a09_input_birthday", "behavior_mismatch"),
+    ('sheets = input()\nint(sheets)\nprint(sheets - 5)', "a09_input", "a09_input_conversion_repair", "type_error"),
 ])
 def test_focused_failures_keep_programming_and_reasoning_distinct(tmp_path, source, lesson, task, code) -> None:
     path = tmp_path / "answer.py"
@@ -486,9 +475,16 @@ def test_full_pilot_progress_requires_every_activity_and_survives_reopening(tmp_
                 reference = PROJECT_ROOT / "lessons" / lesson.id / "reference" / task.template.name
                 shutil.copyfile(reference, controller.source_path())
                 controller.start_run()
+                input_count = 0
                 deadline = time.monotonic() + 5
                 while controller.busy and time.monotonic() < deadline:
                     controller.poll()
+                    if controller.waiting_for_input:
+                        # A real run uses one manual case; private checks vary it next.
+                        from importlib import import_module
+                        answers = import_module(f"lessons.{lesson.id}.acceptance").input_cases(task.id)[0]
+                        controller.submit_input(answers[input_count])
+                        input_count += 1
                     time.sleep(0.01)
                 assert not controller.busy
                 assert controller.message_level == "success", controller.message
@@ -528,7 +524,8 @@ def test_puzzle_ui_collects_answer_reveals_feedback_and_marks_card(tmp_path) -> 
 
 
 @pytest.mark.parametrize("lesson_id,task_id", [
-    ("a02", "a02_houses"), ("a06", "a06_weights"), ("a08", "a08_robot_order"),
+    ("a02", "a02_houses"), ("a06", "a06_weights"),
+    ("a09_input", "a09_input_number_trick"), ("a09_input", "a09_input_farm"),
     ("a07", "a07_change"), ("a07", "a07_swap"),
 ])
 def test_hint_ui_reveals_in_order_without_progress_or_layout_changes(tmp_path, lesson_id, task_id) -> None:

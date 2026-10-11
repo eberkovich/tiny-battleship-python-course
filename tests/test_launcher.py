@@ -184,9 +184,9 @@ def test_multiline_source_is_one_panel_and_output_uses_shared_renderer(
 
     original_output = app._draw_output_panel
 
-    def record_output(lines, rect):
+    def record_output(lines, rect, caption="Вывод программы"):
         output_panels.append((lines, rect.copy()))
-        original_output(lines, rect)
+        original_output(lines, rect, caption)
 
     monkeypatch.setattr(app, "_draw_output_panel", record_output)
     output = "  1\n\n2  "

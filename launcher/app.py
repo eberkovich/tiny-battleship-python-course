@@ -162,7 +162,7 @@ def _markdown_blocks(text: str) -> list[tuple[str, str]]:
         if stripped.startswith(FENCE):
             flush_paragraph()
             language = stripped[len(FENCE):].strip()
-            code_kind = "output" if language == "output" else "code"
+            code_kind = language if language in {"output", "input"} else "code"
             continue
         if stripped == "> [!NOTE]":
             flush_paragraph()
@@ -231,6 +231,10 @@ class LauncherApp:
         self.clipboard_error = False
         self.note_card_rect: pygame.Rect | None = None
         self.output_card_rect: pygame.Rect | None = None
+        self.input_dialog_rect: pygame.Rect | None = None
+        self.input_field_rect: pygame.Rect | None = None
+        self.input_text = ""
+        self.input_active = False
         self.debug_badge_rect: pygame.Rect | None = None
         self.home_title_rect: pygame.Rect | None = None
         self.home_hero_rect: pygame.Rect | None = None
@@ -289,6 +293,8 @@ class LauncherApp:
                     running = False
                 elif event.type == pygame.VIDEORESIZE:
                     self._resize_window(event.size)
+                elif self._handle_input_event(event):
+                    continue
                 elif event.type == pygame.WINDOWRESIZED:
                     resized = (event.x, event.y)
                     if (
@@ -302,6 +308,7 @@ class LauncherApp:
                     event.type == pygame.MOUSEWHEEL
                     and self.api_dialog is None
                     and not self.command_reference_open
+                    and not self.controller.waiting_for_input
                 ):
                     if (
                         self.controller.view != "home"
@@ -326,6 +333,15 @@ class LauncherApp:
         self.screen = pygame.display.set_mode((width, height), WINDOW_FLAGS)
 
     def _click(self, position: tuple[int, int]) -> None:
+        if self.controller.waiting_for_input:
+            for button in self.buttons:
+                if button.rect.collidepoint(position):
+                    if button.action == "send_input":
+                        self._submit_input()
+                    elif button.action == "cancel_input":
+                        self.controller.cancel_run()
+                    return
+            return
         if self.api_dialog is not None:
             for rect, signature in self.copy_signature_links:
                 if rect.collidepoint(position):
@@ -474,7 +490,83 @@ class LauncherApp:
         if self.api_dialog is not None:
             self.copy_signature_links = []
             self._render_api_dialog()
+        self.input_dialog_rect = None
+        self.input_field_rect = None
+        waiting = self.controller.waiting_for_input
+        if waiting != self.input_active:
+            self.input_active = waiting
+            self.input_text = ""
+            if waiting:
+                pygame.key.start_text_input()
+            else:
+                pygame.key.stop_text_input()
+        if waiting:
+            self._render_input_dialog()
         pygame.display.flip()
+
+    def _handle_input_event(self, event: pygame.event.Event) -> bool:
+        if not self.controller.waiting_for_input:
+            return False
+        if event.type == pygame.TEXTINPUT:
+            self.input_text += event.text.replace("\n", "").replace("\r", "")
+            return True
+        if event.type == pygame.KEYDOWN:
+            if event.key in {pygame.K_RETURN, pygame.K_KP_ENTER}:
+                self._submit_input()
+            elif event.key == pygame.K_BACKSPACE:
+                self.input_text = self.input_text[:-1]
+            elif event.key == pygame.K_ESCAPE:
+                self.controller.cancel_run()
+            return True
+        return False
+
+    def _submit_input(self) -> None:
+        self.controller.submit_input(self.input_text)
+        self.input_text = ""
+
+    def _render_input_dialog(self) -> None:
+        overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, DIALOG_OVERLAY_ALPHA))
+        self.screen.blit(overlay, (0, 0))
+        dialog = pygame.Rect(0, 0, 700, 400)
+        dialog.center = self.screen.get_rect().center
+        self.input_dialog_rect = dialog
+        pygame.draw.rect(self.screen, self.theme.content_card, dialog, border_radius=16)
+        title = self.title_font.render("Программа ждёт ответ", True, self.theme.text)
+        self.screen.blit(title, (dialog.x + 28, dialog.y + 22))
+        lines = _wrap_literal(
+            self.code_font, self.controller.latest_output, dialog.width - 92
+        )[-6:]
+        prompt = pygame.Rect(dialog.x + 28, dialog.y + 74, dialog.width - 56, 168)
+        pygame.draw.rect(self.screen, self.theme.output_background, prompt, border_radius=8)
+        for index, line in enumerate(lines):
+            self.screen.blit(
+                self.code_font.render(line, True, self.theme.output_text),
+                (prompt.x + 18, prompt.y + 14 + index * 22),
+            )
+        field = pygame.Rect(dialog.x + 28, dialog.y + 260, dialog.width - 56, 48)
+        self.input_field_rect = field
+        pygame.draw.rect(self.screen, self.theme.code_background, field, border_radius=8)
+        pygame.draw.rect(self.screen, self.theme.accent, field, 2, border_radius=8)
+        visible = self.input_text
+        while self.code_font.size(visible + "|")[0] > field.width - 28:
+            visible = visible[1:]
+        self.screen.blit(
+            self.code_font.render(visible + "|", True, self.theme.code_text),
+            (field.x + 14, field.y + 12),
+        )
+        instruction = self.small_font.render(
+            "Введи ответ и нажми Enter. Esc — остановить запуск.", True, self.theme.muted
+        )
+        self.screen.blit(instruction, (dialog.x + 28, dialog.y + 318))
+        self._add_button(
+            "Остановить", dialog.x + 28, dialog.bottom - 48,
+            126, "cancel_input", height=34,
+        )
+        self._add_button(
+            "Отправить", dialog.right - 154, dialog.bottom - 48,
+            126, "send_input", height=34,
+        )
 
     def _render_debug_badge(self) -> None:
         if not self.controller.debug:
@@ -1487,7 +1579,9 @@ class LauncherApp:
     def _output_panel_height(self, lines: list[str]) -> int:
         return OUTPUT_PADDING_Y * 2 + OUTPUT_HEADER_HEIGHT + len(lines) * OUTPUT_LINE_HEIGHT
 
-    def _draw_output_panel(self, lines: list[str], card: pygame.Rect) -> None:
+    def _draw_output_panel(
+        self, lines: list[str], card: pygame.Rect, caption: str = "Вывод программы"
+    ) -> None:
         pygame.draw.rect(
             self.screen, self.theme.output_background, card, border_radius=8
         )
@@ -1502,7 +1596,7 @@ class LauncherApp:
             self.screen, self.theme.output_caption,
             (icon.x + 12, icon.y + 13), (icon.x + 17, icon.y + 13), 2,
         )
-        title = self.small_font.render("Вывод программы", True, self.theme.output_caption)
+        title = self.small_font.render(caption, True, self.theme.output_caption)
         self.screen.blit(title, (icon.right + 9, card.y + OUTPUT_PADDING_Y - 1))
         line_y = card.y + OUTPUT_PADDING_Y + OUTPUT_HEADER_HEIGHT
         previous_clip = self.screen.get_clip()
@@ -1566,7 +1660,7 @@ class LauncherApp:
                     + len(value.split("\n")) * CODE_LINE_HEIGHT
                     + LITERAL_BLOCK_GAP
                 )
-            elif kind == "output":
+            elif kind in {"output", "input"}:
                 lines = _wrap_literal(self.code_font, value, width - OUTPUT_PADDING_X * 2)
                 height += self._output_panel_height(lines) + LITERAL_BLOCK_GAP
             elif kind == "choice":
@@ -1627,10 +1721,11 @@ class LauncherApp:
                     )
                 self.screen.set_clip(previous_clip)
                 y = code_rect.bottom + LITERAL_BLOCK_GAP
-            elif kind == "output":
+            elif kind in {"output", "input"}:
                 lines = _wrap_literal(self.code_font, value, width - OUTPUT_PADDING_X * 2)
                 output_rect = pygame.Rect(x, y, width, self._output_panel_height(lines))
-                self._draw_output_panel(lines, output_rect)
+                caption = "Ввод пользователя" if kind == "input" else "Вывод программы"
+                self._draw_output_panel(lines, output_rect, caption)
                 y = output_rect.bottom + LITERAL_BLOCK_GAP
             elif kind == "choice":
                 label = next(
@@ -2079,7 +2174,7 @@ class LauncherApp:
         hovered = rect.collidepoint(pygame.mouse.get_pos())
         color = (
             self.theme.button_disabled
-            if self.controller.busy
+            if self.controller.busy and action not in {"send_input", "cancel_input"}
             else self.theme.button_hover
             if hovered
             else self.theme.button

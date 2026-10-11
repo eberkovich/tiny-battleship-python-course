@@ -21,13 +21,13 @@ path. Do not duplicate the curriculum in implementation plans.
 ### Foundation pilot and retired curriculum
 
 The former lessons and executable metadata are retired. The replacement course
-implements A1–A8: comments, showing text/numbers, execution order, arithmetic,
-grouping calculations, naming values, replacement, and old-value updates.
-The launcher is runnable. A1 uses submitted puzzles; A2–A8 also use independent
+implements A1–A9: comments, showing text/numbers, execution order, arithmetic,
+grouping calculations, naming and changing values, text input, and conversion
+to integers. The launcher is runnable. A1 uses submitted puzzles; A2–A9 use independent
 console exercises. They do not create a cumulative game file.
-The roadmap lists the 32 planned foundation lessons; only the first eight are
+The roadmap lists the 33 planned foundation lessons; only the first nine are
 executable. The game section's feature milestones are not yet numbered lessons.
-The user reports positive child-pilot feedback for A1–A3 and approved A4–A8
+The user reports positive child-pilot feedback for A1–A3 and approved A4–A9
 authoring. Continue to use child feedback when designing later lessons;
 activity completion alone is not evidence of understanding.
 
@@ -326,13 +326,13 @@ Child-facing titles, wording, explanation order, and authoring requirements are
 defined in `context/lesson_content.md`. A `summary` is informational, not
 material or a coding task.
 
-#### Deferred A8¾ capstone visual reference
+#### Planned A9¾ capstone visual reference
 
-The planned standalone capstone between A8 and A9 is named **A8¾**. When it is
+The planned standalone bonus capstone after A9 is named **A9¾**. When it is
 authored, include a small Harry Potter visual nod, such as a platform-style
-sign bearing A8¾. Keep it a restrained accent within the existing design,
+sign bearing A9¾. Keep it a restrained accent within the existing design,
 not a separate theme or layout. It does not require a Harry Potter task;
-task selection and its deferred checkpoint belong to `context/lesson_content.md`.
+the settled task and its authoring boundary belong to `context/lesson_content.md`.
 Use the same visual asset in both themes.
 
 #### Puzzle interaction and feedback
@@ -404,7 +404,10 @@ placement remains inline for examples and fixed for the latest run. Shared
 layout and rendering apply in both themes; only palette constants differ.
 
 Use fenced `python` for source, `text` for explicitly identified explanatory
-notation, and `output` for literal printed results. Preserve captured output
+notation, `input` for supplied user answers, and `output` for literal printed results.
+Render `input` with the shared terminal-style block captioned **«Ввод пользователя»**,
+separately from source and printed output; never imply that input was printed.
+Preserve captured output
 without trimming spaces or blank rows. A final newline terminates the last
 display row; it does not add another empty row. Wrap long output for display
 without collapsing whitespace; source lines retain their original layout.
@@ -479,14 +482,28 @@ for or terminate unrelated IDLE processes.
 #### Execution and feedback
 
 Task metadata declares the appropriate output surface. Currently, it has an
-optional `run_mode: console`; omitted `run_mode` means
+optional `run_mode: console` or `run_mode: interactive`; omitted `run_mode` means
 `game`. Foundation exercises normally explicitly select `console`; no game
-window or graphics command is required merely to practise Python. Both kinds
+window or graphics command is required merely to practise Python. Non-interactive tasks
 run once through the checker and may display captured
 `stdout`. A `console` task stops after that run and never opens pygame. A `game`
 task keeps the existing check-then-real-UI flow; it may also display printed
 output. This distinction belongs to lesson metadata so the launcher remains
 lesson-agnostic.
+
+An `interactive` task runs the saved script in a child process first. Standard
+Python `input()` requests a modal text field in the launcher; Enter submits one
+answer, including an empty answer, and Stop/Esc cancels the run. Show the
+program's bounded output before the question; keep the UI responsive and
+suspend the execution timeout while waiting for the child to type. Resume the
+bounded execution allowance after each answer. Do not change the public game API.
+
+After a successful interactive run, check the same script in a separate child
+process with private varied inputs. Preserve the child's actual output; do not
+replace it with private case output or require the child to answer twice.
+Only passing all cases records completion. A failed case leaves the actual
+result visible; cancellation or a runtime error does not complete the task.
+Answers, prompts, and output remain transient, not progress or execution logs.
 
 For a `game` task, a behavioral failure still opens the real UI so the child can
 inspect the result. For a `console` task, the captured output is the visual
@@ -642,7 +659,7 @@ Detailed material stays in its natural format:
 
 An acceptance module exposes
 `check(task_id, snapshot, output)`. The runner passes bounded captured `stdout`
-as `output`. An interactive task may additionally expose
+as `output`. A game task may additionally expose
 `prepare(task_id, fake_ui)`; the runner calls it before student code so the
 checker can configure deterministic private fake-UI input queues. Student code
 never sees or configures those queues. This is the existing checker interface,
@@ -652,6 +669,14 @@ student's function with representative arguments; never import student code
 into the launcher. Implement that extension with its first real task, not in
 the curriculum reset. Tasks before function definitions are taught may remain
 ordinary scripts.
+
+For console scripts that read standard input, the acceptance module instead
+exposes `input_cases(task_id)` and `check_inputs(task_id, answers, output)`.
+Each case executes the script with fresh globals inside the checker subprocess.
+Require exactly the specified number of reads, and compare the result printed
+after the final answer, not incidental question wording. All private cases
+must pass. This checks behavior with unfamiliar data without AST pattern
+requirements or importing arbitrary student code into the launcher.
 
 Do not add per-lesson manifests until one shared curriculum file causes actual
 friction.

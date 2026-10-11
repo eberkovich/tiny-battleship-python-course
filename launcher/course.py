@@ -263,9 +263,9 @@ def load_course(curriculum_path: Path | None = None) -> Course:
                 raise ValueError(f"Answer choices require a question: {task.id}")
             if task.hints and not task.is_coding:
                 raise ValueError(f"Hints require a coding task and text: {task.id}")
-            if task.run_mode not in {"game", "console"}:
+            if task.run_mode not in {"game", "console", "interactive"}:
                 raise ValueError(f"Unknown run mode for {task.id}: {task.run_mode}")
-            if task.run_mode == "console" and not task.is_coding:
+            if task.run_mode in {"console", "interactive"} and not task.is_coding:
                 raise ValueError(f"Console task requires a student file: {task.id}")
             if lesson_id != "lesson_01" and not task.id.startswith(
                 f"{lesson_id}_"

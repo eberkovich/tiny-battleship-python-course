@@ -278,19 +278,48 @@ class LauncherController:
             return
         close_editor(self.editor_process)
         self.editor_process = None
+        interactive = self.current_task.run_mode == "interactive"
         self.job = self.process_starter(
             source,
-            mode="check",
+            mode="interactive" if interactive else "check",
             lesson_id=self.lesson.id,
             task_id=self.current_task.id,
             timeout=5.0,
         )
-        self.job_kind = "check"
+        self.job_kind = "interactive" if interactive else "check"
         self.pending_check = None
         self.latest_output = ""
-        self.message = "Проверяю сохранённый код…"
+        self.message = (
+            "Запускаю программу…" if interactive else "Проверяю сохранённый код…"
+        )
         self.message_level = "info"
         self.technical_details = ""
+
+    @property
+    def waiting_for_input(self) -> bool:
+        return (
+            self.job_kind == "interactive"
+            and self.job is not None
+            and self.job.waiting_for_input
+        )
+
+    def submit_input(self, answer: str) -> None:
+        if self.waiting_for_input:
+            try:
+                self.job.send_input(answer)
+            except OSError:
+                self.cancel_run()
+                self.message = "Программа остановилась до получения ответа. Запусти её ещё раз."
+                self.message_level = "error"
+
+    def cancel_run(self) -> None:
+        if self.job is not None:
+            self.job.cancel()
+        self.job = None
+        self.job_kind = None
+        self.pending_check = None
+        self.message = "Запуск остановлен. Можно изменить код и попробовать ещё раз."
+        self.message_level = "info"
 
     def start_game(self) -> None:
         if self.busy:
@@ -319,24 +348,47 @@ class LauncherController:
         if self.job is None:
             return None
         result = self.job.poll_result()
+        if self.job_kind == "interactive":
+            self.latest_output = self.job.output
         if result is None:
             return None
 
         kind = self.job_kind
         self.job = None
         self.job_kind = None
-        self._report_technical_details(result)
-        if result.output:
+        # Conversion errors can include the typed answer. Keep them transient
+        # in the launcher instead of copying answers into terminal diagnostics.
+        if kind not in {"interactive", "input_check"}:
+            self._report_technical_details(result)
+        if kind != "input_check" and result.output:
             self.latest_output = result.output
 
-        if kind == "check":
+        if kind == "interactive":
+            if result.passed:
+                self.job = self.process_starter(
+                    self.source_path(),
+                    mode="check",
+                    lesson_id=self.lesson.id,
+                    task_id=self.current_task.id,
+                    timeout=5.0,
+                )
+                self.job_kind = "input_check"
+                self.message = "Проверяю программу с разными ответами…"
+            else:
+                self.message = result.message
+                self.message_level = "error"
+                self.technical_details = result.technical_details
+                self.failed_tasks.add(self.current_task.id)
+            return result
+
+        if kind in {"check", "input_check"}:
             if result.passed:
                 if not self.debug:
                     self.progress = self.workspace.mark_passed(self.current_task.id)
                 self.failed_tasks.discard(self.current_task.id)
             else:
                 self.failed_tasks.add(self.current_task.id)
-            if self.current_task.run_mode == "console":
+            if self.current_task.run_mode in {"console", "interactive"}:
                 self.pending_check = None
                 self.message = result.message
                 self.message_level = "success" if result.passed else "error"
@@ -402,9 +454,8 @@ class LauncherController:
         close_editor(self.editor_process)
         self.editor_process = None
         if self.job is not None:
-            process = getattr(self.job, "process", None)
-            if process is not None and process.poll() is None:
-                process.terminate()
+            if getattr(self.job, "process", None) is not None:
+                self.job.cancel()
         self.job = None
         self.job_kind = None
         self.pending_check = None

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import builtins
 import contextlib
 import importlib
 import json
@@ -14,6 +15,7 @@ from runner.results import RunResult
 
 
 RESULT_PREFIX = "BATTLESHIP_RESULT="
+INPUT_PREFIX = "BATTLESHIP_INPUT="
 MAX_OUTPUT_CHARS = 4000
 
 
@@ -81,9 +83,15 @@ def _error_result(error: BaseException, output: str = "") -> RunResult:
         return RunResult(
             "error",
             "type_error",
-            "Команда получила неподходящие аргументы. Проверь их порядок и количество.",
+            "Для этого действия не подходят переданные значения. Проверь, где нужен текст, а где число, и аргументы команды.",
             details,
             output,
+        )
+    if isinstance(error, ValueError) and "invalid literal for int()" in str(error):
+        return RunResult(
+            "error", "value_error",
+            "Не удалось преобразовать значение. Для int нужен текст с целым числом, например 12.",
+            details, output,
         )
     return RunResult(
         "error",
@@ -100,6 +108,9 @@ def execute_check(source: Path, lesson_id: str, task_id: str) -> RunResult:
     try:
         fake_ui = importlib.import_module("battleship_ui.fake_ui")
         acceptance = importlib.import_module(f"lessons.{lesson_id}.acceptance")
+        input_cases = getattr(acceptance, "input_cases", None)
+        if input_cases is not None:
+            return _check_input_cases(source, task_id, acceptance)
         fake_ui._reset()
         prepare = getattr(acceptance, "prepare", None)
         if prepare is not None:
@@ -116,6 +127,82 @@ def execute_check(source: Path, lesson_id: str, task_id: str) -> RunResult:
             outcome.message,
             output=captured,
         )
+    except BaseException as error:
+        return _error_result(error, output.value())
+
+
+class InputMismatch(Exception):
+    pass
+
+
+@contextlib.contextmanager
+def _replace_input(function):
+    original = builtins.input
+    builtins.input = function
+    try:
+        yield
+    finally:
+        builtins.input = original
+
+
+def _check_input_cases(source: Path, task_id: str, acceptance) -> RunResult:
+    """Fresh program globals per case; prompts are not compared as answer rows."""
+    cases = acceptance.input_cases(task_id)
+    if not cases:
+        raise ValueError("Interactive tasks require at least one input case")
+    for answers in cases:
+        output = BoundedOutput()
+        consumed = 0
+        answer_start = 0
+
+        def case_input(prompt=""):
+            nonlocal consumed, answer_start
+            output.write(str(prompt))
+            if consumed >= len(answers):
+                raise InputMismatch()
+            answer = answers[consumed]
+            consumed += 1
+            answer_start = len(output.value())
+            return answer
+
+        try:
+            with _replace_input(case_input), contextlib.redirect_stdout(output):
+                runpy.run_path(str(source), run_name="__main__")
+            if consumed != len(answers):
+                raise InputMismatch()
+            outcome = acceptance.check_inputs(
+                task_id, answers, output.value()[answer_start:]
+            )
+            if not outcome.passed:
+                # Private case output must not replace the child's own run.
+                return RunResult("failed", "behavior_mismatch", outcome.message)
+        except InputMismatch:
+            return RunResult(
+                "failed", "behavior_mismatch",
+                "Проверь количество вопросов: программа должна получить все ответы, указанные в задании.",
+            )
+        except BaseException as error:
+            return _error_result(error)
+    return RunResult("passed", "passed", "Получилось! Программа работает с разными ответами.")
+
+
+def execute_interactive(source: Path) -> RunResult:
+    output = BoundedOutput()
+    protocol = sys.stdout
+
+    def ask(prompt=""):
+        output.write(str(prompt))
+        protocol.write(INPUT_PREFIX + json.dumps({"output": output.value()}, ensure_ascii=False) + "\n")
+        protocol.flush()
+        answer = sys.stdin.readline()
+        if not answer:
+            raise EOFError("Input was cancelled")
+        return answer.removesuffix("\n").removesuffix("\r")
+
+    try:
+        with _replace_input(ask), contextlib.redirect_stdout(output):
+            runpy.run_path(str(source), run_name="__main__")
+        return RunResult("passed", "ran", "Программа завершилась.", output=output.value())
     except BaseException as error:
         return _error_result(error, output.value())
 
@@ -142,7 +229,7 @@ def _emit(result: RunResult) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=("play", "check"), required=True)
+    parser.add_argument("--mode", choices=("play", "check", "interactive"), required=True)
     parser.add_argument("--file", type=Path, required=True)
     parser.add_argument("--lesson")
     parser.add_argument("--task")
@@ -166,6 +253,8 @@ def main(argv: list[str] | None = None) -> int:
         if not arguments.task:
             parser.error("--task is required for check mode")
         result = execute_check(source, arguments.lesson, arguments.task)
+    elif arguments.mode == "interactive":
+        result = execute_interactive(source)
     else:
         result = execute_play(source)
     _emit(result)

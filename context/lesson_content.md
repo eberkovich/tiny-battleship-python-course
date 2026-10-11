@@ -169,6 +169,14 @@ explanation of why that output occurs. Keep explanatory prose outside both
 blocks. Show output literally rather than embedding it in sentences describing
 what appears; preserve its line breaks and meaningful whitespace.
 
+When an example reads standard input, show the supplied answers in a separate
+`input` fence between the source and output blocks. Do not pass off typed text
+as printed output. Verify the example with exactly those answers. Introduce
+input as receiving user data, explain waiting and saving text before practice,
+and teach numeric conversion separately. Keep prompts, answer order, valid
+input domain, and final output unambiguous; do not introduce input validation
+or new control flow merely to handle these early exercises.
+
 Verify that the displayed output matches the example program. For prediction
 puzzles, reveal the correct output and its explanation only after submission;
 possible outputs may still appear as answer choices. This presentation rule
@@ -509,8 +517,9 @@ build a complete one-cell Battleship game. The final game has two 10×10 boards,
 feedback, counters, non-repeating shots, alternating turns, and victory/defeat.
 Multi-deck ships are a later game part, not the second learning section below.
 
-Section A currently has **32 main planned lessons**, plus the standalone
-**A8¾** interim capstone between A8 and A9; its task selection is deferred.
+Section A currently has **33 main planned lessons**, plus the standalone
+**A9¾** bonus capstone after A9. Its shop-calculator task is selected but not
+authored yet.
 Each A-number below denotes one lesson, not a topic block. Some lessons
 consolidate a known tool
 rather than introducing more syntax. This is a working split, not a count to
@@ -635,32 +644,54 @@ Adapt the two independent challenges from published programming tutorials;
 keep ordinary assignments and known arithmetic, without tuple shortcuts,
 function definitions, loops, or modulo.
 
-#### A8. Updating from the previous value
+#### A8. Receiving and retaining text answers
 
-**Learn:** compute the right-hand side using the old value, then store the new
-value. Use ordinary assignment, not unexplained abbreviated update syntax.
+**Learn:** familiar applications receive user data; input is not just typing.
+Here `input()` waits for typed text and Enter. Save separate answers under
+separate names. Explain multiple arguments to `print`, comma separation,
+default spaces, and a newline after each call before combined output tasks.
+No conversion, concatenation, formatted strings, or validation yet.
 
-**Evidence:** track a wallet or score through gains and losses; choose updates
-for a changed scenario and explain every intermediate value. Independently
-investigate how reordering known updates changes their result, rather than
-only translating a supplied sequence.
+**Evidence:** five required activities: guided introduction, predict the pause
+before Enter, repair overwritten answers, build an announcement, and independently
+collect words for a Mad Libs story adapted from Bryson Payne's chapter 1 challenge.
+The same program must work with changed answers, not fixed text in its code.
 
-#### A8¾. Interim capstone — task selection deferred
+#### A9. Converting text answers to integers
 
-The capstone is a standalone lesson between A8 and A9, not an article,
-exercise, or project task within A8. Keep A9 and later labels unchanged.
-When A8 is ready and its lesson checks pass, remind the user to select the
-capstone task. Do not research the task or author the lesson before then.
-At that checkpoint, find a suitable project in the tutorial books referenced
-above or another reputable tutorial, using only concepts taught through A8.
-Discuss the proposed task with the user before authoring it.
+**Learn:** quoted digits and an integer may look alike when printed but support
+different operations. Trace input text, `int`, saved conversion, and arithmetic
+on separate lines. Conversion does not automatically replace the original
+variable. Explain why nonnumeric text cannot be converted, without exception
+handling. All exercise inputs are valid whole numbers in their stated domain.
 
-A Harry Potter setting is welcome but not required. Prioritize educational
-quality: choose a stronger unthemed task over a weaker themed one; do not force
-a theme onto the task. The small visual reference is defined in
-`context/architecture.md`, independently of the task's subject.
+**Evidence:** six required activities: predict which value supports subtraction,
+compute birthday age in 2035, repair a discarded conversion, predict retained
+text versus changed number, solve NRICH's number trick in reverse, and compute
+the hens/sheep population from NRICH's Heads and Feet. Private checks vary the
+inputs; the last two independent problems have progressive optional hints.
 
-#### A9. Defining and calling a function
+#### A9¾. Interim capstone — selected, not authored
+
+A separate bonus lesson after A9, before defining functions, consolidates input,
+variables, and arithmetic without new syntax. Build a small shop calculator
+adapted from Code Avengers Python 1, sections 7.3–7.4 (two products, quantities,
+subtotals, total, and receipt). Omit its optional conditional discount:
+https://assets.codeavengers.com/file/cloud/python/1/lesson-plans/ca-py1-instructions.pdf
+
+Use the Weasley brothers' shop **«Всевозможные волшебные вредилки»** and products
+**«Удлинители ушей»** and **«Забастовочные завтраки»**. Choose fictional integer
+prices, not purported canonical prices. The approved light opening is:
+
+> С волшебными розыгрышами у братьев всё отлично, а вот подсчёт покупок отнимает слишком много времени. Возможно, тут пригодилась бы когтевранская сообразительность, а не гриффиндорская смелость. Но это не точно.
+>
+> Зато твоя программа-касса им точно пригодится!
+
+Remind the user about this separate project after A9 is ready. Do not author it
+as part of A8/A9 or count it among the 33 main lessons. Its small A9¾ visual
+reference belongs to `context/architecture.md` and uses the same asset in both themes.
+
+#### A10. Defining and calling a function
 
 **Learn:** give a known sequence of actions a name with `def`. Explain its
 colon, four-space body indentation, and definition versus execution. Begin
@@ -669,7 +700,7 @@ with a function that takes no arguments.
 **Evidence:** explain why definition alone produces no output; trace calls
 before and after ordinary statements; package a useful repeated sequence.
 
-#### A10. Giving inputs to a function
+#### A11. Giving inputs to a function
 
 **Learn:** parameters name values supplied by a caller. First map one argument
 to one parameter, then explain several arguments in order in a separate short
@@ -679,7 +710,7 @@ article. Trace each call's local names; they are not shared stored state.
 Implement a reusable small calculation or message operation without hardcoded
 inputs. Check parameterized tasks with varied arguments in the subprocess.
 
-#### A11. Returning a result
+#### A12. Returning a result
 
 **Learn:** `return` gives a value back to the caller and ends that call. Store
 or use that result; contrast returning with printing and explain local names
@@ -688,7 +719,7 @@ versus names in the calling code.
 **Evidence:** implement a small calculator whose result another calculation
 uses; explain why printing a number is not the same as returning it.
 
-#### A12. Using functions independently
+#### A13. Using functions independently
 
 **Learn:** consolidation only: choose a function's inputs and result, call it
 more than once, and use its results with known operations. No new syntax.
@@ -697,7 +728,7 @@ more than once, and use its results with known operations. No new syntax.
 explain its contract and two unfamiliar calls. A passing known example alone
 is not enough.
 
-#### A13. Comparisons and truth values
+#### A14. Comparisons and truth values
 
 **Learn:** comparisons produce `True` or `False`, not an instruction to choose
 a branch. Introduce equality and the ordered comparisons needed by the tasks;
@@ -706,7 +737,7 @@ distinguish `==` from assignment. Practise before adding branches.
 **Evidence:** evaluate capacity or price rules at, below, and above a boundary;
 return the comparison result from a function and explain each outcome.
 
-#### A14. Choosing between two actions
+#### A15. Choosing between two actions
 
 **Learn:** `if`/`else` selects one of two bodies using a known truth value.
 Trace the condition, the selected block, and what executes afterwards.
@@ -714,7 +745,7 @@ Trace the condition, the selected block, and what executes afterwards.
 **Evidence:** implement a simple admission or price decision and repair a
 wrong branch. Explain both cases, including a value exactly on the boundary.
 
-#### A15. Requiring two conditions
+#### A16. Requiring two conditions
 
 **Learn:** `and` requires both known conditions to be true. Evaluate each
 condition before combining them; do not add `or` or other new constructions.
@@ -722,7 +753,7 @@ condition before combining them; do not add `or` or other new constructions.
 **Evidence:** implement a rule with two independent requirements and test
 both satisfied, either one missing, and both missing.
 
-#### A16. Reversing a condition
+#### A17. Reversing a condition
 
 **Learn:** `not` reverses a truth value. Connect the syntax to an ordinary
 negative rule rather than teaching it as punctuation to memorize.
@@ -730,7 +761,7 @@ negative rule rather than teaching it as punctuation to memorize.
 **Evidence:** choose and explain a condition for an opposite case; diagnose
 an unnecessary negation. Combine with established branches, not new syntax.
 
-#### A17. Keeping related values in a list
+#### A18. Keeping related values in a list
 
 **Learn:** why a collection is useful, list literals, commas, and ordered
 elements. Use numbers or words; no coordinate pairs, indexing, or mutation yet.
@@ -738,7 +769,7 @@ elements. Use numbers or words; no coordinate pairs, indexing, or mutation yet.
 **Evidence:** choose a collection for a stated problem, construct it, and
 explain its contents and order. Print the collection to inspect the result.
 
-#### A18. Counting the list's elements
+#### A19. Counting the list's elements
 
 **Learn:** `len` returns the number of elements, including zero for an empty
 list. Distinguish the collection from its length.
@@ -746,7 +777,7 @@ list. Distinguish the collection from its length.
 **Evidence:** answer a collection-size or remaining-capacity problem using a
 returned count. Explain why length is not an element's value or position.
 
-#### A19. Reading one list element
+#### A20. Reading one list element
 
 **Learn:** indexed access and zero-based indices versus human positions.
 Explain the bracket syntax and which indices exist before requiring access.
@@ -754,7 +785,7 @@ Explain the bracket syntax and which indices exist before requiring access.
 **Evidence:** locate a clue from its described position, diagnose an off-by-one
 choice, and explain the selected value. Do not silently require slicing.
 
-#### A20. Checking whether an item is present
+#### A21. Checking whether an item is present
 
 **Learn:** membership with `in` returns a truth value; presence is different
 from length and position. Use `not` only through its established meaning.
@@ -763,16 +794,16 @@ from length and position. Use `not` only through its established meaning.
 words, including an empty list and an absent item. This is not another indexed
 lookup task.
 
-#### A21. Acting on every list element
+#### A22. Acting on every list element
 
 **Learn:** `for`, one iteration at a time, and the changing loop-variable value.
-Explain the header's `in` as traversal, not the membership expression from A20.
+Explain the header's `in` as traversal, not the membership expression from A21.
 Use the already established block indentation; begin with one repeated action.
 
 **Evidence:** trace each step of an unfamiliar loop and construct a repeated
 message or instruction sequence. Explain how an element reaches the body.
 
-#### A22. Inside the loop and after it
+#### A23. Inside the loop and after it
 
 **Learn:** consolidation of block boundaries: several actions in one iteration
 versus an action after traversal. Trace indentation as execution, not merely
@@ -781,7 +812,7 @@ spacing; connect it to the previously taught function and branch blocks.
 **Evidence:** diagnose an action repeated instead of executed once, repair its
 placement, and explain the complete output sequence. No new loop construction.
 
-#### A23. Accumulating a total
+#### A24. Accumulating a total
 
 **Learn:** the running-total algorithm: start with zero and update the same
 value for every element. Trace the accumulator and return only after traversal.
@@ -789,7 +820,7 @@ value for every element. Trace the accumulator and return only after traversal.
 **Evidence:** total a small basket or distance list and explain intermediate
 values, including an empty input. Choose the algorithm, not an example's names.
 
-#### A24. Counting matching items
+#### A25. Counting matching items
 
 **Learn:** increment a count only when an element satisfies a known condition.
 Distinguish the count from a sum and from the full collection length.
@@ -797,7 +828,7 @@ Distinguish the count from a sum and from the full collection length.
 **Evidence:** count selected beads or values meeting a rule. Test all, some,
 none, and empty inputs, and explain when the count changes.
 
-#### A25. Searching for an item that satisfies a rule
+#### A26. Searching for an item that satisfies a rule
 
 **Learn:** scan until a matching item is found. A function may return success
 inside the loop, but may conclude failure only after checking every item.
@@ -807,7 +838,7 @@ No `break`, `continue`, or new search built-ins are needed.
 not just an exact value handled by membership. Diagnose a search that checks
 only the first item; trace late-match and no-match inputs.
 
-#### A26. Adding items to a list
+#### A27. Adding items to a list
 
 **Learn:** `append` adds one element; it changes the list rather than returning
 a replacement list. Explain the method-call syntax and an empty starting list.
@@ -815,7 +846,7 @@ a replacement list. Explain the method-call syntax and an empty starting list.
 **Evidence:** grow a collection from successive known values and inspect its
 state after each addition. Explain why assigning the call's result is wrong.
 
-#### A27. Removing an item safely
+#### A28. Removing an item safely
 
 **Learn:** `remove` removes a matching value. Check membership before removing
 an item that may be absent. Do not mutate the list being traversed.
@@ -824,7 +855,7 @@ an item that may be absent. Do not mutate the list being traversed.
 cases and the before/after state. Specify duplicate-value behavior before any
 task needs it; do not introduce copying or aliasing implicitly.
 
-#### A28. Building a filtered collection
+#### A29. Building a filtered collection
 
 **Learn:** combine known traversal, decisions, and `append` to build a separate
 result list. Keep the original collection unchanged; no new syntax.
@@ -833,7 +864,7 @@ result list. Keep the original collection unchanged; no new syntax.
 all-match inputs. The task must differ in reasoning from the counting and
 search examples, not merely replace their names and values.
 
-#### A29. Repeating until a goal
+#### A30. Repeating until a goal
 
 **Learn:** `while` checks its condition before every repetition. Change the
 relevant state inside the loop; contrast this with traversing a known list.
@@ -841,7 +872,7 @@ relevant state inside the loop; contrast this with traversing a known list.
 **Evidence:** determine steps needed to reach or pass a target using familiar
 addition or subtraction. Explain the condition before each repetition.
 
-#### A30. Explaining why a loop finishes
+#### A31. Explaining why a loop finishes
 
 **Learn:** consolidation of termination: identify the state change that makes
 the condition false, including a condition false before the first repetition.
@@ -850,7 +881,7 @@ No new loop syntax.
 **Evidence:** diagnose a non-terminating loop and an incorrect stopping point;
 repair them and explain why the changes work for unfamiliar inputs.
 
-#### A31. Planning and writing a small program
+#### A32. Planning and writing a small program
 
 **Learn:** consolidation only: read a complete problem, choose data and known
 tools, plan steps, implement them, test, and revise. Do not provide the plan as
@@ -859,10 +890,10 @@ answer code.
 **Evidence:** independently implement a small budget checker using familiar
 numbers and lists, then explain its decisions and test meaningful cases.
 
-#### A32. Transferring the plan to another problem
+#### A33. Transferring the plan to another problem
 
 **Learn:** independent application without new syntax. Select familiar tools
-for a different problem instead of repeating A31 with another story.
+for a different problem instead of repeating A32 with another story.
 
 **Evidence:** build a short robot-instruction analyser with a documented list
 of known instruction words and an observable result; adapt it to a changed rule
@@ -977,7 +1008,7 @@ selection rule without changing turn handling or drawing.
 
 ### Authoring and delivery boundary
 
-The A1–A8 lessons are implemented in the agreed prerequisite order.
+The A1–A9 lessons are implemented in the agreed prerequisite order.
 This learning path still defines outcomes and prerequisite order for later
 lessons, not ready-made articles or final tasks. Do not mistake illustrative
 puzzles or technical test fixtures for student content.
@@ -1042,21 +1073,26 @@ The authored lessons' prerequisite and activity review is:
   hints only for the independent challenges. Source links and adaptations
   are recorded in `lessons/a07/acceptance.py`. Fresh task IDs and file paths
   preserve old student solutions without counting old completions.
-- A8: A6/A7 state and replacement, with A4 arithmetic. The evaluate-right-then-
-  store-left trace precedes sequential updates; the print-versus-save contrast
-  precedes prediction and reset-to-start debugging. Two-quantity score/lives
-  tracking combines established ideas. The final independent code investigation
-  asks the child to rearrange three updates to maximize the robot's final charge;
-  both optimal orders pass, and hints encourage comparison rather than copying.
-  Five required activities. Ordinary assignment only; no abbreviated updates,
-  new helpers, functions, loops, or lists. Event tasks are original programming
-  simulations, not purported workbook word problems.
+- A8: input purpose and waiting, retaining answers, and multiple `print`
+  arguments precede their practice. Five required activities, including a
+  Mad Libs adaptation from Payne. Four coding tasks use real typed answers and
+  private varied-input checks; one prediction checks the pause before Enter.
+  Fresh task IDs and paths preserve earlier A8 student files and do not credit
+  their old completions. Text only; no conversion or string formatting yet.
+- A9: text versus integers, `int`, and retaining the converted value precede
+  practice. Six required activities: two predictions and four coding tasks.
+  The birthday problem is adapted from Raspberry Pi's About Me; independent
+  number-trick and farm problems are adapted from NRICH with progressive hints.
+  Source links and adaptations are recorded in `lessons/a09_input/acceptance.py`.
+  All numeric input is valid; no validation, floats, conditions, or loops.
+  Internal roadmap IDs remain stable: the inserted lesson uses `a09_input`,
+  while the later function lesson retains `a09` with displayed position 10.
 
-All twenty-nine coding tasks have private references checked through the student's
-subprocess checker. Eleven answer-choice puzzles have verified answers and
+All thirty-three coding tasks have private references checked through the student's
+subprocess checker. Thirteen answer-choice puzzles have verified answers and
 corrective feedback. No task modifies Battleship. The user reports that A1–A3
-worked well when tried with the children and approved continuing through A8.
-This is pilot feedback, not a measured mastery result; A4–A8 still need child
+worked well when tried with the children and approved continuing through A9.
+This is pilot feedback, not a measured mastery result; A4–A9 still need child
 feedback. Continue checking whether the child can explain unfamiliar code and
 solve a changed problem without receiving its lines. Revise this split
 explicitly when that evidence calls for it.
@@ -1068,6 +1104,8 @@ precomputed answers; review the child's program and reasoning during the pilot
 instead of adding brittle source-pattern checks.
 
 Fresh IDs and puzzle submission/progress support are installed with this pilot.
+Standard-input tasks now run with the child's answers, then check private
+varied cases in a separate subprocess, preserving the actual visible result.
 Extend the runner for varied-input function tasks with the first such task,
 inside the student subprocess, not as speculative work now.
 

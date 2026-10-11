@@ -48,7 +48,7 @@ course:
   roadmap:
     - id: first_steps
       title: "Первые программы"
-      summary: "Читаем код, показываем сообщения, считаем и знакомимся с переменными."
+      summary: "Читаем код, считаем, знакомимся с переменными и получаем ответы пользователя."
       lessons:
         - id: a01
           title: "Читаем первый файл"
@@ -72,8 +72,11 @@ course:
           title: "Изменяем значение переменной"
           outcome: "Изменять и сохранять значения."
         - id: a08
-          title: "Обновляем значение"
-          outcome: "Объяснять работу небольшой программы с переменными."
+          title: "Программа задаёт вопросы"
+          outcome: "Получать и сохранять ответы пользователя."
+        - id: a09_input
+          title: "От текста к числам"
+          outcome: "Преобразовывать ответы в числа и выбирать вычисления."
     - id: functions_and_choices
       title: "Функции и выбор"
       summary: "Создаём свои функции, передаём данные и выбираем действия по условиям."
@@ -637,64 +640,155 @@ lessons:
         section: results
   - id: a08
     content: lessons/a08/lesson.md
-    completion_tasks: ["a08_wallet", "a08_q_update", "a08_repair", "a08_two_values", "a08_robot_order"]
+    completion_tasks: ["a08_introduce", "a08_q_wait", "a08_lost_answer", "a08_announcement", "a08_story"]
     tasks:
-      - id: a08_update
+      - id: a08_why_input
         kind: article
-        title: "Новое значение из предыдущего"
-        section: update
-      - id: a08_wallet
+        title: "Зачем программе твои ответы"
+        section: why_input
+      - id: a08_receive_answer
+        kind: article
+        title: "Как получить и сохранить ответ"
+        section: receive_answer
+      - id: a08_introduce
         kind: exercise
-        title: "Выигрыш и покупка"
-        section: wallet
-        student_file: exercises/a08/wallet.py
-        template: lessons/a08/exercises/wallet.py
-        run_mode: console
-      - id: a08_calculation_or_update
-        kind: article
-        title: "Посчитать не значит сохранить"
-        section: calculation_or_update
-      - id: a08_q_update
+        title: "Как тебя представить?"
+        section: introduce
+        student_file: exercises/a08/introduce.py
+        template: lessons/a08/exercises/introduce.py
+        run_mode: interactive
+      - id: a08_q_wait
         kind: question
-        title: "Прибавили ли очки?"
-        section: q_update
+        title: "Когда появится сообщение?"
+        section: q_wait
         choices:
-          - {id: not_added, label: "Сначала 34, затем 21"}
-          - {id: added, label: "Сначала 34, затем 29"}
-          - {id: stored_only, label: "Сначала 26, затем 21"}
-        correct_choice: not_added
+          - {id: question_only, label: "Только вопрос «Как зовут героя?»"}
+          - {id: continued, label: "Вопрос и «Ответ получен»"}
+          - {id: all, label: "Вопрос, «Ответ получен» и «Луна»"}
+        correct_choice: question_only
         explanation: |
           ```output
-          34
-          21
+          Как зовут героя?
           ```
 
-          Первый print показывает результат 26 + 8, но points остаётся 26. Присваивание затем вычисляет 26 - 5 и сохраняет 21. Последний print показывает новое значение. Если бы прибавление было сохранено, второе число получилось бы другим.
-      - id: a08_repair
+          input ждёт Enter. Пока человек не отправил ответ, программа не дошла до двух последних print. На экране только вопрос «Как зовут героя?». После Enter она сохранит ответ в hero и продолжит выполнение.
+      - id: a08_several_answers
+        kind: article
+        title: "Несколько ответов"
+        section: several_answers
+      - id: a08_lost_answer
         kind: exercise
-        title: "Не теряй прошлый выигрыш"
-        section: repair
-        student_file: exercises/a08/repair.py
-        template: lessons/a08/exercises/repair.py
-        run_mode: console
-      - id: a08_two_values
+        title: "Куда пропал первый ответ?"
+        section: lost_answer
+        student_file: exercises/a08/lost_answer.py
+        template: lessons/a08/exercises/lost_answer.py
+        run_mode: interactive
+      - id: a08_one_line
+        kind: article
+        title: "Текст и значение в одной строке"
+        section: one_line
+      - id: a08_announcement
         kind: exercise
-        title: "Следи за двумя значениями"
-        section: two_values
-        student_file: exercises/a08/two_values.py
-        template: lessons/a08/exercises/two_values.py
-        run_mode: console
-      - id: a08_robot_order
+        title: "Собери объявление"
+        section: announcement
+        student_file: exercises/a08/announcement.py
+        template: lessons/a08/exercises/announcement.py
+        run_mode: interactive
+      - id: a08_story
         kind: exercise
-        title: "Выбери порядок команд"
-        section: robot_order
-        student_file: exercises/a08/robot_order.py
-        template: lessons/a08/exercises/robot_order.py
-        run_mode: console
-        hints:
-          - "Сравни два порядка: зарядка до коридора и зарядка после него. Посчитай оба результата, не меняя начальные 96."
-          - "Зарядка удваивает не начальные 96, а заряд к моменту этой команды. Подумай, как расходы до зарядки влияют на то, сколько она добавит."
-      - id: a08_summary
+        title: "Смешная история"
+        section: story
+        student_file: exercises/a08/story.py
+        template: lessons/a08/exercises/story.py
+        run_mode: interactive
+      - id: a08_input_results
         kind: summary
         title: "Итоги урока"
-        section: summary
+        section: input_results
+  - id: a09_input
+    content: lessons/a09_input/lesson.md
+    completion_tasks: ["a09_input_q_calculation", "a09_input_birthday", "a09_input_conversion_repair", "a09_input_q_original", "a09_input_number_trick", "a09_input_farm"]
+    tasks:
+      - id: a09_input_text_or_number
+        kind: article
+        title: "Похожая запись — разные значения"
+        section: text_or_number
+      - id: a09_input_q_calculation
+        kind: question
+        title: "Из чего можно вычитать?"
+        section: q_calculation
+        choices:
+          - {id: numeric, label: "print(number - 3)"}
+          - {id: text, label: "print(text - 3)"}
+          - {id: quoted, label: "print(\"number - 3\")"}
+        correct_choice: numeric
+        explanation: |
+          number хранит число 18, поэтому number - 3 даёт 15. text хранит текст "18": вычитание из текста остановит программу с ошибкой. В последней записи всё внутри кавычек — текст; print покажет слова number - 3, а не результат вычисления.
+      - id: a09_input_convert
+        kind: article
+        title: "Как получить число из текста"
+        section: convert
+      - id: a09_input_birthday
+        kind: exercise
+        title: "Возраст в 2035 году"
+        section: birthday
+        student_file: exercises/a09_input/birthday.py
+        template: lessons/a09_input/exercises/birthday.py
+        run_mode: interactive
+      - id: a09_input_retain_conversion
+        kind: article
+        title: "Сохраняем преобразованное значение"
+        section: retain_conversion
+      - id: a09_input_conversion_repair
+        kind: exercise
+        title: "Почему вычитание не работает?"
+        section: conversion_repair
+        student_file: exercises/a09_input/conversion_repair.py
+        template: lessons/a09_input/exercises/conversion_repair.py
+        run_mode: interactive
+      - id: a09_input_q_original
+        kind: question
+        title: "Изменился ли исходный ответ?"
+        section: q_original
+        choices:
+          - {id: independent, label: "8, затем 9"}
+          - {id: both_changed, label: "9, затем 9"}
+          - {id: no_change, label: "8, затем 8"}
+        correct_choice: independent
+        explanation: |
+          ```output
+          8
+          9
+          ```
+
+          answer хранит исходный текст "8". int даёт число 8, которое сохраняется отдельно в number. Прибавление меняет только number на 9; answer остаётся прежним.
+      - id: a09_input_valid_text
+        kind: article
+        title: "Что можно преобразовать"
+        section: valid_text
+      - id: a09_input_number_trick
+        kind: exercise
+        title: "Угадай задуманное число"
+        section: number_trick
+        student_file: exercises/a09_input/number_trick.py
+        template: lessons/a09_input/exercises/number_trick.py
+        run_mode: interactive
+        hints:
+          - "Проведи фокус на бумаге с двумя разными числами. Запиши результат после каждого действия. Какие действия можно отменить?"
+          - "Чтобы восстановить число, начни с последнего результата. Отменяй действия в обратном порядке: сначала последнее, затем предыдущее."
+          - "Вычитание 7 отменяется прибавлением 7. Удвоение можно отменить делением нацело на 2. Какое действие останется отменить?"
+      - id: a09_input_farm
+        kind: exercise
+        title: "Куры и овцы"
+        section: farm
+        student_file: exercises/a09_input/farm.py
+        template: lessons/a09_input/exercises/farm.py
+        run_mode: interactive
+        hints:
+          - "Представь, что все животные — куры. Сколько ног тогда получилось бы? Сравни это число с настоящим количеством ног."
+          - "Замена одной курицы овцой не меняет количество животных, но добавляет ноги. Сколько именно?"
+          - "Посчитай, сколько таких замен объясняет лишние ноги. Это количество овец. Как узнать количество оставшихся кур?"
+      - id: a09_input_conversion_results
+        kind: summary
+        title: "Итоги урока"
+        section: conversion_results
