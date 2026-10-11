@@ -1,0 +1,6 @@
+print("Как называется команда?")
+team = input()
+print("Какой у команды девиз?")
+motto = input()
+print(team)
+print(motto)

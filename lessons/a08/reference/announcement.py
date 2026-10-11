@@ -1,0 +1,5 @@
+print("Что нашли?")
+item = input()
+print("Где нашли?")
+place = input()
+print("Найден предмет:", item, "Место:", place)
