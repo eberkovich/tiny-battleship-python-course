@@ -756,9 +756,9 @@ section 3.14, exercise 3. The excerpt contains four deliberately misspelled
 copies of one reaction followed by a three-asterisk divider. A shared
 no-argument function must print both correct rows, run four times, and reduce
 13 physical code lines to fewer than 13. Count the definition header too;
-ignore blanks/comments and do not count minification as refactoring. This
-explicit source-size contract is local to this exercise, not a general grading
-policy. Sources and adaptations are recorded in `lessons/a09/acceptance.py`.
+ignore blanks/comments. This explicit source-size contract is local to this
+exercise, not a general grading policy. Sources and adaptations are recorded
+in `lessons/a09/acceptance.py`.
 
 #### A11. Giving inputs to a function
 

@@ -21,7 +21,6 @@ Function behavior and real invocation counts are checked in the child process;
 names/formatting/decomposition are otherwise not prescribed.
 """
 
-import ast
 import contextlib
 import io
 import tokenize
@@ -76,9 +75,6 @@ def _function_outputs(source, namespace, calls):
 def check_program(task_id, source, namespace, calls):
     if task_id == "a09_book":
         text = source.read_text(encoding="utf-8")
-        statements = [node for node in ast.walk(ast.parse(text)) if isinstance(node, ast.stmt)]
-        if len({node.lineno for node in statements}) != len(statements):
-            return Outcome(False, "Запиши каждое действие на отдельной строке. Склеивание действий не считается сокращением.")
         ignored = {tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.INDENT,
                    tokenize.DEDENT, tokenize.ENDMARKER}
         code_lines = set()

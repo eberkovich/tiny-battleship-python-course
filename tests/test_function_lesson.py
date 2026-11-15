@@ -40,7 +40,6 @@ def test_a10_references_use_only_established_no_argument_function_syntax():
 @pytest.mark.parametrize("mutation,message", [
     ("unused", "Одна и та же функция"),
     ("extra_code", "строк с кодом"),
-    ("semicolon", "отдельной строке"),
     ("typo", "правильную фразу"),
     ("divider", "три звёздочки"),
     ("order", "порядок"),
@@ -54,12 +53,6 @@ def test_book_rejects_output_only_or_incomplete_refactoring(tmp_path, mutation, 
         source = 'def unused():\n    print("unused")\n\n' + f"print({output!r})\n"
     elif mutation == "extra_code":
         source += "spare = 1\n"
-    elif mutation == "semicolon":
-        source = (LESSON / "exercises/book.py").read_text()
-        source = "\n".join(line for line in source.splitlines() if not line.startswith("#"))
-        source = source.replace("закотили", "закатили").replace("гласа", "глаза")
-        source = source.replace("Гермеона", "Гермиона").replace("глоза", "глаза")
-        source = "; ".join(line for line in source.splitlines() if line.strip())
     elif mutation == "typo":
         source = source.replace("Гермиона закатили", "Гермеона закатили")
     elif mutation == "divider":

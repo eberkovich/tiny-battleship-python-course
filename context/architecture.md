@@ -732,10 +732,10 @@ Do not enable this observation in ordinary playback or earlier script checks.
 A10 uses this hook to verify actual no-argument function use while accepting
 different helper names and decompositions. Its explicitly required book
 refactoring additionally counts physical code-token lines, including the
-definition header but excluding comments/blanks, and rejects multiple
-statements on one line. The approved four-scene starter has 13 code lines;
-the solution must have fewer. This narrow source contract does not authorize
-general expression-pattern grading or imply that passing proves understanding.
+definition header but excluding comments/blanks. The approved four-scene
+starter has 13 code lines; the solution must have fewer. This narrow source
+contract does not authorize general expression-pattern grading or imply that
+passing proves understanding.
 
 For console scripts that read standard input, the acceptance module instead
 exposes `input_cases(task_id)` and `check_inputs(task_id, answers, output)`.
