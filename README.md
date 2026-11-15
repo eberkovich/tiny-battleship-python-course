@@ -6,7 +6,7 @@ helpers provide rendering and input; the child writes the game logic.
 
 ## Foundation lessons
 
-The first nine numbered lessons and the A9¾ capstone are available:
+The first ten numbered lessons and the A9¾ capstone are available:
 
 - A1: reading a file and understanding comments — three answer-choice puzzles.
 - A2: displaying text and numbers — five activities, including logic and arithmetic.
@@ -24,12 +24,15 @@ The first nine numbered lessons and the A9¾ capstone are available:
   payment, and change, with illustrated goods and wizarding coins.
   The receipt and change need only numeric results; optional labels and their
   spelling are not graded.
+- A10: defining and calling functions — five activities, including refactoring
+  a four-scene book excerpt, debugging indentation, and composing a text window.
+  Checks verify real function use; the book task also checks that code is shorter.
 
 Puzzle submissions reveal the correct answer and explanation even after a
 wrong answer. Coding tasks need correct output. These lessons use independent
 files, not the cumulative game. The user has tried A1–A3 with the children and
-reports positive feedback; A4–A9¾ are ready for their next trial. Later lessons
-remain planned, not executable. Teaching principles and the path are in
+reports positive feedback; A4–A10 and the capstone are ready for their next trial.
+Later lessons remain planned, not executable. Teaching principles and the path are in
 [context/lesson_content.md](context/lesson_content.md#learning-path-definition).
 
 ## Current platform and language support
@@ -59,7 +62,7 @@ After the program finishes, private checks try different answers without
 replacing the child's own output.
 
 A9¾ appears as a locked secret lesson without its number until A9 is completed.
-Finish its checkout to unlock its summary and the future A10; it is required,
+Finish its checkout to unlock its summary and A10; it is required,
 not an optional star.
 Debug mode reveals it for review. Its background and illustrations are the same
 in both themes; prices and labels remain readable application text.
@@ -90,10 +93,11 @@ checker, puzzle feedback/progress, and the mixed lesson workflow.
 The previous curriculum is retired. Fresh lesson/task IDs prevent old
 completions from counting toward new lessons; existing student code is preserved.
 
-Verification (2026-10-11): 417 tests passed, including all thirty-four coding
+Verification (2026-11-15): 453 tests passed, including all thirty-seven coding
 references, untouched-starter rejection, worked examples with supplied input,
-thirteen puzzle contracts, optional-star progression, varied-input checks,
-preserved earlier student work, and end-to-end progression through A1–A9¾.
+fifteen puzzle contracts, optional-star progression, varied-input checks,
+preserved earlier student work, and end-to-end progression through A1–A10
+including the required A9¾ capstone.
 Input transport checks cover Unicode and empty answers, cancellation, resumed
 timeouts, hard-coded answer rejection, chronological receipt/payment checks,
 and preservation of the child's output. Capstone checks cover exact payment,
@@ -105,7 +109,7 @@ repair starters are checked as failing starters rather than compiled as valid co
 Headless production-renderer previews were inspected in both themes at
 1180×760 and 1600×1000, alongside automated layout checks.
 Native macOS startup was checked in the initial pilot (2026-10-03). A1–A3
-child-pilot feedback is user-reported, not a measured mastery result; A4–A9¾
+child-pilot feedback is user-reported, not a measured mastery result; A4–A10 and the capstone
 child testing is next.
 The A9¾ native macOS check (2026-10-11) started the real launcher and an IDLE
 editor process in a temporary student workspace, then exercised six answers
@@ -113,6 +117,14 @@ through the production controller. The rendered receipt preceded payment,
 change followed it, and reopening preserved the solution and completion.
 This was automated native verification, not a physical keyboard/child trial.
 The wheel build includes all ten selected illustration assets and their prompts.
+
+The A10 native macOS check (2026-11-15) opened the real launcher and editor in
+a temporary workspace, ran all three reference programs through the normal
+Run/check flow, submitted both puzzles, and verified completion after reopening.
+Both-theme production previews were inspected at 1180×760 and 1600×1000;
+automated checks cover every task and the optional window hint. The wheel
+includes A10 content, starter files, references, and its checker. No existing
+student workspace was changed; child understanding still needs a pilot.
 
 The capstone's original illustrations and generation prompts are in
 [lessons/a09_bonus/assets](lessons/a09_bonus/assets/README.md).

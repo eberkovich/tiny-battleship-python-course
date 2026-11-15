@@ -21,13 +21,14 @@ path. Do not duplicate the curriculum in implementation plans.
 ### Foundation pilot and retired curriculum
 
 The former lessons and executable metadata are retired. The replacement course
-implements A1–A9: comments, showing text/numbers, execution order, arithmetic,
+implements A1–A10: comments, showing text/numbers, execution order, arithmetic,
 grouping calculations, naming and changing values, text input, and conversion
-to integers. The launcher is runnable. A1 uses submitted puzzles; A2–A9 use independent
+to integers, and defining/calling no-argument functions. The launcher is runnable.
+A1 uses submitted puzzles; A2–A10 use independent
 console exercises. They do not create a cumulative game file.
 The required A9¾ standalone shop capstone follows A9. The roadmap lists 33
 numbered foundation lessons plus this capstone: 34 required entries, of which
-nine numbered lessons and the capstone are executable. The game section's
+ten numbered lessons and the capstone are executable. The game section's
 feature milestones are not yet numbered lessons.
 The user reports positive child-pilot feedback for A1–A3 and approved A4–A9
 authoring. Continue to use child feedback when designing later lessons;
@@ -719,6 +720,22 @@ student's function with representative arguments; never import student code
 into the launcher. Implement that extension with its first real task, not in
 the curriculum reset. Tasks before function definitions are taught may remain
 ordinary scripts.
+
+Function-use tasks may additionally expose the private hook
+`check_program(task_id, source, namespace, calls)`, after the ordinary output
+check passes. Only opted-in checks collect real student-function invocation
+counts, keyed by code object. Restore the previous profiler after execution;
+keep the namespace, observations, and any function probes inside the checker
+subprocess. Probe/check output must not alter the child's captured output.
+Do not enable this observation in ordinary playback or earlier script checks.
+
+A10 uses this hook to verify actual no-argument function use while accepting
+different helper names and decompositions. Its explicitly required book
+refactoring additionally counts physical code-token lines, including the
+definition header but excluding comments/blanks, and rejects multiple
+statements on one line. The approved four-scene starter has 13 code lines;
+the solution must have fewer. This narrow source contract does not authorize
+general expression-pattern grading or imply that passing proves understanding.
 
 For console scripts that read standard input, the acceptance module instead
 exposes `input_cases(task_id)` and `check_inputs(task_id, answers, output)`.

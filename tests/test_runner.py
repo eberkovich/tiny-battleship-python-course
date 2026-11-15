@@ -193,6 +193,19 @@ def test_student_output_is_bounded(tmp_path: Path) -> None:
     assert result.output.endswith("… вывод сокращён …")
 
 
+@pytest.mark.parametrize("calls,passed", [
+    ("greet()\ngreet()\n", True),
+    ("print(7)\nprint(7)\n", False),
+])
+def test_optional_program_check_observes_real_calls_and_isolates_probe_output(tmp_path, calls, passed):
+    source = tmp_path / "functions.py"
+    source.write_text("def greet():\n    print(7)\n\n" + calls)
+    result = run_check(source, "functions", lesson_id="functions")
+    assert result.passed == passed
+    assert result.output == "7\n7\n"
+    assert result.message == ("Calls checked in the subprocess." if passed else "Call the function twice.")
+
+
 def test_play_does_not_capture_pygame_banner_as_student_output() -> None:
     job = start_student_process(
         REFERENCE_ROOT / "boards.py",

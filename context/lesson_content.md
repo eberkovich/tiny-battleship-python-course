@@ -216,6 +216,15 @@ Technical terms must be defined in plain language, connected to their syntax
 or action, and illustrated. Do not use a term as the only task instruction;
 restate the action in ordinary language when recall is not the objective.
 
+Do not presume an untaught term or idea, including in a heading. If an
+unfamiliar detail genuinely has to appear before its full explanation,
+explicitly reassure the learner that it is not yet required, state what they
+should understand now, and identify the upcoming explanation. Deliver it before
+tasks depend on that detail. This is a narrow, signposted preview, not a license
+to defer the mechanism needed to understand the current example. Preserve a
+concrete motivating problem and its complete solution; do not artificially
+leave the problem half-solved merely to reduce the number of calls shown.
+
 #### Helper commands and output
 
 Use the game API only when a task genuinely needs graphics or input. Explain
@@ -734,6 +743,23 @@ with a function that takes no arguments.
 **Evidence:** explain why definition alone produces no output; trace calls
 before and after ordinary statements; package a useful repeated sequence.
 
+The approved opening compares repeated introductory messages with the complete
+two-call function version. Before the latter, reassure the learner that the
+next article will trace execution in detail; explain the minimum definition,
+call, punctuation, and indentation behavior here before guided practice.
+Do not replace this motivation with an artificially isolated single call.
+
+Five required activities: refactor the user-approved Harry Potter excerpt,
+predict call order, repair ticket indentation, count nested-call output, and
+independently compose a four-pane text window adapted from Think Python 2e,
+section 3.14, exercise 3. The excerpt contains four deliberately misspelled
+copies of one reaction followed by a three-asterisk divider. A shared
+no-argument function must print both correct rows, run four times, and reduce
+13 physical code lines to fewer than 13. Count the definition header too;
+ignore blanks/comments and do not count minification as refactoring. This
+explicit source-size contract is local to this exercise, not a general grading
+policy. Sources and adaptations are recorded in `lessons/a09/acceptance.py`.
+
 #### A11. Giving inputs to a function
 
 **Learn:** parameters name values supplied by a caller. First map one argument
@@ -1042,7 +1068,7 @@ selection rule without changing turn handling or drawing.
 
 ### Authoring and delivery boundary
 
-The A1–A9 lessons are implemented in the agreed prerequisite order.
+The A1–A10 lessons are implemented in the agreed prerequisite order.
 The separate A9¾ capstone is also authored: one required independent program
 combines six inputs, a three-product receipt before payment, and change after
 payment. The currency article introduces the domain facts, not new Python
@@ -1125,18 +1151,29 @@ The authored lessons' prerequisite and activity review is:
   All numeric input is valid; no validation, floats, conditions, or loops.
   Internal roadmap IDs remain stable: the inserted lesson uses `a09_input`,
   while the later function lesson retains `a09` with displayed position 10.
+- A10 (runtime ID `a09`): definition/call syntax and the minimum execution
+  explanation precede guided refactoring; an explicit preview leads to the
+  next article's detailed trace. Indentation and function composition each
+  precede their practice. Three coding tasks and two prediction puzzles;
+  the book task uses the four user-approved scenes and deliberately misspelled
+  reactions, while the independent window adapts the published grid exercise.
+  Private checks observe actual calls and probe no-argument function output
+  inside the subprocess. No parameters, return, loops, conditions, or new
+  string operations are introduced.
 
-All thirty-three coding tasks have private references checked through the student's
-subprocess checker. Thirteen answer-choice puzzles have verified answers and
-corrective feedback. No task modifies Battleship. The user reports that A1–A3
+All thirty-seven coding tasks, including the capstone, have private references
+checked through the student's subprocess checker. Fifteen answer-choice puzzles
+have verified answers and corrective feedback. No task modifies Battleship. The user reports that A1–A3
 worked well when tried with the children and approved continuing through A9.
-This is pilot feedback, not a measured mastery result; A4–A9 still need child
-feedback. Continue checking whether the child can explain unfamiliar code and
+This is pilot feedback, not a measured mastery result; A4–A10 and the capstone
+still need child feedback. Continue checking whether the child can explain unfamiliar code and
 solve a changed problem without receiving its lines. Revise this split
 explicitly when that evidence calls for it.
 
-The behavioral checker verifies literal printed results, not whether the child
-used a particular expression or understands it. Arithmetic and variable tasks
+The behavioral checker normally verifies printed results, not whether the child
+used a particular expression or understands it. A10 additionally verifies the
+function use taught by its tasks, with a source-size check only for the
+explicit book-refactoring contract. Arithmetic and variable tasks
 still require the stated calculations, assignments, and reuse rather than
 precomputed answers; review the child's program and reasoning during the pilot
 instead of adding brittle source-pattern checks.

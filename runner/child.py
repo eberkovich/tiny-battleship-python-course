@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import builtins
+from collections import Counter
 import contextlib
 import importlib
 import json
@@ -115,10 +116,28 @@ def execute_check(source: Path, lesson_id: str, task_id: str) -> RunResult:
         prepare = getattr(acceptance, "prepare", None)
         if prepare is not None:
             prepare(task_id, fake_ui)
-        with contextlib.redirect_stdout(output):
-            runpy.run_path(str(source), run_name="__main__")
+        check_program = getattr(acceptance, "check_program", None)
+        calls = Counter()
+
+        def record_call(frame, event, argument):
+            if event == "call" and frame.f_code.co_filename == str(source):
+                calls[frame.f_code] += 1
+
+        previous_profile = sys.getprofile()
+        try:
+            if check_program is not None:
+                sys.setprofile(record_call)
+            with contextlib.redirect_stdout(output):
+                namespace = runpy.run_path(str(source), run_name="__main__")
+        finally:
+            if check_program is not None:
+                sys.setprofile(previous_profile)
         captured = output.value()
         outcome = acceptance.check(task_id, fake_ui._snapshot(), captured)
+        if outcome.passed and check_program is not None:
+            # Program objects and code observations stay inside this subprocess.
+            with contextlib.redirect_stdout(BoundedOutput()):
+                outcome = check_program(task_id, source, namespace, calls)
         if outcome.passed:
             return RunResult("passed", "passed", outcome.message, output=captured)
         return RunResult(

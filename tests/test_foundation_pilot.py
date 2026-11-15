@@ -112,7 +112,7 @@ def test_pilot_source_lines_fit_the_minimum_example_width(tmp_path) -> None:
 
 def test_pilot_scope_and_material_are_consistent() -> None:
     assert [lesson.id for lesson in COURSE.lessons] == [
-        "a01", "a02", "a03", "a04", "a05", "a06", "a07", "a08", "a09_input", "a09_bonus",
+        "a01", "a02", "a03", "a04", "a05", "a06", "a07", "a08", "a09_input", "a09_bonus", "a09",
     ]
     assert len(COURSE.roadmap_lessons) == 34
     assert {lesson.id for lesson in COURSE.roadmap_lessons} == {
@@ -121,7 +121,7 @@ def test_pilot_scope_and_material_are_consistent() -> None:
     assert COURSE.roadmap_position("a09") == 11
     assert COURSE.lesson_label("a09") == "10"
     assert COURSE.lesson_label("a09_bonus") == "9¾"
-    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4, 6, 5, 5, 6, 5, 6, 1]
+    assert [len(lesson.completion_tasks) for lesson in COURSE.lessons] == [3, 5, 4, 6, 5, 5, 6, 5, 6, 1, 5]
     all_ids = set()
     for lesson in COURSE.lessons:
         sections = load_sections(lesson.content)
@@ -531,6 +531,7 @@ def test_puzzle_ui_collects_answer_reveals_feedback_and_marks_card(tmp_path) -> 
     ("a02", "a02_houses"), ("a06", "a06_weights"),
     ("a09_input", "a09_input_number_trick"), ("a09_input", "a09_input_farm"),
     ("a07", "a07_change"), ("a07", "a07_swap"),
+    ("a09", "a09_window"),
 ])
 def test_hint_ui_reveals_in_order_without_progress_or_layout_changes(tmp_path, lesson_id, task_id) -> None:
     controller = LauncherController(tmp_path / "review", debug=True)

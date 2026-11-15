@@ -861,3 +861,88 @@ lessons:
         kind: summary
         title: "Итоги урока"
         section: results
+  - id: a09
+    content: lessons/a09/lesson.md
+    completion_tasks: ["a09_book", "a09_q_order", "a09_ticket", "a09_q_calls", "a09_window"]
+    tasks:
+      - id: a09_intro
+        kind: article
+        title: "Несколько действий под одним именем"
+        section: intro
+      - id: a09_book
+        kind: exercise
+        title: "Эта фраза уже где-то была"
+        section: book
+        student_file: exercises/a09/book.py
+        template: lessons/a09/exercises/book.py
+        run_mode: console
+      - id: a09_execution
+        kind: article
+        title: "Когда выполняются строки функции"
+        section: execution
+      - id: a09_q_order
+        kind: question
+        title: "Что появится первым?"
+        section: q_order
+        choices:
+          - {id: definitions, label: "Солнце, Луна, Земля"}
+          - {id: calls, label: "Луна, Земля, Солнце"}
+          - {id: grouped, label: "Луна, Солнце, Земля"}
+        correct_choice: calls
+        explanation: |
+          ```output
+          Луна
+          Земля
+          Солнце
+          ```
+
+          Определения sun и moon ещё не выводят слова. Первым выполняется вызов moon(), затем обычный print("Земля"), а после него — вызов sun().
+      - id: a09_indentation
+        kind: article
+        title: "Какие строки относятся к функции"
+        section: indentation
+      - id: a09_ticket
+        kind: exercise
+        title: "Почему билет неполный?"
+        section: ticket
+        student_file: exercises/a09/ticket.py
+        template: lessons/a09/exercises/ticket.py
+        run_mode: console
+      - id: a09_composition
+        kind: article
+        title: "Функция может вызывать другую функцию"
+        section: composition
+      - id: a09_q_calls
+        kind: question
+        title: "Сколько раз напечатано «Тук»?"
+        section: q_calls
+        choices:
+          - {id: three, label: "3"}
+          - {id: four, label: "4"}
+          - {id: six, label: "6"}
+          - {id: eight, label: "8"}
+        correct_choice: six
+        explanation: |
+          ```output
+          Тук
+          Тук
+          Тук
+          Тук
+          Тук
+          Тук
+          ```
+
+          Вызов signal() выполняет pair() два раза: это четыре строки. Последний отдельный вызов pair() добавляет ещё две. Всего получается шесть строк.
+      - id: a09_window
+        kind: exercise
+        title: "Нарисуй окно"
+        section: window
+        student_file: exercises/a09/window.py
+        template: lessons/a09/exercises/window.py
+        run_mode: console
+        hints:
+          - "Сначала найди строки рисунка, которые полностью совпадают. Затем посмотри, повторяются ли группы строк."
+      - id: a09_summary
+        kind: summary
+        title: "Итоги урока"
+        section: summary
