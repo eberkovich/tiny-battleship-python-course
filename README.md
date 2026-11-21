@@ -27,6 +27,7 @@ The first ten numbered lessons and the A9¾ capstone are available:
 - A10: defining and calling functions — five activities, including refactoring
   a four-scene book excerpt, debugging indentation, and composing a text window.
   Checks verify real function use; the book task also checks that code is shorter.
+  Typos confined to the repeated reaction get a gentle reminder to recheck it.
 
 Puzzle submissions reveal the correct answer and explanation even after a
 wrong answer. Coding tasks need correct output. These lessons use independent
@@ -93,7 +94,7 @@ checker, puzzle feedback/progress, and the mixed lesson workflow.
 The previous curriculum is retired. Fresh lesson/task IDs prevent old
 completions from counting toward new lessons; existing student code is preserved.
 
-Verification (2026-11-15): 452 tests passed, including all thirty-seven coding
+Verification (2026-11-21): 453 tests passed, including all thirty-seven coding
 references, untouched-starter rejection, worked examples with supplied input,
 fifteen puzzle contracts, optional-star progression, varied-input checks,
 preserved earlier student work, and end-to-end progression through A1–A10

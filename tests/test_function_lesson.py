@@ -40,7 +40,7 @@ def test_a10_references_use_only_established_no_argument_function_syntax():
 @pytest.mark.parametrize("mutation,message", [
     ("unused", "Одна и та же функция"),
     ("extra_code", "строк с кодом"),
-    ("typo", "правильную фразу"),
+    ("typo", "остались опечатки"),
     ("divider", "три звёздочки"),
     ("order", "порядок"),
 ])
@@ -75,6 +75,23 @@ def test_book_accepts_another_function_name_quotes_and_comment_spacing(tmp_path)
     path.write_text(source)
     result = run_check(path, "a09_book", lesson_id="a09")
     assert result.passed, result
+
+
+def test_book_gently_reports_the_users_misspelling_and_accepts_its_correction(tmp_path):
+    correct = (LESSON / "reference/book.py").read_text().replace("roll_eyes", "h")
+    path = tmp_path / "answer.py"
+    path.write_text(correct.replace("Гермиона", "Гермеона"))
+    result = run_check(path, "a09_book", lesson_id="a09")
+    assert result.status == "failed"
+    assert "остались опечатки" in result.message
+    assert "Проверь внимательно" in result.message
+    assert "Гермеона" in result.output
+    assert "Гермиона" not in result.message
+
+    path.write_text(correct)
+    result = run_check(path, "a09_book", lesson_id="a09")
+    assert result.passed, result
+    assert "Гермеона" not in result.output
 
 
 @pytest.mark.parametrize("task,source", [

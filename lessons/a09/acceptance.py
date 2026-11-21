@@ -53,7 +53,16 @@ FAILURES = {
 
 
 def check(task_id, snapshot, output):
-    return check_output(output, EXPECTED[task_id], FAILURES[task_id])
+    expected = EXPECTED[task_id]
+    outcome = check_output(output, expected, FAILURES[task_id])
+    if task_id == "a09_book" and not outcome.passed:
+        actual = tuple(line.strip() for line in output.strip().splitlines())
+        if len(actual) == len(expected) and all(
+            line == wanted or wanted == REACTION
+            for line, wanted in zip(actual, expected)
+        ):
+            return Outcome(False, "Кажется, в сообщении всё ещё остались опечатки. Проверь внимательно.")
+    return outcome
 
 
 def _function_outputs(source, namespace, calls):
